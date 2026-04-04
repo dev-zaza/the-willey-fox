@@ -5,6 +5,7 @@ import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { sql } from 'drizzle-orm';
 import Redis from 'ioredis';
+import { getRedisConnectionOptions } from '../../config/redis-connection';
 
 @Controller('health')
 export class HealthController {
@@ -29,8 +30,7 @@ export class HealthController {
     // Redis check
     try {
       const redisClient = new Redis({
-        host: this.configService.get<string>('REDIS_HOST', 'localhost'),
-        port: this.configService.get<number>('REDIS_PORT', 6379),
+        ...getRedisConnectionOptions(this.configService),
         connectTimeout: 2000,
         lazyConnect: true,
         maxRetriesPerRequest: 1,

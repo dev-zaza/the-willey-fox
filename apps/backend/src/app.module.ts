@@ -22,6 +22,7 @@ import { EmergencyModule } from './modules/emergency/emergency.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PlacesModule } from './modules/places/places.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { getRedisConnectionOptions } from './config/redis-connection';
 
 @Module({
   imports: [
@@ -39,10 +40,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-        },
+        connection: getRedisConnectionOptions(configService),
       }),
     }),
     DatabaseModule,

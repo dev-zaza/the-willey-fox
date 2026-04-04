@@ -9,6 +9,7 @@ import { users, userBlocks, userReports, userLocations } from '../../database/sc
 import { UpdateProfileDto, UpdateLocationDto, ReportUserDto, VerifyPhoneOtpDto } from './dto';
 import { CloudinaryService } from './cloudinary.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { getRedisConnectionOptions } from '../../config/redis-connection';
 
 @Injectable()
 export class UsersService implements OnModuleInit, OnModuleDestroy {
@@ -24,8 +25,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.redis = new Redis({
-      host: this.configService.get<string>('REDIS_HOST', 'localhost'),
-      port: this.configService.get<number>('REDIS_PORT', 6379),
+      ...getRedisConnectionOptions(this.configService),
       maxRetriesPerRequest: 3,
     });
   }
