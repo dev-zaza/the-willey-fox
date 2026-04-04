@@ -38,7 +38,7 @@ RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY apps/backend/src/database/migrations ./apps/backend/src/database/migrations
+COPY --from=builder /app/apps/backend/src/database/migrations ./apps/backend/src/database/migrations
 
 ENV NODE_ENV=production
 EXPOSE 3000
