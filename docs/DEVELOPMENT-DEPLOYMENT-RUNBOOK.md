@@ -156,6 +156,8 @@ Check Fly’s **current** free allowance; it changes over time.
 2. Set **start command** to `pnpm --filter @safetag/backend start:prod` (or `node dist/main` from built output).
 3. **Free tier:** service may **sleep** after idle → cold starts; acceptable for demos, painful for daily QA.
 
+**Deploy only when the backend (or shared) changes:** Turn off Render **auto-deploy** for this service, create a **Deploy Hook** (service Settings), and add GitHub secret `RENDER_DEPLOY_HOOK_URL`. The workflow `.github/workflows/deploy-backend-render.yml` POSTs that hook on pushes to `main` that touch `apps/backend`, `packages/shared`, or root lock/workspace/Docker/tsconfig files. Use **Run workflow** in the Actions tab for a manual deploy. If your default branch is not `main`, edit the workflow `branches` list.
+
 ### Option C — Small VPS (Hetzner, DigitalOcean, etc.)
 
 1. Install Docker, run API container + optionally **self-host** Postgres/Redis (or still use Neon/Upstash).

@@ -1,0 +1,41 @@
+# Triggers a Render deploy via Deploy Hook only when backend-related paths change.
+# Prerequisite: disable "Auto-Deploy" for the API service on Render (or it will still deploy every push).
+#
+# GitHub repo settings → Secrets → Actions → add RENDER_DEPLOY_HOOK_URL
+# (Render dashboard → your Web Service → Settings → Deploy Hook → generate URL)
+#
+# If the monorepo is not the Git repo root (e.g. code lives under safetag/), prefix every path below with that folder (e.g. safetag/apps/backend/**).
+
+name: Deploy backend (Render)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/**'
+      - 'packages/shared/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'Dockerfile'
+      - 'tsconfig.base.json'
+  workflow_dispatch:
+
+concurrency:
+  group: render-backend-deploy
+  cancel-in-progress: false
+
+jobs:
+  trigger-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_URL is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
