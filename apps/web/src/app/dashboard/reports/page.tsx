@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Bell, MapPin, Mail, Phone, Flag, X, Loader2 } from 'lucide-react';
-import { qrCodes, reports, type Report, type QrCode, ApiError } from '@/lib/api';
+import { qrCodes, reports, type Report, type QrCode } from '@/lib/api';
 
 interface AlertItem {
   report: Report;
@@ -65,7 +65,7 @@ export default function ReportsPage() {
       setAlerts((prev) =>
         prev.map((a) =>
           a.report.id === reportId
-            ? { ...a, report: { ...a.report, responses: [...a.report.responses, resp] } }
+            ? { ...a, report: { ...a.report, responses: [...(a.report.responses ?? []), resp] } }
             : a,
         ),
       );

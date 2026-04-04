@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Plus, Pencil, Trash2, Palette } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
 import { admin, type VisualTheme, type CreateVisualThemePayload } from '@/lib/api';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { cn } from '@/lib/utils';

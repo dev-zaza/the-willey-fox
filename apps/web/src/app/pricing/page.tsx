@@ -55,7 +55,7 @@ export default function PricingPage() {
     settings.getPricing().then(setPricing).catch(() => {});
   }, []);
 
-  const { monthlyPriceLabel, annualPriceLabel, annualSavePercent, trialDays } = pricing;
+  const { annualSavePercent, trialDays } = pricing;
 
   return (
     <div className="min-h-screen bg-[#0f1117] text-white">

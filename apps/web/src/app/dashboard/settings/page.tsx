@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Save, Shield, Upload, Camera } from 'lucide-react';
-import { users as usersApi, auth, twoFactor } from '@/lib/api';
+import { Save, Shield, Camera } from 'lucide-react';
+import { users as usersApi, auth } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
 
 export default function SettingsPage() {
