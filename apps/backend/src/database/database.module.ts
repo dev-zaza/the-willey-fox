@@ -19,7 +19,13 @@ export const DRIZZLE = Symbol('DRIZZLE');
           'postgresql://safetag:safetag_dev@localhost:5432/safetag_dev',
         );
 
-        const client = postgres(connectionString);
+        // Supabase pooler (PgBouncer): disable prepared statements — required for Transaction mode;
+        // safe for Session pooler URLs that use the same host pattern.
+        const supabasePooler = /pooler\.supabase\.com/i.test(connectionString);
+
+        const client = postgres(connectionString, {
+          ...(supabasePooler ? { prepare: false } : {}),
+        });
         const db = drizzle(client, { schema });
 
         logger.log('Database connection established');

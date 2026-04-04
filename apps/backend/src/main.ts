@@ -15,7 +15,11 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
-  const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:3001');
+  const corsOrigins = configService
+    .get<string>('CORS_ORIGINS', 'http://localhost:3001')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
 
   app.setGlobalPrefix('api/v1');
 
@@ -36,7 +40,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   app.enableCors({
-    origin: corsOrigins.split(','),
+    origin: corsOrigins,
     credentials: true,
   });
 
