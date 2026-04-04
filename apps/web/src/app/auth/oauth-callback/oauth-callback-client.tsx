@@ -42,7 +42,7 @@ export function OAuthCallbackClient() {
         const profile = await auth.me();
         if (cancelled) return;
         setUser(profile);
-        router.replace('/dashboard');
+        router.replace(profile.isAdmin ? '/admin' : '/dashboard');
       } catch (e) {
         if (cancelled) return;
         setMessage('');

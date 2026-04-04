@@ -19,6 +19,15 @@ export const DRIZZLE = Symbol('DRIZZLE');
           'postgresql://safetag:safetag_dev@localhost:5432/safetag_dev',
         );
 
+        const supabaseDirectIpv6 =
+          /db\.[^./\s]+\.supabase\.co/i.test(connectionString) &&
+          !/pooler\.supabase\.com/i.test(connectionString);
+        if (process.env.NODE_ENV === 'production' && supabaseDirectIpv6) {
+          logger.warn(
+            'DATABASE_URL uses Supabase direct host (db.*.supabase.co → IPv6). Platforms without IPv6 (e.g. Render) get ENETUNREACH — switch to the Session pooler URI in Supabase → Connect (*.pooler.supabase.com:5432).',
+          );
+        }
+
         // Supabase pooler (PgBouncer): disable prepared statements — required for Transaction mode;
         // safe for Session pooler URLs that use the same host pattern.
         const supabasePooler = /pooler\.supabase\.com/i.test(connectionString);

@@ -461,6 +461,7 @@ export class AuthService {
         lastName: user.lastName,
         subscriptionTier: user.subscriptionTier,
         isVerified: user.isVerified,
+        isAdmin: user.isAdmin,
       },
     };
   }
