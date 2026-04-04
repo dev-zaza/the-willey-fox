@@ -8,8 +8,8 @@ RUN apk add --no-cache python3 make g++
 # Install pnpm (match root package.json packageManager when possible)
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-# Copy workspace manifests
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy workspace manifests (tsconfig.base.json required for shared/backend tsc extends)
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/shared/package.json ./packages/shared/
 
