@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { X, Printer } from 'lucide-react';
-import type { PrintTemplate, QrCode } from '@/lib/api';
+import type { PrintTemplate, QrCode, TextSlots } from '@/lib/api';
 
 interface PrintPreviewModalProps {
   template: PrintTemplate;
@@ -20,7 +20,7 @@ const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
 
 export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose }: PrintPreviewModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const slots = (template.textSlots ?? {}) as Record<string, unknown>;
+  const slots = (template.textSlots ?? {}) as TextSlots;
   const dim = FORMAT_DIMENSIONS[template.formatType] ?? FORMAT_DIMENSIONS.square;
 
   function handlePrint() {

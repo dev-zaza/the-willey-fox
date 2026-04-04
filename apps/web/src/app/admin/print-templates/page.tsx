@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2, Plus, Pencil, Trash2, Printer } from 'lucide-react';
-import { admin, type PrintTemplate, type CreatePrintTemplatePayload } from '@/lib/api';
+import { admin, type PrintTemplate, type CreatePrintTemplatePayload, type TextSlots } from '@/lib/api';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { cn } from '@/lib/utils';
 
@@ -105,6 +105,7 @@ export default function PrintTemplatesPage() {
 
   // Live print preview (CSS-only layout)
   function PrintPreview() {
+    const textSlots = form.textSlots as TextSlots;
     const dim = form.formatType === 'wristband'
       ? { width: 240, height: 80 }
       : form.formatType === 'rectangle'
@@ -124,11 +125,11 @@ export default function PrintTemplatesPage() {
         <div style={{ width: form.qrSize * 0.4, height: form.qrSize * 0.4, border: '1px solid #ddd', borderRadius: 4, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, color: '#999' }}>
           QR
         </div>
-        {(form.textSlots as Record<string, unknown>)?.showTagName && (
+        {textSlots.showTagName && (
           <div className="font-semibold truncate" style={{ color: '#333', maxWidth: dim.width - 12 }}>Tag Name</div>
         )}
-        {(form.textSlots as Record<string, unknown>)?.showInstructions && (
-          <div style={{ color: '#666', fontSize: 7 }}>{String((form.textSlots as Record<string, unknown>)?.instructionsText ?? '')}</div>
+        {textSlots.showInstructions && (
+          <div style={{ color: '#666', fontSize: 7 }}>{String(textSlots.instructionsText ?? '')}</div>
         )}
       </div>
     );
