@@ -1,0 +1,38 @@
+import { pgTable, uuid, varchar, boolean, timestamp, integer, jsonb } from 'drizzle-orm/pg-core';
+import { subscriptionTierEnum } from './enums';
+
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  firstName: varchar('first_name', { length: 100 }).notNull(),
+  lastName: varchar('last_name', { length: 100 }).notNull(),
+  passwordHash: varchar('password_hash', { length: 255 }),
+  oauthProvider: varchar('oauth_provider', { length: 50 }),
+  oauthProviderId: varchar('oauth_provider_id', { length: 255 }),
+  phone: varchar('phone', { length: 20 }),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  isVerified: boolean('is_verified').default(false).notNull(),
+  verificationToken: varchar('verification_token', { length: 255 }),
+  verificationTokenExpiresAt: timestamp('verification_token_expires_at'),
+  resetToken: varchar('reset_token', { length: 255 }),
+  resetTokenExpiresAt: timestamp('reset_token_expires_at'),
+  reputation: integer('reputation').default(0).notNull(),
+  subscriptionTier: subscriptionTierEnum('subscription_tier').default('free').notNull(),
+  language: varchar('language', { length: 10 }).default('en').notNull(),
+  isAdmin: boolean('is_admin').default(false).notNull(),
+  isBanned: boolean('is_banned').default(false).notNull(),
+  banReason: varchar('ban_reason', { length: 500 }),
+  bannedAt: timestamp('banned_at'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
+  twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
+  fcmToken: varchar('fcm_token', { length: 500 }),
+  notificationPreferences: jsonb('notification_preferences').default({
+    email: true,
+    push: true,
+    sms: false,
+  }).notNull(),
+  lastNotificationReadAt: timestamp('last_notification_read_at'),
+  phoneVerifiedAt: timestamp('phone_verified_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
