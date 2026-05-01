@@ -28,6 +28,9 @@ interface QrPublicInfo {
     showLogo: boolean;
     logoUrl: string | null;
   };
+  customFields?: Record<string, unknown> & {
+    medicalInfo?: Record<string, string>;
+  };
 }
 
 interface ActivationFormData {

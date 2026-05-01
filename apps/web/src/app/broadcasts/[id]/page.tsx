@@ -22,8 +22,9 @@ async function getBroadcast(id: string): Promise<{ status: number; data: Broadca
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const { data } = await getBroadcast(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const { data } = await getBroadcast(id);
   if (!data) {
     return { title: 'Alert no longer active — TheWileyfox', robots: { index: false, follow: false } };
   }
@@ -44,8 +45,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function BroadcastDetailPage({ params }: { params: { id: string } }) {
-  const { status, data } = await getBroadcast(params.id);
+export default async function BroadcastDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { status, data } = await getBroadcast(id);
 
   if (status === 404) {
     notFound();
