@@ -58,18 +58,18 @@ export function SearchBar({ onSelect, placeholder = 'Search destination…' }: S
   return (
     <div className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7a6957] pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 border border-transparent transition-colors"
+          className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 border border-transparent transition-colors"
         />
         {query && (
           <button
             onClick={() => { setQuery(''); setResults([]); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7a6957] hover:text-white"
           >
             <X className="w-4 h-4" />
           </button>
@@ -82,7 +82,7 @@ export function SearchBar({ onSelect, placeholder = 'Search destination…' }: S
             <button
               key={i}
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
+              className="w-full text-left px-4 py-2.5 text-sm text-[#5a4a3d] hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
             >
               {r.label}
             </button>
@@ -91,7 +91,7 @@ export function SearchBar({ onSelect, placeholder = 'Search destination…' }: S
       )}
 
       {loading && (
-        <div className="absolute top-full left-0 right-0 mt-1 glass rounded-xl px-4 py-3 text-xs text-slate-400">
+        <div className="absolute top-full left-0 right-0 mt-1 glass rounded-xl px-4 py-3 text-xs text-[#7a6957]">
           Searching…
         </div>
       )}

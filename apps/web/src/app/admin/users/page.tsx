@@ -46,7 +46,7 @@ function BanModal({ user, onClose, onBanned }: { user: AdminUserRow; onClose: ()
         </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
         <div className="flex gap-3 justify-end pt-1">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-[#9d8c7a] hover:text-[#5a4a3d] transition-colors">Cancel</button>
           <button
             onClick={submit}
             disabled={loading}

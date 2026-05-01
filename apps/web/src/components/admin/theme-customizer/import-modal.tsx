@@ -72,7 +72,7 @@ export function ImportModal({ open, onOpenChange, onImport }: ImportModalProps) 
             value={css}
             onChange={(e) => setCss(e.target.value)}
             rows={12}
-            placeholder={`:root {\n  --primary: #f97316;\n  --background: #ffffff;\n  /* ... */\n}\n.dark {\n  --primary: #ea580c;\n  --background: #0f1117;\n  /* ... */\n}`}
+            placeholder={`:root {\n  --primary: #ea2e00;\n  --background: #ffffff;\n  /* ... */\n}\n.dark {\n  --primary: #cc2900;\n  --background: #0f1117;\n  /* ... */\n}`}
             className="w-full rounded-lg border admin-border-color admin-surface-raised px-3 py-2.5 text-xs font-mono admin-text-color placeholder:admin-text-subtle focus:outline-none admin-accent-ring resize-none"
           />
           {error && <p className="text-xs text-red-400">{error}</p>}

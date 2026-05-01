@@ -66,7 +66,7 @@ export function LostAlertsModal(_: LostAlertsModalProps) {
 
   if (alerts.length === 0) {
     return (
-      <div className="p-5 text-center text-slate-500 text-sm py-12">
+      <div className="p-5 text-center text-[#9d8c7a] text-sm py-12">
         No lost alerts. All your items are safe!
       </div>
     );
@@ -80,7 +80,7 @@ export function LostAlertsModal(_: LostAlertsModalProps) {
             <div>
               <p className="font-medium text-white text-sm">{alert.itemLabel}</p>
               {alert.message && (
-                <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{alert.message}</p>
+                <p className="text-xs text-[#7a6957] mt-0.5 line-clamp-2">{alert.message}</p>
               )}
             </div>
             <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full flex-shrink-0 capitalize">
@@ -88,7 +88,7 @@ export function LostAlertsModal(_: LostAlertsModalProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-4 text-xs text-[#9d8c7a]">
             {alert.lastSeenLocation && (
               <span className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />

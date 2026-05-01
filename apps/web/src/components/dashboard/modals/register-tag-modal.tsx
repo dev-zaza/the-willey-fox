@@ -75,14 +75,14 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
         <div
           className="rounded-xl p-4 flex items-start gap-3"
           style={{
-            backgroundColor: 'rgba(249, 115, 22, 0.08)',
-            border: '1px solid rgba(249, 115, 22, 0.25)',
+            backgroundColor: 'rgba(234, 46, 0, 0.08)',
+            border: '1px solid rgba(234, 46, 0, 0.25)',
           }}
         >
           <span className="text-2xl">🏷️</span>
           <div className="flex-1 space-y-1">
             <p className="text-sm font-semibold text-white">Tag limit reached</p>
-            <p className="text-sm text-slate-400 leading-5">
+            <p className="text-sm text-[#7a6957] leading-5">
               You&apos;ve reached your free plan limit of {FREE_TAG_LIMIT} tags. Upgrade your plan
               to register more tags for your valuables.
             </p>
@@ -97,7 +97,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
           <button
             type="button"
             onClick={() => setLimitReached(false)}
-            className="text-slate-500 hover:text-slate-400 text-lg leading-none"
+            className="text-[#9d8c7a] hover:text-[#7a6957] text-lg leading-none"
             aria-label="Dismiss"
           >
             ×
@@ -105,19 +105,19 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
         </div>
       )}
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1.5">Tag label</label>
+        <label className="block text-xs font-medium text-[#7a6957] mb-1.5">Tag label</label>
         <input
           type="text"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           required
           placeholder="e.g. Max the Dog, Travel Bag"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-2">Category</label>
+        <label className="block text-xs font-medium text-[#7a6957] mb-2">Category</label>
         <div className="grid grid-cols-3 gap-2">
           {availableCategories.map((cat) => (
             <button
@@ -127,7 +127,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
               className={`py-2 rounded-lg text-xs font-medium transition-all border ${
                 cat.value === category
                   ? 'bg-brand-500/20 text-brand-400 border-brand-500/50'
-                  : 'bg-surface-elevated text-slate-400 border-surface-border hover:border-slate-500'
+                  : 'bg-surface-elevated text-[#7a6957] border-surface-border hover:border-slate-500'
               }`}
             >
               {cat.label}
@@ -138,30 +138,30 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Contact email</label>
+          <label className="block text-xs font-medium text-[#7a6957] mb-1.5">Contact email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Contact phone</label>
+          <label className="block text-xs font-medium text-[#7a6957] mb-1.5">Contact phone</label>
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+1 555 0100"
-            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1.5">
-          Reward message <span className="text-slate-600">(optional)</span>
+        <label className="block text-xs font-medium text-[#7a6957] mb-1.5">
+          Reward message <span className="text-[#7a6957]">(optional)</span>
         </label>
         <textarea
           value={reward}
@@ -169,7 +169,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
           rows={2}
           maxLength={200}
           placeholder="Reward if returned — visible to finders"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors resize-none"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors resize-none"
         />
       </div>
 
@@ -183,7 +183,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2.5 rounded-xl border border-surface-border text-slate-400 hover:text-white transition-colors text-sm"
+          className="flex-1 py-2.5 rounded-xl border border-surface-border text-[#7a6957] hover:text-white transition-colors text-sm"
         >
           Cancel
         </button>

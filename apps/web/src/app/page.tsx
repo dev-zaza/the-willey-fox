@@ -1,32 +1,63 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { GlobeHeroSection } from '@/components/landing/globe-hero-section';
+import { HowItWorksSection } from '@/components/landing/how-it-works-section';
+import { UseCasesSection } from '@/components/landing/use-cases-section';
 import { PhoneMockupSection } from '@/components/landing/phone-mockup-section';
 import { FeaturesSection } from '@/components/landing/features-section';
+import { TrustStatsSection } from '@/components/landing/trust-stats-section';
+import { PricingTeaserSection } from '@/components/landing/pricing-teaser-section';
+import { FaqSection } from '@/components/landing/faq-section';
+import { AppDownloadSection } from '@/components/landing/app-download-section';
+import { FinalCtaSection } from '@/components/landing/final-cta-section';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans overflow-x-hidden">
-      {/* Globe hero — dark, full bleed */}
+    <div
+      className="min-h-screen flex flex-col font-sans overflow-x-hidden"
+      style={{ background: '#f0e7d6', color: '#1b1410' }}
+    >
       <GlobeHeroSection />
-
-      {/* Phone mockup — white/gray-50 */}
+      <HowItWorksSection />
+      <UseCasesSection />
       <PhoneMockupSection />
-
-      {/* Features grid — gray-50 */}
       <FeaturesSection />
+      <TrustStatsSection />
+      <PricingTeaserSection />
+      <AppDownloadSection />
+      <FaqSection />
+      <FinalCtaSection />
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="TheWileyfox" width={32} height={32} className="object-contain grayscale opacity-50" />
-            <span className="text-gray-400 font-semibold">© {new Date().getFullYear()} TheWileyfox.com</span>
+      <footer
+        className="py-14 px-4"
+        style={{ background: '#f0e7d6', borderTop: '1px solid rgba(27,20,16,0.08)' }}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="TheWileyfox"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+            <span className="text-sm" style={{ color: '#7a6957' }}>
+              © {new Date().getFullYear()} TheWileyfox. Reuniting strangers since today.
+            </span>
           </div>
-          <div className="flex gap-8 text-gray-500 text-sm">
-            <Link href="#" className="hover:text-orange-500 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-orange-500 transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-orange-500 transition-colors">Contact Support</Link>
+          <div className="flex gap-7 text-sm" style={{ color: '#7a6957' }}>
+            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+              Privacy
+            </Link>
+            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+              Terms
+            </Link>
+            <Link href="/pricing" className="transition-colors hover:text-[#ea2e00]">
+              Pricing
+            </Link>
+            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+              Support
+            </Link>
           </div>
         </div>
       </footer>

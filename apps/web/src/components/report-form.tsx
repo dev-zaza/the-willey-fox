@@ -304,7 +304,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '64px',
     lineHeight: '64px',
     fontSize: '32px',
-    backgroundColor: '#f97316',
+    backgroundColor: '#ea2e00',
     color: '#fff',
     borderRadius: '50%',
     margin: '0 auto 16px',

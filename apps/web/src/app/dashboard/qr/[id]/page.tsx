@@ -123,7 +123,7 @@ export default function QrDetailPage() {
   const userTier = user?.subscriptionTier ?? 'free';
 
   if (loading) return (
-    <div className="min-h-screen bg-surface flex items-center justify-center text-slate-400">Loading…</div>
+    <div className="min-h-screen bg-surface flex items-center justify-center text-[#7a6957]">Loading…</div>
   );
   if (!tag) return null;
 
@@ -131,7 +131,7 @@ export default function QrDetailPage() {
     <div className="min-h-screen bg-surface p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/dashboard/qr')} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => router.push('/dashboard/qr')} className="text-[#7a6957] hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold text-white flex-1">{tag.label ?? tag.name}</h1>
@@ -152,7 +152,7 @@ export default function QrDetailPage() {
             <p className={`text-sm font-semibold ${tag.isLost ? 'text-red-400' : 'text-green-400'}`}>
               {tag.isLost ? 'Reported as Lost' : 'Status: Safe'}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#9d8c7a] mt-0.5">
               {tag.isLost
                 ? 'Finders will see a red urgent banner when they scan this QR.'
                 : 'Mark as lost to alert finders when this QR is scanned.'}
@@ -178,8 +178,8 @@ export default function QrDetailPage() {
         {/* Visual Theme Picker */}
         {themes.length > 0 && (
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Finder Page Theme</h2>
-            <p className="text-xs text-slate-500">Choose how your finder page looks when someone scans this QR.</p>
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Finder Page Theme</h2>
+            <p className="text-xs text-[#9d8c7a]">Choose how your finder page looks when someone scans this QR.</p>
             <div className="flex flex-wrap gap-3">
               {/* "None / Default" option */}
               <button
@@ -192,9 +192,9 @@ export default function QrDetailPage() {
                 }`}
               >
                 <div className="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center">
-                  <span className="text-slate-400 text-xs">✕</span>
+                  <span className="text-[#7a6957] text-xs">✕</span>
                 </div>
-                <span className="text-xs text-slate-400">Default</span>
+                <span className="text-xs text-[#7a6957]">Default</span>
               </button>
 
               {themes.map((theme) => {
@@ -218,25 +218,25 @@ export default function QrDetailPage() {
                       className="w-8 h-8 rounded-full border-2 border-white/20 shadow-sm"
                       style={{ backgroundColor: theme.accentColor }}
                     />
-                    <span className="text-xs text-slate-400 max-w-[60px] text-center truncate">{theme.name}</span>
+                    <span className="text-xs text-[#7a6957] max-w-[60px] text-center truncate">{theme.name}</span>
                     {locked && (
                       <div className="absolute top-1 right-1">
-                        <Lock className="w-3 h-3 text-slate-500" />
+                        <Lock className="w-3 h-3 text-[#9d8c7a]" />
                       </div>
                     )}
                   </button>
                 );
               })}
             </div>
-            {settingTheme && <p className="text-xs text-slate-500">Saving theme…</p>}
+            {settingTheme && <p className="text-xs text-[#9d8c7a]">Saving theme…</p>}
           </div>
         )}
 
         {/* Print Tag Section */}
         {printTemplates.length > 0 && (
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Print Physical Tag</h2>
-            <p className="text-xs text-slate-500">Select a format then preview and print your QR tag.</p>
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Print Physical Tag</h2>
+            <p className="text-xs text-[#9d8c7a]">Select a format then preview and print your QR tag.</p>
             <div className="flex flex-wrap gap-2">
               {printTemplates.map((pt) => {
                 const locked = tierIndex(userTier) < tierIndex(pt.tierRequired);
@@ -249,8 +249,8 @@ export default function QrDetailPage() {
                       selectedTemplate?.id === pt.id
                         ? 'border-brand-500 bg-brand-500/10 text-brand-400'
                         : locked
-                          ? 'border-surface-border text-slate-600 cursor-not-allowed'
-                          : 'border-surface-border text-slate-400 hover:border-slate-500'
+                          ? 'border-surface-border text-[#7a6957] cursor-not-allowed'
+                          : 'border-surface-border text-[#7a6957] hover:border-slate-500'
                     }`}
                     title={locked ? `Requires ${pt.tierRequired} tier` : pt.name}
                   >
@@ -274,7 +274,7 @@ export default function QrDetailPage() {
 
         {/* Edit form */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Tag Details</h2>
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Tag Details</h2>
 
           {[
             { label: 'Name (shown on finder page)', value: name, set: setName, type: 'text' },
@@ -286,7 +286,7 @@ export default function QrDetailPage() {
             { label: 'Reward Message (shown to finders)', value: rewardMessage, set: setRewardMessage, type: 'text' },
           ].map(({ label: lbl, value, set, type }) => (
             <div key={lbl} className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-400">{lbl}</label>
+              <label className="text-xs font-medium text-[#7a6957]">{lbl}</label>
               <input
                 type={type}
                 value={value}
@@ -297,7 +297,7 @@ export default function QrDetailPage() {
           ))}
 
           <div className="flex items-center justify-between pt-2">
-            <p className="text-xs text-slate-500 font-mono">{tag.uniqueCode}</p>
+            <p className="text-xs text-[#9d8c7a] font-mono">{tag.uniqueCode}</p>
             <button
               onClick={save}
               disabled={saving}
@@ -311,20 +311,20 @@ export default function QrDetailPage() {
 
         {/* Reports */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider mb-3">
             Reports ({tagReports.length})
           </h2>
           {tagReports.length === 0 ? (
-            <p className="text-slate-500 text-sm">No reports yet</p>
+            <p className="text-[#9d8c7a] text-sm">No reports yet</p>
           ) : (
             <div className="space-y-3">
               {tagReports.map((r) => (
                 <div key={r.id} className="border border-surface-border rounded-xl p-3 space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-brand-400 font-medium">{r.finderContact}</p>
-                    <p className="text-xs text-slate-500">{new Date(r.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-[#9d8c7a]">{new Date(r.createdAt).toLocaleDateString()}</p>
                   </div>
-                  {r.finderNotes && <p className="text-sm text-slate-300">{r.finderNotes}</p>}
+                  {r.finderNotes && <p className="text-sm text-[#5a4a3d]">{r.finderNotes}</p>}
                   {r.locationLat && r.locationLng && (
                     <a
                       href={`https://maps.google.com/?q=${r.locationLat},${r.locationLng}`}
@@ -344,13 +344,13 @@ export default function QrDetailPage() {
         {/* Guardians */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">
               Guardians ({tagGuardians.length})
             </h2>
             <a href={`/dashboard/qr/${id}/guardians`} className="text-xs text-brand-400 hover:text-brand-300">Manage →</a>
           </div>
           {tagGuardians.length === 0 ? (
-            <p className="text-slate-500 text-sm">No guardians assigned</p>
+            <p className="text-[#9d8c7a] text-sm">No guardians assigned</p>
           ) : (
             <div className="space-y-2">
               {tagGuardians.map((g) => (

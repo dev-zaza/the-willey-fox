@@ -22,7 +22,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
         </div>
         <div className="text-center">
           <p className="font-bold text-white text-lg">{user ? `${user.firstName} ${user.lastName}` : '—'}</p>
-          <p className="text-sm text-slate-400">TheWileyfox member</p>
+          <p className="text-sm text-[#7a6957]">TheWileyfox member</p>
         </div>
       </div>
 
@@ -30,14 +30,14 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       <div className="space-y-2">
         {user?.email && (
           <div className="flex items-center gap-3 bg-surface-elevated rounded-lg px-4 py-3">
-            <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
-            <span className="text-sm text-slate-300">{user.email}</span>
+            <Mail className="w-4 h-4 text-[#7a6957] flex-shrink-0" />
+            <span className="text-sm text-[#5a4a3d]">{user.email}</span>
           </div>
         )}
         {user?.phone && (
           <div className="flex items-center gap-3 bg-surface-elevated rounded-lg px-4 py-3">
-            <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
-            <span className="text-sm text-slate-300">{user.phone}</span>
+            <Phone className="w-4 h-4 text-[#7a6957] flex-shrink-0" />
+            <span className="text-sm text-[#5a4a3d]">{user.phone}</span>
           </div>
         )}
       </div>

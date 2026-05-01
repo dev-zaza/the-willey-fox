@@ -22,7 +22,7 @@ function Toggle({
     <label className="flex items-center gap-3 cursor-pointer select-none">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-10 h-6 rounded-full transition-colors ${checked ? 'bg-orange-500' : 'admin-surface-raised border admin-border-color'}`}
+        className={`relative w-10 h-6 rounded-full transition-colors ${checked ? 'bg-brand-500' : 'admin-surface-raised border admin-border-color'}`}
       >
         <span
           className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-1'}`}
@@ -105,7 +105,7 @@ export default function QrTemplatePage() {
               value={form.accentColor}
               onChange={(e) => patch('accentColor', e.target.value)}
               className={`${inputCls} flex-1`}
-              placeholder="#f97316"
+              placeholder="#ea2e00"
               maxLength={7}
             />
           </div>

@@ -56,7 +56,7 @@ export default function GuardiansPage() {
     <div className="min-h-screen bg-surface p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push(`/dashboard/qr/${id}`)} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => router.push(`/dashboard/qr/${id}`)} className="text-[#7a6957] hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold text-white">Guardian Management</h1>
@@ -74,7 +74,7 @@ export default function GuardiansPage() {
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="guardian@example.com"
               required
-              className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-brand-500"
+              className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] outline-none focus:border-brand-500"
             />
             <button
               type="submit"
@@ -92,9 +92,9 @@ export default function GuardiansPage() {
         </div>
 
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-          {loading && <p className="text-slate-400 text-sm">Loading…</p>}
+          {loading && <p className="text-[#7a6957] text-sm">Loading…</p>}
           {!loading && list.length === 0 && (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-[#9d8c7a]">
               <Shield className="w-8 h-8 mx-auto mb-2 opacity-40" />
               <p>No guardians yet</p>
             </div>
@@ -107,7 +107,7 @@ export default function GuardiansPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium">{g.guardian.firstName} {g.guardian.lastName}</p>
-                  <p className="text-slate-500 text-xs">{g.guardian.email}</p>
+                  <p className="text-[#9d8c7a] text-xs">{g.guardian.email}</p>
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize flex-shrink-0 ${
                   g.status === 'approved' ? 'bg-green-500/15 text-green-400' :
@@ -119,7 +119,7 @@ export default function GuardiansPage() {
                     <CheckCircle className="w-4 h-4" />
                   </button>
                 )}
-                <button onClick={() => remove(g.id)} className="text-slate-600 hover:text-red-400 transition-colors">
+                <button onClick={() => remove(g.id)} className="text-[#7a6957] hover:text-red-400 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

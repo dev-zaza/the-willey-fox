@@ -29,7 +29,7 @@ function createPinIcon(color: string) {
 }
 
 export function EventPin({ pin, onClick }: EventPinProps) {
-  const color = PIN_COLORS[pin.type as keyof typeof PIN_COLORS] ?? '#f97316';
+  const color = PIN_COLORS[pin.type as keyof typeof PIN_COLORS] ?? '#ea2e00';
   const icon = createPinIcon(color);
 
   return (
@@ -40,7 +40,7 @@ export function EventPin({ pin, onClick }: EventPinProps) {
     >
       <Tooltip direction="top" offset={[0, -44]} opacity={0.95}>
         <div className="text-xs font-medium">{pin.title}</div>
-        <div className="text-xs text-slate-400">{pin.type}</div>
+        <div className="text-xs text-[#7a6957]">{pin.type}</div>
       </Tooltip>
     </Marker>
   );

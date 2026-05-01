@@ -19,7 +19,7 @@ function gradeColor(grade: string): string {
     case 'A': return '#16a34a';
     case 'B': return '#65a30d';
     case 'C': return '#f59e0b';
-    case 'D': return '#ea580c';
+    case 'D': return '#cc2900';
     default: return '#ef4444';
   }
 }
@@ -84,18 +84,18 @@ function LocationInput({
   return (
     <div className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7a6957] pointer-events-none" />
         <input
           type="text"
           value={query}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full bg-surface border border-surface-border rounded-xl pl-9 pr-8 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface border border-surface-border rounded-xl pl-9 pr-8 py-2.5 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
         />
         {query && (
           <button
             onClick={() => { setQuery(''); setResults([]); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9d8c7a] hover:text-white"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -103,12 +103,12 @@ function LocationInput({
       </div>
       {(results.length > 0 || searching) && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-surface-card border border-surface-border rounded-xl overflow-hidden z-50 shadow-xl">
-          {searching && <p className="px-4 py-3 text-xs text-slate-400">Searching…</p>}
+          {searching && <p className="px-4 py-3 text-xs text-[#7a6957]">Searching…</p>}
           {results.map((r, i) => (
             <button
               key={i}
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-2.5 text-xs text-slate-300 hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
+              className="w-full text-left px-4 py-2.5 text-xs text-[#5a4a3d] hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
             >
               {r.label}
             </button>
@@ -177,7 +177,7 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
 
       {/* Origin */}
       <div className="space-y-1.5">
-        <p className="text-xs text-slate-400 font-medium">Origin</p>
+        <p className="text-xs text-[#7a6957] font-medium">Origin</p>
         <div className="flex gap-2">
           <div className="flex-1">
             <LocationInput
@@ -195,13 +195,13 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
           </button>
         </div>
         {originLabel && (
-          <p className="text-xs text-slate-500 px-1 truncate">{originLabel}</p>
+          <p className="text-xs text-[#9d8c7a] px-1 truncate">{originLabel}</p>
         )}
       </div>
 
       {/* Destination */}
       <div className="space-y-1.5">
-        <p className="text-xs text-slate-400 font-medium">Destination</p>
+        <p className="text-xs text-[#7a6957] font-medium">Destination</p>
         <LocationInput
           placeholder="Search destination…"
           onSelect={(r) => setDestination(r.location)}
@@ -227,7 +227,7 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
       {/* Route results */}
       {routes.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{routes.length} route{routes.length !== 1 ? 's' : ''} found</p>
+          <p className="text-xs text-[#9d8c7a] font-medium uppercase tracking-wider">{routes.length} route{routes.length !== 1 ? 's' : ''} found</p>
           {routes.map((route, i) => (
             <div key={i} className="bg-surface-card border border-surface-border rounded-2xl p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
@@ -245,12 +245,12 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
                     >
                       Grade {route.safetyGrade}
                     </span>
-                    <span className="text-xs text-slate-400">Score: {route.safetyScore}</span>
+                    <span className="text-xs text-[#7a6957]">Score: {route.safetyScore}</span>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-white text-sm font-medium">{formatDistance(route.distance)}</p>
-                  <p className="text-slate-400 text-xs">{formatDuration(route.duration)}</p>
+                  <p className="text-[#7a6957] text-xs">{formatDuration(route.duration)}</p>
                 </div>
               </div>
 

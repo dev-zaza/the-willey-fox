@@ -15,7 +15,7 @@ const TIER_LABELS: Record<string, string> = {
 
 const emptyForm: CreateVisualThemePayload = {
   name: '',
-  accentColor: '#f97316',
+  accentColor: '#ea2e00',
   backgroundStyle: 'light',
   showLogo: true,
   logoUrl: '',
@@ -128,7 +128,7 @@ export default function VisualThemesPage() {
         actions={
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-500 text-white hover:bg-brand-600 transition-colors"
           >
             <Plus className="h-4 w-4" /> New Theme
           </button>
@@ -156,7 +156,7 @@ export default function VisualThemesPage() {
               <div className="flex items-center gap-2">
                 <span className={cn(
                   'text-xs font-medium px-2 py-0.5 rounded-full',
-                  t.tierRequired === 'free' ? 'bg-green-500/10 text-green-400' : 'bg-orange-500/10 text-orange-400'
+                  t.tierRequired === 'free' ? 'bg-green-500/10 text-green-400' : 'bg-brand-500/10 text-brand-400'
                 )}>
                   {TIER_LABELS[t.tierRequired] ?? t.tierRequired}
                 </span>
@@ -201,7 +201,7 @@ export default function VisualThemesPage() {
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full admin-surface-card border admin-border-color rounded-lg px-3 py-2 text-sm admin-text-color focus:outline-none focus:border-orange-500"
+                    className="w-full admin-surface-card border admin-border-color rounded-lg px-3 py-2 text-sm admin-text-color focus:outline-none focus:border-brand-500"
                     placeholder="e.g. Midnight Dark"
                   />
                 </div>
@@ -288,7 +288,7 @@ export default function VisualThemesPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name.trim()}
-                className="flex items-center gap-2 text-sm font-medium px-4 py-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium px-4 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50 transition-colors"
               >
                 {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {editing ? 'Save Changes' : 'Create Theme'}

@@ -1,209 +1,257 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
+import { useRef, useEffect, useState } from 'react';
+import createGlobe, { type Marker, type Arc } from 'cobe';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-export interface BubblePoint {
+// ── City data ────────────────────────────────────────────────────────────────
+export interface CityMarker {
+  id: string;          // matches cobe marker id → CSS var --cobe-{id}
+  city: string;
   lat: number;
   lng: number;
-  /** Projected screen coords (updated each frame) */
-  screenX: number;
-  screenY: number;
-  /** Whether the point faces the viewer (front hemisphere) */
-  visible: boolean;
+  type: 'item' | 'pet' | 'person';
+  message: string;
 }
 
-// ── Brand / location data ─────────────────────────────────────────────────────
-const BRAND = { orange: '#f97316', blue: '#3B82F6', emerald: '#10B981' };
-
-export const BUBBLE_LOCATIONS: Omit<BubblePoint, 'screenX' | 'screenY' | 'visible'>[] = [
-  { lat: 40.71,  lng: -74.01  }, // New York
-  { lat: 51.51,  lng: -0.12   }, // London
-  { lat: 35.68,  lng: 139.69  }, // Tokyo
-  { lat: -33.87, lng: 151.21  }, // Sydney
-  { lat: 48.85,  lng: 2.35    }, // Paris
-  { lat: 25.20,  lng: 55.27   }, // Dubai
-  { lat: 1.35,   lng: 103.82  }, // Singapore
-  { lat: 19.08,  lng: 72.88   }, // Mumbai
-  { lat: -23.55, lng: -46.63  }, // São Paulo
-  { lat: 6.52,   lng: 3.38    }, // Lagos
-  { lat: 55.75,  lng: 37.62   }, // Moscow
-  { lat: -34.60, lng: -58.38  }, // Buenos Aires
+export const CITIES: CityMarker[] = [
+  { id: 'm0',  city: 'New York',     lat: 40.71,  lng: -74.01, type: 'item',   message: 'Lost wallet recovered!' },
+  { id: 'm1',  city: 'London',       lat: 51.51,  lng: -0.12,  type: 'pet',    message: 'Dog reunited with owner' },
+  { id: 'm2',  city: 'Tokyo',        lat: 35.68,  lng: 139.69, type: 'person', message: 'Child found safe' },
+  { id: 'm3',  city: 'Sydney',       lat: -33.87, lng: 151.21, type: 'item',   message: 'Luggage returned' },
+  { id: 'm4',  city: 'Paris',        lat: 48.85,  lng: 2.35,   type: 'pet',    message: 'Cat found via QR' },
+  { id: 'm5',  city: 'Dubai',        lat: 25.20,  lng: 55.27,  type: 'person', message: 'Elder returned home' },
+  { id: 'm6',  city: 'Singapore',    lat: 1.35,   lng: 103.82, type: 'item',   message: 'Backpack recovered' },
+  { id: 'm7',  city: 'Mumbai',       lat: 19.08,  lng: 72.88,  type: 'pet',    message: 'Lost dog reunited' },
+  { id: 'm8',  city: 'São Paulo',    lat: -23.55, lng: -46.63, type: 'item',   message: 'Keys returned' },
+  { id: 'm9',  city: 'Lagos',        lat: 6.52,   lng: 3.38,   type: 'person', message: 'Child safely home' },
+  { id: 'm10', city: 'Moscow',       lat: 55.75,  lng: 37.62,  type: 'item',   message: 'Passport returned' },
+  { id: 'm11', city: 'Buenos Aires', lat: -34.60, lng: -58.38, type: 'pet',    message: 'Cat scanned & reunited' },
 ];
 
-const RING_DATA = BUBBLE_LOCATIONS.map((p, i) => ({
-  lat: p.lat,
-  lng: p.lng,
-  color: [BRAND.orange, BRAND.blue, BRAND.emerald][i % 3],
-}));
+const ARC_PAIRS: { from: number; to: number }[] = [
+  { from: 0, to: 1 },   // NY → London
+  { from: 4, to: 2 },   // Paris → Tokyo
+  { from: 1, to: 8 },   // London → São Paulo
+  { from: 7, to: 6 },   // Mumbai → Singapore
+  { from: 9, to: 10 },  // Lagos → Moscow
+  { from: 11, to: 3 },  // BA → Sydney
+  { from: 5, to: 0 },   // Dubai → NY
+];
 
-// Globe radius used by three-globe (default 100)
-const GLOBE_RADIUS = 100;
-
-/**
- * Convert lat/lng to a local-space position on the globe surface.
- * three-globe uses the same spherical convention as Three.js:
- *   x = -R·sin(φ)·cos(θ)
- *   y =  R·cos(φ)
- *   z =  R·sin(φ)·sin(θ)
- * where φ = (90-lat)·π/180, θ = (lng+180)·π/180
- */
-function latLngToLocal(lat: number, lng: number, r = GLOBE_RADIUS): THREE.Vector3 {
-  const phi   = (90 - lat)  * (Math.PI / 180);
-  const theta = (lng + 180) * (Math.PI / 180);
-  return new THREE.Vector3(
-    -r * Math.sin(phi) * Math.cos(theta),
-     r * Math.cos(phi),
-     r * Math.sin(phi) * Math.sin(theta),
-  );
-}
-
-// ── GlobeScene ────────────────────────────────────────────────────────────────
-interface GlobeSceneProps {
-  bubblePointsRef: React.MutableRefObject<BubblePoint[]>;
-}
-
-function GlobeScene({ bubblePointsRef }: GlobeSceneProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const { camera, size } = useThree();
-
-  // Pre-compute local-space surface positions for each location
-  const localPositions = useRef(
-    BUBBLE_LOCATIONS.map((p) => latLngToLocal(p.lat, p.lng)),
-  );
-
-  // Reusable scratch vectors — allocated once
-  const _worldPos  = useRef(new THREE.Vector3());
-  const _ndc       = useRef(new THREE.Vector3());
-  const _camToPoint = useRef(new THREE.Vector3());
-  const _camDir    = useRef(new THREE.Vector3());
-
-  useEffect(() => {
-    let globe: any;
-
-    async function init() {
-      const ThreeGlobe = (await import('three-globe')).default;
-
-      globe = new ThreeGlobe({ waitForGlobeReady: true, animateIn: true });
-
-      globe
-        .globeImageUrl('')
-        .showAtmosphere(true)
-        .atmosphereColor('#3B82F6')
-        .atmosphereAltitude(0.18)
-        .showGraticules(false);
-
-      globe.globeMaterial(
-        new THREE.MeshPhongMaterial({
-          color: new THREE.Color('#0a1628'),
-          emissive: new THREE.Color('#0d1f3c'),
-          emissiveIntensity: 0.4,
-          shininess: 120,
-          transparent: true,
-          opacity: 0.88,
-        }),
-      );
-
-      const geoData = await fetch('/globe-countries.geojson').then((r) => r.json());
-      globe
-        .hexPolygonsData(geoData.features)
-        .hexPolygonResolution(3)
-        .hexPolygonMargin(0.4)
-        .hexPolygonColor(() => 'rgba(59,130,246,0.22)');
-
-      globe
-        .ringsData(RING_DATA)
-        .ringColor('color')
-        .ringMaxRadius(3)
-        .ringPropagationSpeed(2)
-        .ringRepeatPeriod(1200);
-
-      globe
-        .pointsData(RING_DATA)
-        .pointColor('color')
-        .pointAltitude(0.01)
-        .pointRadius(0.25)
-        .pointsMerge(false);
-
-      if (groupRef.current) groupRef.current.add(globe);
-    }
-
-    init();
-    return () => { if (globe && groupRef.current) groupRef.current.remove(globe); };
-  }, []);
-
-  useFrame((_, delta) => {
-    const group = groupRef.current;
-    if (!group) return;
-
-    // Auto-rotate the globe group
-    group.rotation.y += delta * 0.06;
-
-    // Camera's world-space forward direction (points away from camera)
-    camera.getWorldDirection(_camDir.current);
-
-    const updated: BubblePoint[] = BUBBLE_LOCATIONS.map((loc, i) => {
-      // Transform the pre-computed local surface point into world space
-      // (accounts for group rotation AND any parent transforms)
-      _worldPos.current.copy(localPositions.current[i]);
-      group.localToWorld(_worldPos.current);
-
-      // Vector from camera to this point
-      _camToPoint.current.copy(_worldPos.current).sub(camera.position).normalize();
-
-      // Point is on the front face when the camera is looking roughly "at" it.
-      // dot(camDir, camToPoint) > threshold means the point faces the viewer.
-      // We use 0.3 so only well-centred points qualify (avoids limb overflow).
-      const dot = _camDir.current.dot(_camToPoint.current);
-      const visible = dot > 0.3;
-
-      // Project world position → NDC → pixel coords
-      _ndc.current.copy(_worldPos.current).project(camera);
-      const screenX = ( _ndc.current.x + 1) / 2 * size.width;
-      const screenY = (-_ndc.current.y + 1) / 2 * size.height;
-
-      return { ...loc, screenX, screenY, visible };
-    });
-
-    bubblePointsRef.current = updated;
+// Lazy-load CSS anchor positioning polyfill once (safe in Chrome 125+, polyfills Safari/Firefox)
+let polyfillLoaded = false;
+function ensurePolyfill() {
+  if (polyfillLoaded) return;
+  if (typeof CSS !== 'undefined' && CSS.supports?.('anchor-name', '--x')) {
+    polyfillLoaded = true;
+    return;
+  }
+  polyfillLoaded = true;
+  import('@oddbird/css-anchor-positioning').catch(() => {
+    // Polyfill is a progressive enhancement — silently skip if unavailable
   });
-
-  return (
-    <group ref={groupRef}>
-      <ambientLight intensity={0.6} color="#ffffff" />
-      <directionalLight position={[2, 2, 2]} intensity={1.2} color="#ffffff" />
-      <directionalLight position={[-2, -1, -1]} intensity={0.3} color="#3B82F6" />
-      <pointLight position={[3, 3, 3]} intensity={1.5} color="#f97316" distance={10} />
-    </group>
-  );
 }
 
-// ── Exported canvas wrapper ───────────────────────────────────────────────────
+// ── Component ────────────────────────────────────────────────────────────────
 export interface GlobeCanvasProps {
   width: number;
   height: number;
-  bubblePointsRef: React.MutableRefObject<BubblePoint[]>;
+  reducedMotion?: boolean;
 }
 
-export function GlobeCanvas({ width, height, bubblePointsRef }: GlobeCanvasProps) {
+export function GlobeCanvas({ width, height, reducedMotion = false }: GlobeCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const phiRef = useRef(0);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    ensurePolyfill();
+  }, []);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const markers: Marker[] = CITIES.map((c) => ({
+      id: c.id,
+      location: [c.lat, c.lng],
+      size: 0.05,
+      color: [0.918, 0.18, 0.0],
+    }));
+
+    // Build the full pool of arcs once — we'll cycle them in/out via update()
+    const allArcs: Arc[] = ARC_PAIRS.map(({ from, to }, i) => ({
+      id: `a${i}`,
+      from: [CITIES[from].lat, CITIES[from].lng],
+      to:   [CITIES[to].lat,   CITIES[to].lng],
+      color: [0.918, 0.18, 0.0],
+    }));
+
+    const globe = createGlobe(canvasRef.current, {
+      devicePixelRatio: dpr,
+      width: width * dpr,
+      height: height * dpr,
+      phi: 0,
+      theta: 0.28,
+      dark: 0,
+      diffuse: 1.2,
+      mapSamples: 16000,
+      mapBrightness: 6,
+      mapBaseBrightness: 0.0,
+      baseColor: [0.94, 0.91, 0.84],
+      markerColor: [0.918, 0.18, 0.0],
+      glowColor: [0.95, 0.78, 0.7],
+      markers,
+      arcs: [],                            // start hidden — sequencer fills in
+      arcColor: [0.918, 0.18, 0.0],
+      arcWidth: 0.4,
+      arcHeight: 0.18,
+      markerElevation: 0.01,
+    });
+
+    setReady(true);
+
+    // Arc sequencer — show 2 arcs at a time, rotate every 2.6s.
+    // Each arc lives ~5s on screen total (overlapping windows give a sense of flow).
+    let arcCursor = 0;
+    let active: Arc[] = [];
+    const tickArcs = () => {
+      // Drop oldest, add next from pool
+      if (active.length >= 2) active = active.slice(1);
+      const next = allArcs[arcCursor % allArcs.length];
+      arcCursor++;
+      active = [...active, next];
+      globe.update({ arcs: active });
+    };
+    // Prime with first two
+    tickArcs();
+    setTimeout(tickArcs, 1300);
+    const arcInterval = reducedMotion ? null : setInterval(tickArcs, 2600);
+
+    let raf: number;
+    const tick = () => {
+      if (!reducedMotion) phiRef.current += 0.0035;
+      globe.update({ phi: phiRef.current });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (arcInterval) clearInterval(arcInterval);
+      globe.destroy();
+      setReady(false);
+    };
+  }, [width, height, reducedMotion]);
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 260], fov: 50, near: 0.1, far: 2000 }}
-      gl={{ antialias: true, alpha: true }}
-      style={{ display: 'block', width, height, background: 'transparent' }}
-    >
-      <GlobeScene bubblePointsRef={bubblePointsRef} />
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        autoRotate={false}
-        minPolarAngle={Math.PI * 0.25}
-        maxPolarAngle={Math.PI * 0.75}
-        rotateSpeed={0.3}
+    <>
+      <canvas
+        ref={canvasRef}
+        style={{ width, height, maxWidth: '100%', aspectRatio: '1', contain: 'layout paint size' }}
       />
-    </Canvas>
+      {ready && <CityLabels />}
+    </>
+  );
+}
+
+// ── Anchored bubble labels ───────────────────────────────────────────────────
+// Cycles through the 12 cities, showing 2 bubbles at a time. Each label uses
+// CSS `position-anchor: --cobe-{id}` so it tracks the marker as the globe spins.
+// Visibility is driven by the `--cobe-visible-{id}` variable cobe writes when
+// the marker faces the viewer.
+
+function CityLabels() {
+  const [activeIdx, setActiveIdx] = useState<number[]>([0, 4]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIdx(([a, b]) => {
+        // Step both cursors forward, keep them ~6 cities apart so they don't crowd
+        const next1 = (a + 1) % CITIES.length;
+        const next2 = (b + 1) % CITIES.length;
+        return [next1, next2];
+      });
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      {activeIdx.map((idx, slot) => {
+        const c = CITIES[idx];
+        return <CityLabel key={`${slot}-${c.id}`} city={c} />;
+      })}
+    </>
+  );
+}
+
+const TYPE_COLOR: Record<CityMarker['type'], string> = {
+  item:   '#ea2e00',
+  pet:    '#0e8b5e',
+  person: '#1e3a8a',
+};
+
+const TYPE_ICON: Record<CityMarker['type'], string> = {
+  item:   '📦',
+  pet:    '🐾',
+  person: '👤',
+};
+
+function CityLabel({ city }: { city: CityMarker }) {
+  const color = TYPE_COLOR[city.type];
+  const icon = TYPE_ICON[city.type];
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        // CSS anchor positioning — modern browsers + polyfill
+        positionAnchor: `--cobe-${city.id}` as React.CSSProperties['positionAnchor'],
+        bottom: 'anchor(top)' as React.CSSProperties['bottom'],
+        left: 'anchor(center)' as React.CSSProperties['left'],
+        translate: '-50% -8px',
+        opacity: `var(--cobe-visible-${city.id}, 0)`,
+        transition: 'opacity 0.4s ease',
+        pointerEvents: 'none',
+        zIndex: 30,
+      } as React.CSSProperties}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1px solid rgba(27,20,16,0.08)',
+          borderRadius: 12,
+          padding: '8px 12px',
+          boxShadow: '0 12px 28px -8px rgba(80,40,15,0.18), 0 2px 6px rgba(80,40,15,0.06)',
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          minWidth: 140,
+        }}
+      >
+        <span style={{ fontSize: 9, color: '#9d8c7a', fontFamily: 'var(--font-mono, monospace)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          {city.city}
+        </span>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 12 }}>{icon}</span>
+          {city.message}
+        </span>
+      </div>
+      {/* Tail */}
+      <div
+        style={{
+          width: 0,
+          height: 0,
+          borderLeft: '5px solid transparent',
+          borderRight: '5px solid transparent',
+          borderTop: '6px solid #ffffff',
+          margin: '0 auto',
+          filter: 'drop-shadow(0 1px 0 rgba(27,20,16,0.06))',
+        }}
+      />
+    </div>
   );
 }

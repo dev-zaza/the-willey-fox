@@ -129,7 +129,7 @@ export default function PlacesPage() {
         </div>
         <button
           onClick={() => setShowAddForm((v) => !v)}
-          className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           {showAddForm ? 'Cancel' : '+ Add a Place'}
         </button>
@@ -139,7 +139,7 @@ export default function PlacesPage() {
       {showAddForm && (
         <form
           onSubmit={handleAddPlace}
-          className="mb-6 border border-orange-200 dark:border-orange-900 rounded-xl p-5 bg-orange-50 dark:bg-orange-950/20 space-y-4"
+          className="mb-6 border border-brand-200 dark:border-brand-900 rounded-xl p-5 bg-brand-50 dark:bg-brand-900/20 space-y-4"
         >
           <h2 className="font-semibold text-gray-800 dark:text-white">Add a Place</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -201,7 +201,7 @@ export default function PlacesPage() {
           <button
             type="submit"
             disabled={addLoading}
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-6 py-2 rounded-lg disabled:opacity-50 transition-colors"
+            className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-6 py-2 rounded-lg disabled:opacity-50 transition-colors"
           >
             {addLoading ? 'Saving…' : 'Save Place'}
           </button>
@@ -216,8 +216,8 @@ export default function PlacesPage() {
             onClick={() => setCategory(t.value)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               category === t.value
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900/30'
+                ? 'bg-brand-500 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30'
             }`}
           >
             {t.label}
@@ -268,7 +268,7 @@ export default function PlacesPage() {
                   key={place.id}
                   onClick={() => openPlace(place)}
                   disabled={modalLoading}
-                  className="text-left border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-md transition-all bg-white dark:bg-gray-900"
+                  className="text-left border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-md transition-all bg-white dark:bg-gray-900"
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">{PLACE_CATEGORY_EMOJI[place.category] ?? '📍'}</span>

@@ -50,7 +50,7 @@ export function VerifyEmailClient() {
 
         <div className="glass rounded-2xl p-8 space-y-4">
           {status === 'loading' && (
-            <p className="text-slate-400 text-sm animate-pulse">Verifying your email…</p>
+            <p className="text-[#7a6957] text-sm animate-pulse">Verifying your email…</p>
           )}
 
           {status === 'success' && (

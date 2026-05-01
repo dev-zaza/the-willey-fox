@@ -1,75 +1,130 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShieldAlert, MapPin, Navigation, Users } from 'lucide-react';
+import { ShieldAlert, Navigation, Users, QrCode, MessageCircle, Bell } from 'lucide-react';
 
 const FEATURES = [
   {
-    title: 'Real-time Alerts',
-    description: 'Get instant notifications about traffic, hazards, and events in your area.',
-    icon: ShieldAlert,
-    color: 'text-orange-500',
-    bg: 'bg-orange-50',
+    title: 'Anonymous chat with finders',
+    description:
+      'Talk to whoever scanned your tag through a private channel. Share contact only when you decide to.',
+    icon: MessageCircle,
+    accent: '#ea2e00',
   },
   {
-    title: 'Community Pins',
-    description: 'Share and discover local insights with our community-driven map pins.',
-    icon: MapPin,
-    color: 'text-blue-500',
-    bg: 'bg-blue-50',
-  },
-  {
-    title: 'Emergency SOS',
-    description: 'One-tap emergency alerts to your trusted contacts with your precise location.',
+    title: 'Smart hazard-aware routes',
+    description:
+      'Live community pin data feeds into directions. Skip the road closures, the demo, the unsafe shortcut.',
     icon: Navigation,
-    color: 'text-red-500',
-    bg: 'bg-red-50',
+    accent: '#0e8b5e',
   },
   {
-    title: 'Route Planning',
-    description: 'Smart navigation that helps you avoid hazards and find the safest path.',
+    title: 'One-tap SOS with GPS',
+    description:
+      'Critical alert with your live location goes to every emergency contact. Push, SMS, and email at once.',
+    icon: ShieldAlert,
+    accent: '#dc2626',
+  },
+  {
+    title: 'Lost-child broadcasting',
+    description:
+      'Opt-in public broadcast pins a profile to a radius for verified scanners. Auto-retracts on resolved.',
+    icon: Bell,
+    accent: '#1e3a8a',
+  },
+  {
+    title: 'Bulk QR for families & teams',
+    description:
+      'Generate, print, and assign tag packs at once. Perfect for kids, fleets, school trips, dog walkers.',
+    icon: QrCode,
+    accent: '#7c3aed',
+  },
+  {
+    title: 'Guardians & shared access',
+    description:
+      'Add trusted contacts with the right permissions. Anyone in the family can respond when you can\'t.',
     icon: Users,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-50',
+    accent: '#0891b2',
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="bg-gray-50 py-20 px-4">
-      <div className="max-w-7xl mx-auto">
+    <section className="relative py-24 sm:py-32 px-4" style={{ background: '#e6dcc7' }}>
+      <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="mb-14 sm:mb-16 max-w-2xl"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Everything you need to stay safe
+          <span
+            className="text-[11px] font-mono uppercase tracking-[0.18em] block mb-3"
+            style={{ color: '#9d8c7a' }}
+          >
+            What's inside
+          </span>
+          <h2
+            className="text-4xl sm:text-5xl tracking-tight"
+            style={{
+              fontFamily: 'var(--font-display, Georgia, serif)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              color: '#1b1410',
+            }}
+          >
+            Everything you need to stay{' '}
+            <em className="not-italic" style={{ color: '#ea2e00', fontStyle: 'italic' }}>
+              connected
+            </em>
+            .
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            TheWileyfox combines powerful navigation tools with community safety features.
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {FEATURES.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-            >
-              <div className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center mb-4`}>
-                <feature.icon className={`w-6 h-6 ${feature.color}`} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          {FEATURES.map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.45, delay: (i % 2) * 0.08 }}
+                className="flex gap-5"
+              >
+                <div
+                  className="flex-shrink-0 flex items-center justify-center rounded-2xl"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    background: '#ffffff',
+                    border: '1px solid rgba(27,20,16,0.08)',
+                    boxShadow: '0 6px 14px -8px rgba(80,40,15,0.14)',
+                  }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: f.accent }} strokeWidth={1.9} />
+                </div>
+                <div className="flex-1 pt-1">
+                  <h3
+                    className="text-xl mb-2 tracking-tight"
+                    style={{
+                      fontFamily: 'var(--font-display, Georgia, serif)',
+                      fontWeight: 700,
+                      color: '#1b1410',
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p className="text-[15px] leading-relaxed" style={{ color: '#5a4a3d' }}>
+                    {f.description}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

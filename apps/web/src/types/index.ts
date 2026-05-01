@@ -8,6 +8,10 @@ export type PinCategory =
   | 'safety_alert'
   | 'traffic'
   | 'event'
+  | 'pickpocket'
+  | 'recommendation'
+  | 'harassment'
+  | 'unsafe_area'
   | 'other';
 
 export const TAG_CATEGORY_LABELS: Record<PinCategory, string> = {
@@ -17,16 +21,24 @@ export const TAG_CATEGORY_LABELS: Record<PinCategory, string> = {
   safety_alert: 'Safety Alert',
   traffic: 'Traffic',
   event: 'Event',
+  pickpocket: 'Pickpocket',
+  recommendation: 'Recommendation',
+  harassment: 'Harassment',
+  unsafe_area: 'Unsafe Area',
   other: 'Other',
 };
 
 export const PIN_COLORS: Record<PinCategory, string> = {
   hazard: '#f59e0b',
   roadblock: '#ef4444',
-  construction: '#f97316',
+  construction: '#ea2e00',
   safety_alert: '#8b5cf6',
   traffic: '#3b82f6',
   event: '#22c55e',
+  pickpocket: '#dc2626',
+  recommendation: '#10b981',
+  harassment: '#be185d',
+  unsafe_area: '#991b1b',
   other: '#94a3b8',
 };
 

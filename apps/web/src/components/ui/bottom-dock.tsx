@@ -36,14 +36,14 @@ export function BottomDock({ items, activeId, onSelect }: BottomDockProps) {
                 )}
                 <span
                   className={`text-xl transition-transform ${
-                    isActive ? 'text-brand-400 scale-110' : 'text-slate-400'
+                    isActive ? 'text-brand-400 scale-110' : 'text-[#7a6957]'
                   }`}
                 >
                   {item.icon}
                 </span>
                 <span
                   className={`text-[10px] font-medium transition-colors ${
-                    isActive ? 'text-brand-400' : 'text-slate-500'
+                    isActive ? 'text-brand-400' : 'text-[#9d8c7a]'
                   }`}
                 >
                   {item.label}

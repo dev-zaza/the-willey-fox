@@ -64,7 +64,7 @@ export default function MessagesPage() {
       await usersApi.blockUser(other.id);
       setActiveConvo(null);
     } catch (e: any) {
-      alert(e?.response?.data?.message ?? 'Failed to block user');
+      alert(e instanceof Error ? e.message : 'Failed to block user');
     } finally {
       setActionLoading(false);
     }
@@ -79,7 +79,7 @@ export default function MessagesPage() {
       setReportReason('');
       alert('Report submitted. Our team will review it.');
     } catch (e: any) {
-      alert(e?.response?.data?.message ?? 'Failed to submit report');
+      alert(e instanceof Error ? e.message : 'Failed to submit report');
     } finally {
       setActionLoading(false);
     }
@@ -91,7 +91,7 @@ export default function MessagesPage() {
       <div className="flex flex-col h-screen bg-surface">
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 bg-surface-card border-b border-surface-border flex-shrink-0">
-          <button onClick={() => setActiveConvo(null)} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => setActiveConvo(null)} className="text-[#7a6957] hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-xs flex-shrink-0">
@@ -103,7 +103,7 @@ export default function MessagesPage() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowConvoMenu((v) => !v)}
-                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
+                className="text-[#7a6957] hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
@@ -111,7 +111,7 @@ export default function MessagesPage() {
                 <div className="absolute right-0 top-8 w-44 bg-surface-card border border-surface-border rounded-xl shadow-lg z-50 overflow-hidden">
                   <button
                     onClick={() => { setShowConvoMenu(false); setShowReportModal(true); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#5a4a3d] hover:bg-white/5 transition-colors"
                   >
                     <Flag className="w-4 h-4 text-amber-400" />
                     Report user
@@ -136,11 +136,11 @@ export default function MessagesPage() {
             <div className="bg-surface-card border border-surface-border rounded-2xl p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-semibold">Report User</h3>
-                <button onClick={() => { setShowReportModal(false); setReportReason(''); }} className="text-slate-400 hover:text-white">
+                <button onClick={() => { setShowReportModal(false); setReportReason(''); }} className="text-[#7a6957] hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-[#7a6957] text-sm mb-4">
                 Describe why you're reporting {other?.firstName} {other?.lastName}. Our moderation team will review your report.
               </p>
               <textarea
@@ -149,12 +149,12 @@ export default function MessagesPage() {
                 placeholder="Describe the issue (e.g. harassment, spam, threats…)"
                 rows={4}
                 maxLength={500}
-                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-slate-500 mb-4"
+                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a] mb-4"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowReportModal(false); setReportReason(''); }}
-                  className="flex-1 py-2 rounded-xl border border-surface-border text-slate-400 text-sm hover:border-slate-500 transition-colors"
+                  className="flex-1 py-2 rounded-xl border border-surface-border text-[#7a6957] text-sm hover:border-slate-500 transition-colors"
                 >
                   Cancel
                 </button>
@@ -174,7 +174,7 @@ export default function MessagesPage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {msgsLoading ? (
-            <div className="flex items-center justify-center h-full text-slate-400 text-sm">Loading…</div>
+            <div className="flex items-center justify-center h-full text-[#7a6957] text-sm">Loading…</div>
           ) : (
             msgs.map((msg) => {
               const isMe = msg.senderId === user?.id;
@@ -186,7 +186,7 @@ export default function MessagesPage() {
                       : 'bg-surface-card border border-surface-border rounded-tl-sm'
                   }`}>
                     <p className={`text-sm ${isMe ? 'text-white' : 'text-slate-200'}`}>{msg.body}</p>
-                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-slate-500'}`}>
+                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-[#9d8c7a]'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -206,7 +206,7 @@ export default function MessagesPage() {
             placeholder="Type a message…"
             rows={1}
             maxLength={4000}
-            className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-slate-500"
+            className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
           />
           <button
             type="submit"
@@ -227,28 +227,28 @@ export default function MessagesPage() {
 
         {/* Search */}
         <div className="relative mb-5">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9d8c7a] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full bg-surface-card border border-surface-border text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-slate-500"
+            className="w-full bg-surface-card border border-surface-border text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9d8c7a] hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {loading && <div className="text-slate-400 text-sm text-center py-20">Loading…</div>}
+        {loading && <div className="text-[#7a6957] text-sm text-center py-20">Loading…</div>}
 
         {!loading && conversations.length === 0 && (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-[#9d8c7a]">
             <p className="text-4xl mb-3">💬</p>
             <p className="font-medium text-white">{search ? 'No results' : 'No Messages'}</p>
             <p className="text-sm mt-1">{search ? `No conversations matching "${search}"` : 'Conversations with finders will appear here'}</p>
@@ -271,7 +271,7 @@ export default function MessagesPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold text-sm">{other ? `${other.firstName} ${other.lastName}` : 'Unknown'}</p>
                   {convo.lastMessage && (
-                    <p className="text-slate-500 text-xs truncate">{convo.lastMessage.body}</p>
+                    <p className="text-[#9d8c7a] text-xs truncate">{convo.lastMessage.body}</p>
                   )}
                 </div>
                 {convo.unreadCount > 0 && (

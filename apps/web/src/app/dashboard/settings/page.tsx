@@ -92,12 +92,12 @@ export default function SettingsPage() {
       <div className="max-w-xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Settings</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your profile and notification preferences</p>
+          <p className="text-[#7a6957] text-sm mt-1">Manage your profile and notification preferences</p>
         </div>
 
         {/* Avatar */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Profile Photo</h2>
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider mb-4">Profile Photo</h2>
           <div className="flex items-center gap-5">
             <div className="relative">
               {avatarPreview ? (
@@ -130,12 +130,12 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="flex items-center gap-2 text-sm border border-surface-border hover:border-brand-500 text-slate-300 hover:text-white px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 text-sm border border-surface-border hover:border-brand-500 text-[#5a4a3d] hover:text-white px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
               >
                 <Camera className="w-4 h-4" />
                 Change photo
               </button>
-              <p className="text-xs text-slate-500">JPG, PNG or WebP · Max 5 MB</p>
+              <p className="text-xs text-[#9d8c7a]">JPG, PNG or WebP · Max 5 MB</p>
               {avatarError && <p className="text-xs text-red-400">{avatarError}</p>}
             </div>
           </div>
@@ -144,20 +144,20 @@ export default function SettingsPage() {
         <form onSubmit={save} className="space-y-6">
           {/* Profile */}
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Profile</h2>
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Profile</h2>
             {[
               { label: 'First Name', value: firstName, set: setFirstName, type: 'text', required: true },
               { label: 'Last Name', value: lastName, set: setLastName, type: 'text', required: true },
               { label: 'Phone', value: phone, set: setPhone, type: 'tel', required: false },
             ].map(({ label, value, set, type, required }) => (
               <div key={label} className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400">{label}</label>
+                <label className="text-xs font-medium text-[#7a6957]">{label}</label>
                 <input
                   type={type}
                   value={value}
                   onChange={(e) => set(e.target.value)}
                   required={required}
-                  className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-slate-500"
+                  className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
                 />
               </div>
             ))}
@@ -165,14 +165,14 @@ export default function SettingsPage() {
 
           {/* Notifications */}
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Notifications</h2>
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Notifications</h2>
             {[
               { label: 'Email notifications', value: emailNotif, set: setEmailNotif },
               { label: 'Push notifications', value: pushNotif, set: setPushNotif },
               { label: 'SMS notifications', value: smsNotif, set: setSmsNotif },
             ].map(({ label, value, set }) => (
               <div key={label} className="flex items-center justify-between">
-                <label className="text-sm text-slate-300">{label}</label>
+                <label className="text-sm text-[#5a4a3d]">{label}</label>
                 <button
                   type="button"
                   onClick={() => set(!value)}
@@ -196,19 +196,19 @@ export default function SettingsPage() {
 
         {/* Security */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">Security</h2>
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider mb-3">Security</h2>
           <Link
             href="/dashboard/settings/security"
             className="flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">
-              <Shield className="w-4 h-4 text-slate-400" />
+              <Shield className="w-4 h-4 text-[#7a6957]" />
               <div>
-                <p className="text-sm text-slate-300">Two-Factor Authentication</p>
-                <p className="text-xs text-slate-500">Add extra security to your account</p>
+                <p className="text-sm text-[#5a4a3d]">Two-Factor Authentication</p>
+                <p className="text-xs text-[#9d8c7a]">Add extra security to your account</p>
               </div>
             </div>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-slate-400'}`}>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-[#7a6957]'}`}>
               {is2faEnabled ? 'Enabled' : 'Off'}
             </span>
           </Link>
@@ -216,21 +216,21 @@ export default function SettingsPage() {
 
         {/* Account info */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">Account</h2>
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider mb-3">Account</h2>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Email</span>
-              <span className="text-slate-300">{user?.email}</span>
+              <span className="text-[#7a6957]">Email</span>
+              <span className="text-[#5a4a3d]">{user?.email}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Verified</span>
+              <span className="text-[#7a6957]">Verified</span>
               <span className={user?.isVerified ? 'text-green-400' : 'text-amber-400'}>
                 {user?.isVerified ? 'Yes' : 'Pending'}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-slate-400">User ID</span>
-              <span className="text-slate-500 font-mono text-xs">{user?.id}</span>
+              <span className="text-[#7a6957]">User ID</span>
+              <span className="text-[#9d8c7a] font-mono text-xs">{user?.id}</span>
             </div>
           </div>
         </div>

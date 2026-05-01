@@ -78,13 +78,13 @@ export default function QrPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-white">My Tags</h1>
-            <p className="text-slate-400 text-sm mt-1">{tags.length} registered tag{tags.length !== 1 ? 's' : ''}</p>
+            <p className="text-[#7a6957] text-sm mt-1">{tags.length} registered tag{tags.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2">
             {isPremium && (
               <button
                 onClick={() => setShowBulkForm((v) => !v)}
-                className="flex items-center gap-2 bg-surface-card border border-surface-border hover:border-brand-500/40 text-slate-300 text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
+                className="flex items-center gap-2 bg-surface-card border border-surface-border hover:border-brand-500/40 text-[#5a4a3d] text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
               >
                 <Layers className="w-4 h-4" />
                 Generate Multiple
@@ -109,7 +109,7 @@ export default function QrPage() {
             <p className="text-white font-semibold text-sm">Generate Multiple Tags</p>
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <label className="text-xs text-slate-400 mb-1 block">Count (1–50)</label>
+                <label className="text-xs text-[#7a6957] mb-1 block">Count (1–50)</label>
                 <input
                   type="number"
                   min={1}
@@ -120,7 +120,7 @@ export default function QrPage() {
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs text-slate-400 mb-1 block">Category</label>
+                <label className="text-xs text-[#7a6957] mb-1 block">Category</label>
                 <select
                   value={bulkCategory}
                   onChange={(e) => setBulkCategory(e.target.value)}
@@ -146,7 +146,7 @@ export default function QrPage() {
               <button
                 type="button"
                 onClick={() => setShowBulkForm(false)}
-                className="text-slate-400 text-sm px-3 py-2 hover:text-white transition-colors"
+                className="text-[#7a6957] text-sm px-3 py-2 hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -155,7 +155,7 @@ export default function QrPage() {
         )}
 
         {loading && (
-          <div className="flex items-center justify-center py-20 text-slate-400">Loading…</div>
+          <div className="flex items-center justify-center py-20 text-[#7a6957]">Loading…</div>
         )}
 
         {error && (
@@ -165,7 +165,7 @@ export default function QrPage() {
         )}
 
         {!loading && !error && tags.length === 0 && (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-[#9d8c7a]">
             <Tag className="w-10 h-10 mx-auto mb-3 opacity-40" />
             <p className="font-medium">No tags registered yet</p>
             <p className="text-sm mt-1">Register your first tag to get started</p>
@@ -191,8 +191,8 @@ export default function QrPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-slate-500 text-xs capitalize mt-0.5">{tag.category}</p>
-                <p className="text-slate-600 text-xs font-mono mt-0.5">{tag.uniqueCode}</p>
+                <p className="text-[#9d8c7a] text-xs capitalize mt-0.5">{tag.category}</p>
+                <p className="text-[#7a6957] text-xs font-mono mt-0.5">{tag.uniqueCode}</p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 {tag.isLost ? (
@@ -212,11 +212,11 @@ export default function QrPage() {
                 )}
                 <button
                   onClick={(e) => handleDelete(tag.id, e)}
-                  className="p-1.5 text-slate-600 hover:text-red-400 transition-colors"
+                  className="p-1.5 text-[#7a6957] hover:text-red-400 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <ChevronRight className="w-4 h-4 text-slate-600" />
+                <ChevronRight className="w-4 h-4 text-[#7a6957]" />
               </div>
             </div>
           ))}

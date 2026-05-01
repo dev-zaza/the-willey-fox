@@ -105,7 +105,7 @@ export default function ReportsPage() {
                 <button
                   onClick={() => updateStatus(r.id, 'dismissed')}
                   disabled={actionLoading === r.id}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:bg-zinc-700 disabled:opacity-40 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium text-[#7a6957] hover:bg-zinc-700 disabled:opacity-40 transition-colors"
                 >
                   Dismiss
                 </button>

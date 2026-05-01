@@ -7,8 +7,8 @@ const ADMIN_THEME_INIT = `
 (function() {
   try {
     var dark = localStorage.getItem('admin-dark-mode');
-    // default is dark (true) unless explicitly set to 'false'
-    if (dark !== 'false') {
+    // Default is light (cream brand). Only enable dark if explicitly opted in.
+    if (dark === 'true') {
       document.documentElement.classList.add('admin-dark');
     }
     var radius = localStorage.getItem('admin-radius');

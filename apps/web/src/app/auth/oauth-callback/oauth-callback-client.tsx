@@ -66,9 +66,9 @@ export function OAuthCallbackClient() {
       <div className="text-center space-y-3 max-w-sm px-4">
         <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
         {message ? (
-          <p className="text-slate-400 text-sm">{message}</p>
+          <p className="text-[#7a6957] text-sm">{message}</p>
         ) : (
-          <p className="text-slate-500 text-sm">Redirecting…</p>
+          <p className="text-[#9d8c7a] text-sm">Redirecting…</p>
         )}
       </div>
     </div>

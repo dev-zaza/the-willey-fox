@@ -289,7 +289,7 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
   if (!qrInfo) return null;
 
   const isMedical = qrInfo.category === 'medical';
-  const accentColor = qrInfo.theme?.accentColor ?? '#f97316';
+  const accentColor = qrInfo.theme?.accentColor ?? '#ea2e00';
   const isDark = qrInfo.theme?.backgroundStyle === 'dark';
 
   return (
@@ -325,10 +325,36 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
           {qrInfo.name && <h1 style={styles.itemName}>{qrInfo.name}</h1>}
 
           {/* Medical info — shown prominently with red alert box */}
-          {isMedical && qrInfo.description ? (
+          {isMedical && (qrInfo.description || qrInfo.customFields?.medicalInfo) ? (
             <div style={styles.medicalBox}>
               <p style={styles.medicalHeading}>🚨 Medical / Emergency Info</p>
-              <p style={styles.medicalText}>{qrInfo.description}</p>
+              {qrInfo.description && <p style={styles.medicalText}>{qrInfo.description}</p>}
+              {qrInfo.customFields?.medicalInfo && (() => {
+                const med = qrInfo.customFields.medicalInfo as Record<string, string>;
+                const fields = [
+                  { key: 'allergies', label: 'Allergies' },
+                  { key: 'bloodType', label: 'Blood Type' },
+                  { key: 'medicalConditions', label: 'Medical Conditions' },
+                  { key: 'medications', label: 'Medications' },
+                  { key: 'emergencyContactName', label: 'Emergency Contact' },
+                  { key: 'emergencyContactPhone', label: 'Emergency Phone' },
+                  { key: 'doctorName', label: 'Doctor' },
+                  { key: 'doctorPhone', label: 'Doctor Phone' },
+                  { key: 'insuranceInfo', label: 'Insurance' },
+                  { key: 'notes', label: 'Notes' },
+                ];
+                return (
+                  <div style={{ marginTop: '8px' }}>
+                    {fields.map(({ key, label }) =>
+                      med[key] ? (
+                        <p key={key} style={{ margin: '4px 0', fontSize: '14px', color: '#7f1d1d' }}>
+                          <strong>{label}:</strong> {med[key]}
+                        </p>
+                      ) : null
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ) : (
             qrInfo.description && <p style={styles.description}>{qrInfo.description}</p>
@@ -380,7 +406,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   header: {
-    backgroundColor: '#f97316',
+    backgroundColor: '#ea2e00',
     padding: '16px 20px',
     textAlign: 'center',
   },
@@ -552,7 +578,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   activateBtn: {
     display: 'block',
-    backgroundColor: '#f97316',
+    backgroundColor: '#ea2e00',
     color: '#fff',
     border: 'none',
     borderRadius: '10px',
@@ -580,7 +606,7 @@ const styles: Record<string, React.CSSProperties> = {
   loginCtaLink: {
     textAlign: 'center' as const,
     fontSize: '13px',
-    color: '#f97316',
+    color: '#ea2e00',
     textDecoration: 'none',
     fontWeight: 500,
   },

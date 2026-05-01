@@ -54,18 +54,18 @@ export function PinDetailModal({ pin: initialPin }: PinDetailModalProps) {
         >
           {label}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${pin.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-slate-500/15 text-slate-400'}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${pin.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-slate-500/15 text-[#7a6957]'}`}>
           {pin.status}
         </span>
       </div>
 
       <h2 className="text-lg font-bold text-white">{pin.title}</h2>
       {pin.description && (
-        <p className="text-sm text-slate-400 leading-relaxed">{pin.description}</p>
+        <p className="text-sm text-[#7a6957] leading-relaxed">{pin.description}</p>
       )}
 
       {/* Location */}
-      <div className="flex items-center gap-2 text-xs text-slate-500">
+      <div className="flex items-center gap-2 text-xs text-[#9d8c7a]">
         <MapPin className="w-3.5 h-3.5" />
         <span>{parseFloat(pin.lat).toFixed(5)}, {parseFloat(pin.lng).toFixed(5)}</span>
       </div>

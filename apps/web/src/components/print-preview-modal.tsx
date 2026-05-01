@@ -59,7 +59,7 @@ export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
           <h2 className="text-base font-semibold text-white">Print Preview — {template.name}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#7a6957] hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -113,7 +113,7 @@ export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose 
                       right: template.logoPlacement === 'top-right' ? 12 : undefined,
                       fontSize: 10,
                       fontWeight: 700,
-                      color: '#f97316',
+                      color: '#ea2e00',
                     }}
                   >
                     TheWileyfox
@@ -164,14 +164,14 @@ export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose 
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-surface-border">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[#9d8c7a]">
             Format: <span className="font-medium capitalize">{template.formatType}</span> ·
             Size: <span className="font-medium">{dim.width}×{dim.height}px</span>
           </p>
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="text-sm text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg"
+              className="text-sm text-[#7a6957] hover:text-white transition-colors px-3 py-1.5 rounded-lg"
             >
               Cancel
             </button>

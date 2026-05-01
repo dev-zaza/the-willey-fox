@@ -21,6 +21,7 @@ import {
   LayoutTemplate,
   Printer,
   Palette,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -49,6 +50,7 @@ const NAV_ITEMS = [
       { id: 'qr-codes', label: 'QR Codes', icon: QrCode, href: '/admin/qr-codes' },
       { id: 'reports', label: 'Reports', icon: Flag, href: '/admin/reports' },
       { id: 'pins', label: 'Pins', icon: MapPin, href: '/admin/pins' },
+      { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
     ],
   },
   {

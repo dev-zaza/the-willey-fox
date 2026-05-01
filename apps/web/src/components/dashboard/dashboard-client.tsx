@@ -30,7 +30,7 @@ const MapView = dynamic(() => import('@/components/map/map-view').then(m => ({ d
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-surface flex items-center justify-center">
-      <div className="text-slate-500 text-sm animate-pulse">Loading map…</div>
+      <div className="text-[#9d8c7a] text-sm animate-pulse">Loading map…</div>
     </div>
   ),
 });
@@ -154,7 +154,7 @@ export function DashboardClient() {
           className={`flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border transition-colors ${
             safetyOverlayOn
               ? 'bg-green-500/20 border-green-500/50 text-green-400'
-              : 'border-surface-border text-slate-400 hover:text-white'
+              : 'border-surface-border text-[#7a6957] hover:text-white'
           }`}
           aria-label="Toggle safety overlay"
           title="Safety overlay"
@@ -163,7 +163,7 @@ export function DashboardClient() {
         </button>
         <button
           onClick={() => setModal('directions')}
-          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-slate-400 hover:text-white transition-colors"
+          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-[#7a6957] hover:text-white transition-colors"
           aria-label="Directions"
           title="Get directions"
         >

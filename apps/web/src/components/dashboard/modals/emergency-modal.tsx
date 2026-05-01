@@ -134,7 +134,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
             SOS sent to {sosResult.notifiedCount} contact{sosResult.notifiedCount !== 1 ? 's' : ''}
           </p>
         ) : (
-          <p className="text-sm text-slate-300 text-center">
+          <p className="text-sm text-[#5a4a3d] text-center">
             Tap SOS to alert all your emergency contacts instantly.
           </p>
         )}
@@ -147,7 +147,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
           Send SOS Alert
         </button>
         {acceptedContacts.length === 0 && !loading && (
-          <p className="text-xs text-slate-500 text-center">Add accepted contacts to enable SOS</p>
+          <p className="text-xs text-[#9d8c7a] text-center">Add accepted contacts to enable SOS</p>
         )}
       </div>
 
@@ -169,7 +169,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
           {/* Accepted contacts */}
           {acceptedContacts.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Emergency Contacts</p>
+              <p className="text-xs font-medium text-[#9d8c7a] uppercase tracking-wider">Emergency Contacts</p>
               {acceptedContacts.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 glass rounded-xl p-3">
                   <div className="w-9 h-9 rounded-full bg-brand-500/15 flex items-center justify-center flex-shrink-0 text-xs font-medium text-brand-400">
@@ -179,11 +179,11 @@ export function EmergencyModal(_: EmergencyModalProps) {
                     <p className="text-sm font-medium text-white truncate">
                       {c.contact ? `${c.contact.firstName} ${c.contact.lastName}` : 'Unknown'}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">{c.contact?.email}</p>
+                    <p className="text-xs text-[#9d8c7a] truncate">{c.contact?.email}</p>
                   </div>
                   <button
                     onClick={() => removeContact(c.id)}
-                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    className="text-[#9d8c7a] hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -195,7 +195,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
           {/* Pending contacts */}
           {pendingContacts.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending</p>
+              <p className="text-xs font-medium text-[#9d8c7a] uppercase tracking-wider">Pending</p>
               {pendingContacts.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 glass rounded-xl p-3 opacity-75">
                   <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
@@ -219,7 +219,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
                   )}
                   <button
                     onClick={() => removeContact(c.id)}
-                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    className="text-[#9d8c7a] hover:text-red-400 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -229,7 +229,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
           )}
 
           {contacts.length === 0 && (
-            <p className="text-center text-sm text-slate-500 py-4">
+            <p className="text-center text-sm text-[#9d8c7a] py-4">
               No emergency contacts yet. Search by email or name to add contacts.
             </p>
           )}
@@ -239,7 +239,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
       {/* Add form — search by email or name */}
       {addMode !== 'idle' ? (
         <div className="glass rounded-xl p-4 space-y-3">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#7a6957]">
             Search by email or name. The person must have a SafeTag account. They will receive a request to accept.
           </p>
           <div className="flex gap-2">
@@ -249,7 +249,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
               placeholder="Email or name…"
-              className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+              className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500"
             />
             <button
               onClick={search}
@@ -265,7 +265,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
               <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-medium text-amber-400">Contact limit reached</p>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[#7a6957] mt-0.5">
                   Upgrade to Premium to add more emergency contacts.{' '}
                   <Link href="/dashboard/subscription" className="text-brand-400 underline hover:text-brand-300">
                     Upgrade now
@@ -283,7 +283,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{u.firstName} {u.lastName}</p>
-                    <p className="text-slate-500 text-xs truncate">{u.email}</p>
+                    <p className="text-[#9d8c7a] text-xs truncate">{u.email}</p>
                   </div>
                   <button
                     onClick={() => addContact(u.id)}
@@ -297,11 +297,11 @@ export function EmergencyModal(_: EmergencyModalProps) {
             </div>
           )}
           {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && addMode === 'results' && (
-            <p className="text-slate-500 text-xs">No users found. They must register with SafeTag first.</p>
+            <p className="text-[#9d8c7a] text-xs">No users found. They must register with SafeTag first.</p>
           )}
           <button
             onClick={resetAddForm}
-            className="w-full py-2 rounded-lg border border-surface-border text-slate-400 text-sm hover:text-white"
+            className="w-full py-2 rounded-lg border border-surface-border text-[#7a6957] text-sm hover:text-white"
           >
             Cancel
           </button>
@@ -309,7 +309,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
       ) : (
         <button
           onClick={() => setAddMode('search')}
-          className="w-full flex items-center justify-center gap-2 border border-dashed border-slate-600 rounded-xl py-3 text-slate-400 text-sm hover:border-brand-500/40 hover:text-brand-400 transition-colors"
+          className="w-full flex items-center justify-center gap-2 border border-dashed border-[rgba(27,20,16,0.12)] rounded-xl py-3 text-[#7a6957] text-sm hover:border-brand-500/40 hover:text-brand-400 transition-colors"
         >
           <Plus className="w-4 h-4" /> Add emergency contact
         </button>

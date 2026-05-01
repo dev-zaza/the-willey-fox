@@ -25,7 +25,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   header: {
-    backgroundColor: '#f97316',
+    backgroundColor: '#ea2e00',
     padding: '16px 20px',
     textAlign: 'center' as const,
   },

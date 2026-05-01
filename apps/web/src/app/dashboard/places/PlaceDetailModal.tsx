@@ -202,7 +202,7 @@ export default function PlaceDetailModal({ place, onClose, onRefresh }: Props) {
           <div>
             <button
               onClick={() => setShowReviewForm((v) => !v)}
-              className="w-full text-sm font-medium text-orange-500 hover:text-orange-600 border border-orange-300 rounded-lg py-2 transition-colors"
+              className="w-full text-sm font-medium text-brand-500 hover:text-brand-600 border border-brand-300 rounded-lg py-2 transition-colors"
             >
               {showReviewForm ? 'Cancel Review' : '✏️ Write a Review'}
             </button>
@@ -240,7 +240,7 @@ export default function PlaceDetailModal({ place, onClose, onRefresh }: Props) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-orange-500 text-white font-medium py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                  className="w-full bg-brand-500 text-white font-medium py-2 rounded-lg hover:bg-brand-600 disabled:opacity-50 transition-colors"
                 >
                   {submitting ? 'Submitting…' : 'Submit Review'}
                 </button>

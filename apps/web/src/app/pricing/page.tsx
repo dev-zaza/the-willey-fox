@@ -23,12 +23,12 @@ type FeatureValue = boolean | string | ((p: PricingConfig) => string);
 function FeatureCell({ value, pricing }: { value: FeatureValue; pricing: PricingConfig }) {
   const resolved = typeof value === 'function' ? value(pricing) : value;
   if (typeof resolved === 'string') {
-    return <span className="text-sm text-white">{resolved}</span>;
+    return <span className="text-sm text-[#1b1410]">{resolved}</span>;
   }
   return resolved ? (
-    <CheckCircle className="w-5 h-5 text-green-400 mx-auto" />
+    <CheckCircle className="w-5 h-5 text-[#0e8b5e] mx-auto" />
   ) : (
-    <XCircle className="w-5 h-5 text-slate-600 mx-auto" />
+    <XCircle className="w-5 h-5 text-[#9d8c7a] mx-auto" />
   );
 }
 
@@ -58,19 +58,27 @@ export default function PricingPage() {
   const { annualSavePercent, trialDays } = pricing;
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
+    <div className="min-h-screen" style={{ background: '#f0e7d6', color: '#1b1410' }}>
       {/* Nav */}
-      <nav className="border-b border-white/10 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-        <Link href="/" className="text-lg font-bold text-[#f97316]">
+      <nav
+        className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto"
+        style={{ borderBottom: '1px solid rgba(27,20,16,0.08)' }}
+      >
+        <Link
+          href="/"
+          className="text-lg font-bold"
+          style={{ color: '#ea2e00', fontFamily: 'var(--font-display, Georgia, serif)' }}
+        >
           TheWileyfox
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/auth/login" className="text-sm text-slate-400 hover:text-white transition-colors">
+          <Link href="/login" className="text-sm transition-colors" style={{ color: '#5a4a3d' }}>
             Sign in
           </Link>
           <Link
-            href="/auth/register"
-            className="text-sm bg-[#f97316] hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+            href="/register"
+            className="text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-brand-600"
+            style={{ background: '#ea2e00' }}
           >
             Get started free
           </Link>
@@ -80,8 +88,17 @@ export default function PricingPage() {
       <main className="max-w-5xl mx-auto px-6 py-20">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Simple, honest pricing</h1>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto">
+          <h1
+            className="text-4xl md:text-5xl tracking-tight mb-4"
+            style={{
+              fontFamily: 'var(--font-display, Georgia, serif)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Simple, honest pricing
+          </h1>
+          <p className="text-lg max-w-xl mx-auto" style={{ color: '#5a4a3d' }}>
             Start free and upgrade when you need more. No hidden fees.
           </p>
         </div>
@@ -89,93 +106,142 @@ export default function PricingPage() {
         {/* Plan cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {/* Free */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-7 flex flex-col">
+          <div
+            className="rounded-2xl p-7 flex flex-col"
+            style={{ background: '#ffffff', border: '1px solid rgba(27,20,16,0.08)' }}
+          >
             <div className="mb-6">
-              <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Free</p>
-              <p className="text-4xl font-bold">$0</p>
-              <p className="text-slate-500 text-sm mt-1">Forever free</p>
+              <p className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: '#9d8c7a' }}>Free</p>
+              <p
+                className="text-4xl tracking-tight"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 700, color: '#1b1410' }}
+              >
+                $0
+              </p>
+              <p className="text-sm mt-1" style={{ color: '#7a6957' }}>Forever free</p>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} QR tags
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} QR tags
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxEmergencyContacts} emergency contacts
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxEmergencyContacts} emergency contacts
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Community safety map
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Community safety map
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Basic safety alerts
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Basic safety alerts
               </li>
             </ul>
             <Link
-              href="/auth/register"
-              className="block text-center bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-xl transition-colors"
+              href="/register"
+              className="block text-center font-semibold py-3 rounded-xl transition-colors"
+              style={{
+                border: '1px solid rgba(27,20,16,0.15)',
+                color: '#1b1410',
+                background: '#ffffff',
+              }}
             >
               Get Started Free
             </Link>
           </div>
 
           {/* Pro Monthly */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-7 flex flex-col">
+          <div
+            className="rounded-2xl p-7 flex flex-col"
+            style={{ background: '#ffffff', border: '1px solid rgba(27,20,16,0.08)' }}
+          >
             <div className="mb-6">
-              <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Pro Monthly</p>
-              <p className="text-4xl font-bold">${(pricing.monthlyPriceCents / 100).toFixed(2)}</p>
-              <p className="text-slate-500 text-sm mt-1">per month · {trialDays}-day free trial</p>
+              <p className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: '#9d8c7a' }}>Pro Monthly</p>
+              <p
+                className="text-4xl tracking-tight"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 700, color: '#1b1410' }}
+              >
+                ${(pricing.monthlyPriceCents / 100).toFixed(2)}
+              </p>
+              <p className="text-sm mt-1" style={{ color: '#7a6957' }}>
+                per month · {trialDays}-day free trial
+              </p>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited QR tags
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited QR tags
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Safety-aware routing
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> SOS push to contacts
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Medical alert on tag
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Medical alert on tag
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Full report history
               </li>
             </ul>
             <Link
               href="/dashboard/subscription"
-              className="block text-center bg-[#f97316] hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="block text-center text-white font-semibold py-3 rounded-xl transition-colors hover:bg-brand-600"
+              style={{ background: '#ea2e00' }}
             >
               Start {trialDays}-day Free Trial
             </Link>
           </div>
 
-          {/* Pro Annual */}
-          <div className="bg-white/5 border border-[#f97316]/40 rounded-2xl p-7 flex flex-col relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-[#f97316] text-white text-xs font-bold px-2.5 py-1 rounded-full">
+          {/* Pro Annual — recommended */}
+          <div
+            className="relative rounded-2xl p-7 flex flex-col overflow-hidden"
+            style={{
+              background: '#1b1410',
+              color: '#f0e7d6',
+              boxShadow: '0 18px 38px -14px rgba(80,40,15,0.32)',
+            }}
+          >
+            <div
+              className="absolute top-4 right-4 text-xs font-bold px-2.5 py-1 rounded-full"
+              style={{ background: '#ea2e00', color: '#1b1410' }}
+            >
               Save {annualSavePercent}%
             </div>
             <div className="mb-6">
-              <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Pro Annual</p>
-              <p className="text-4xl font-bold">${(pricing.annualPriceCents / 100).toFixed(2)}</p>
-              <p className="text-slate-500 text-sm mt-1">per year · ~${((pricing.annualPriceCents / 100) / 12).toFixed(0)}/mo</p>
+              <p className="text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgba(240,231,214,0.6)' }}>
+                Pro Annual
+              </p>
+              <p
+                className="text-4xl tracking-tight"
+                style={{
+                  fontFamily: 'var(--font-display, Georgia, serif)',
+                  fontWeight: 700,
+                  color: '#ea2e00',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                ${(pricing.annualPriceCents / 100).toFixed(2)}
+              </p>
+              <p className="text-sm mt-1" style={{ color: 'rgba(240,231,214,0.6)' }}>
+                per year · ~${((pricing.annualPriceCents / 100) / 12).toFixed(0)}/mo
+              </p>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Everything in Pro Monthly
+              <li className="flex items-start gap-2 text-sm" style={{ color: 'rgba(240,231,214,0.85)' }}>
+                <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#ea2e00' }} /> Everything in Pro Monthly
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {annualSavePercent}% annual discount
+              <li className="flex items-start gap-2 text-sm" style={{ color: 'rgba(240,231,214,0.85)' }}>
+                <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#ea2e00' }} /> {annualSavePercent}% annual discount
               </li>
-              <li className="flex items-start gap-2 text-sm text-slate-300">
-                <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority support
+              <li className="flex items-start gap-2 text-sm" style={{ color: 'rgba(240,231,214,0.85)' }}>
+                <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#ea2e00' }} /> Priority support
               </li>
             </ul>
             <Link
               href="/dashboard/subscription"
-              className="block text-center bg-[#f97316] hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="block text-center font-semibold py-3 rounded-xl transition-opacity hover:opacity-90"
+              style={{ background: '#ea2e00', color: '#1b1410' }}
             >
               Start {trialDays}-day Free Trial
             </Link>
@@ -183,20 +249,25 @@ export default function PricingPage() {
         </div>
 
         {/* Feature comparison table */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-4 text-sm font-semibold text-slate-400 uppercase tracking-wider px-6 py-4 border-b border-white/10">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ background: '#ffffff', border: '1px solid rgba(27,20,16,0.08)' }}
+        >
+          <div
+            className="grid grid-cols-4 text-sm font-semibold uppercase tracking-wider px-6 py-4"
+            style={{ color: '#9d8c7a', borderBottom: '1px solid rgba(27,20,16,0.08)' }}
+          >
             <div className="col-span-2">Feature</div>
             <div className="text-center">Free</div>
-            <div className="text-center text-[#f97316]">Pro</div>
+            <div className="text-center" style={{ color: '#ea2e00' }}>Pro</div>
           </div>
           {FEATURES.map((f, i) => (
             <div
               key={f.label}
-              className={`grid grid-cols-4 items-center px-6 py-3.5 text-sm ${
-                i % 2 === 0 ? '' : 'bg-white/[0.02]'
-              }`}
+              className="grid grid-cols-4 items-center px-6 py-3.5 text-sm"
+              style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(27,20,16,0.02)' }}
             >
-              <div className="col-span-2 text-slate-300">{f.label}</div>
+              <div className="col-span-2" style={{ color: '#5a4a3d' }}>{f.label}</div>
               <div className="text-center">
                 <FeatureCell value={f.free} pricing={pricing} />
               </div>
@@ -209,12 +280,16 @@ export default function PricingPage() {
 
         {/* Bottom CTA */}
         <div className="text-center mt-16">
-          <p className="text-slate-400 mb-6">
-            Questions? <a href="mailto:support@thewileyfox.com" className="text-[#f97316] hover:underline">Contact us</a>
+          <p className="mb-6" style={{ color: '#5a4a3d' }}>
+            Questions?{' '}
+            <a href="mailto:support@thewileyfox.com" className="hover:underline" style={{ color: '#ea2e00' }}>
+              Contact us
+            </a>
           </p>
           <Link
-            href="/auth/register"
-            className="inline-block bg-[#f97316] hover:bg-orange-600 text-white font-bold px-10 py-4 rounded-xl text-lg transition-colors"
+            href="/register"
+            className="inline-block text-white font-bold px-10 py-4 rounded-xl text-lg transition-colors hover:bg-brand-600"
+            style={{ background: '#ea2e00' }}
           >
             Get Started Free — No credit card required
           </Link>

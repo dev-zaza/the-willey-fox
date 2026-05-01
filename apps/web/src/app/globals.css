@@ -3,24 +3,27 @@
 @tailwind utilities;
 
 /* ──────────────────────────────────────────────
-   CSS Custom Properties — dark mode (default)
+   CSS Custom Properties — Wileyfox brand (cream default)
 ────────────────────────────────────────────── */
 :root {
-  --bg-primary: #0f1117;
-  --bg-card: #1a1d27;
-  --bg-elevated: #21263a;
-  --border: #2a2f45;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --brand: #f97316;
-  --brand-dim: rgba(249, 115, 22, 0.15);
-  --brand-glow: rgba(249, 115, 22, 0.4);
+  /* Surface — brand cream */
+  --bg-primary: #f0e7d6;       /* brand cream */
+  --bg-card: #ffffff;
+  --bg-elevated: #e6dcc7;      /* cream-deep */
+  --border: rgba(27, 20, 16, 0.08);
+  --text-primary: #1b1410;     /* warm ink */
+  --text-secondary: #5a4a3d;
+  --text-muted: #7a6957;
+  --brand: #ea2e00;            /* brand terracotta */
+  --brand-dim: rgba(234, 46, 0, 0.12);
+  --brand-glow: rgba(234, 46, 0, 0.32);
+  --brand-soft: #9dbdb8;       /* brand sage */
+  --brand-soft-dim: rgba(157, 189, 184, 0.22);
 
   /* Admin panel accent — overridden by theme customizer */
-  --admin-primary: #f97316;
-  --admin-primary-dim: rgba(249, 115, 22, 0.15);
-  --admin-ring: #fb923c;
+  --admin-primary: #ea2e00;
+  --admin-primary-dim: rgba(234, 46, 0, 0.12);
+  --admin-ring: #ea2e00;
   --admin-radius: 8px;
 
   /* Admin panel surface colors — default light (overridden by .admin-dark) */
@@ -48,39 +51,7 @@ html.admin-dark {
   --admin-hover: rgba(255,255,255,0.05);
 }
 
-/* ──────────────────────────────────────────────
-   Light mode (system preference)
-────────────────────────────────────────────── */
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg-primary: #f8f9fb;
-    --bg-card: #ffffff;
-    --bg-elevated: #f1f3f7;
-    --border: #e2e6ef;
-    --text-primary: #0f1117;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --brand: #ea6c0a;
-    --brand-dim: rgba(234, 108, 10, 0.12);
-    --brand-glow: rgba(234, 108, 10, 0.3);
-  }
-
-  .leaflet-container {
-    background: #f8f9fb !important;
-  }
-
-  .leaflet-control-attribution {
-    background: rgba(248, 249, 251, 0.9) !important;
-  }
-
-  .glass {
-    background: rgba(255, 255, 255, 0.85) !important;
-  }
-
-  .glass-light {
-    background: rgba(241, 243, 247, 0.7) !important;
-  }
-}
+/* (Light mode is the default; old prefers-color-scheme block removed.) */
 
 /* ──────────────────────────────────────────────
    Admin accent utilities — driven by --admin-primary
@@ -145,10 +116,10 @@ body {
 }
 
 /* ──────────────────────────────────────────────
-   Leaflet map overrides — dark theme
+   Leaflet map overrides — cream theme
 ────────────────────────────────────────────── */
 .leaflet-container {
-  background: #0f1117 !important;
+  background: #f0e7d6 !important;
   font-family: inherit;
 }
 
@@ -168,7 +139,7 @@ body {
 }
 
 .leaflet-control-attribution {
-  background: rgba(15, 17, 23, 0.8) !important;
+  background: rgba(240, 231, 214, 0.9) !important;
   color: var(--text-muted) !important;
   font-size: 10px !important;
 }
@@ -248,17 +219,17 @@ body {
 ────────────────────────────────────────────── */
 @layer utilities {
   .glass {
-    background: rgba(26, 29, 39, 0.85);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
   }
 
   .glass-light {
-    background: rgba(33, 38, 58, 0.7);
+    background: rgba(230, 220, 199, 0.72);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(42, 47, 69, 0.6);
+    border: 1px solid rgba(27, 20, 16, 0.08);
   }
 
   .brand-glow {
@@ -266,7 +237,7 @@ body {
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #f97316, #fb923c);
+    background: linear-gradient(135deg, #ea2e00, #ff6b3d);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

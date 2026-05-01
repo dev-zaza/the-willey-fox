@@ -9,7 +9,7 @@ const MapInner = dynamic(() => import('./map-inner').then((m) => ({ default: m.M
   ssr: false,
   loading: () => (
     <div className="w-full h-full bg-surface flex items-center justify-center">
-      <div className="text-slate-500 text-sm">Loading map…</div>
+      <div className="text-[#9d8c7a] text-sm">Loading map…</div>
     </div>
   ),
 });

@@ -75,13 +75,13 @@ export default function SecuritySettingsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/settings"
-            className="text-slate-400 hover:text-slate-300 transition-colors"
+            className="text-[#7a6957] hover:text-[#5a4a3d] transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-white">Security</h1>
-            <p className="text-slate-400 text-sm mt-0.5">Manage two-factor authentication</p>
+            <p className="text-[#7a6957] text-sm mt-0.5">Manage two-factor authentication</p>
           </div>
         </div>
 
@@ -97,17 +97,17 @@ export default function SecuritySettingsPage() {
             <div className={`p-2.5 rounded-xl ${is2faEnabled ? 'bg-green-500/10' : 'bg-slate-700/40'}`}>
               {is2faEnabled
                 ? <ShieldCheck className="w-6 h-6 text-green-400" />
-                : <Shield className="w-6 h-6 text-slate-400" />}
+                : <Shield className="w-6 h-6 text-[#7a6957]" />}
             </div>
             <div className="flex-1">
               <p className="font-semibold text-white text-sm">Authenticator App (TOTP)</p>
-              <p className="text-slate-400 text-xs mt-0.5">
+              <p className="text-[#7a6957] text-xs mt-0.5">
                 {is2faEnabled
                   ? 'Two-factor authentication is active.'
                   : 'Add an extra layer of security to your account with an authenticator app like Google Authenticator or Authy.'}
               </p>
             </div>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-slate-400'}`}>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-[#7a6957]'}`}>
               {is2faEnabled ? 'Enabled' : 'Disabled'}
             </span>
           </div>
@@ -125,7 +125,7 @@ export default function SecuritySettingsPage() {
 
           {step === 'setup' && (
             <div className="space-y-4">
-              <p className="text-slate-300 text-sm">
+              <p className="text-[#5a4a3d] text-sm">
                 Scan this QR code with your authenticator app, then enter the 6-digit code below.
               </p>
               <div className="flex justify-center">
@@ -138,13 +138,13 @@ export default function SecuritySettingsPage() {
                 />
               </div>
               <div className="text-center">
-                <p className="text-xs text-slate-500 mb-1">Manual entry key</p>
-                <code className="text-xs font-mono text-slate-300 bg-surface-elevated px-3 py-1.5 rounded-lg break-all">
+                <p className="text-xs text-[#9d8c7a] mb-1">Manual entry key</p>
+                <code className="text-xs font-mono text-[#5a4a3d] bg-surface-elevated px-3 py-1.5 rounded-lg break-all">
                   {secret}
                 </code>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400">Verification code</label>
+                <label className="text-xs font-medium text-[#7a6957]">Verification code</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -163,7 +163,7 @@ export default function SecuritySettingsPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => { setStep('idle'); setCode(''); setError(''); }}
-                  className="flex-1 border border-surface-border text-slate-400 hover:text-slate-300 font-medium py-2.5 rounded-xl transition-colors text-sm"
+                  className="flex-1 border border-surface-border text-[#7a6957] hover:text-[#5a4a3d] font-medium py-2.5 rounded-xl transition-colors text-sm"
                 >
                   Cancel
                 </button>
@@ -190,11 +190,11 @@ export default function SecuritySettingsPage() {
 
           {step === 'disable' && (
             <div className="space-y-4">
-              <p className="text-slate-300 text-sm">
+              <p className="text-[#5a4a3d] text-sm">
                 Enter the current 6-digit code from your authenticator app to disable 2FA.
               </p>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400">Verification code</label>
+                <label className="text-xs font-medium text-[#7a6957]">Verification code</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -213,7 +213,7 @@ export default function SecuritySettingsPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => { setStep('idle'); setCode(''); setError(''); }}
-                  className="flex-1 border border-surface-border text-slate-400 hover:text-slate-300 font-medium py-2.5 rounded-xl transition-colors text-sm"
+                  className="flex-1 border border-surface-border text-[#7a6957] hover:text-[#5a4a3d] font-medium py-2.5 rounded-xl transition-colors text-sm"
                 >
                   Cancel
                 </button>

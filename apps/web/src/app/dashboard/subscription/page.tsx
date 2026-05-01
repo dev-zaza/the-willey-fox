@@ -93,14 +93,14 @@ export default function SubscriptionPage() {
     }
   }
 
-  if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-slate-400">Loading…</div>;
+  if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-[#7a6957]">Loading…</div>;
 
   return (
     <div className="min-h-screen bg-surface p-6">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Subscription</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your TheWileyfox plan</p>
+          <p className="text-[#7a6957] text-sm mt-1">Manage your TheWileyfox plan</p>
         </div>
 
         {/* Current status */}
@@ -116,7 +116,7 @@ export default function SubscriptionPage() {
               }`}>{sub.status}</span>
             </div>
             {sub.currentPeriodEnd && (
-              <p className="text-slate-500 text-sm">
+              <p className="text-[#9d8c7a] text-sm">
                 {sub.cancelAtPeriodEnd ? 'Cancels' : 'Renews'} on{' '}
                 {new Date(sub.currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
@@ -138,7 +138,7 @@ export default function SubscriptionPage() {
                 <button
                   onClick={openBillingPortal}
                   disabled={portalLoading}
-                  className="flex items-center gap-1.5 text-slate-400 hover:text-slate-300 text-sm font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-[#7a6957] hover:text-[#5a4a3d] text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   <CreditCard className="w-4 h-4" />
                   {portalLoading ? 'Opening…' : 'Manage billing & payment'}
@@ -163,15 +163,15 @@ export default function SubscriptionPage() {
             <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
               <div>
                 <p className="text-white font-bold text-lg">Pro Monthly</p>
-                <p className="text-slate-400 text-sm">{pricing.monthlyPriceLabel}</p>
+                <p className="text-[#7a6957] text-sm">{pricing.monthlyPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
               </ul>
               <button
                 onClick={() => checkout('month')}
@@ -187,15 +187,15 @@ export default function SubscriptionPage() {
               <div className="absolute top-3 right-3 bg-brand-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">Save {pricing.annualSavePercent}%</div>
               <div>
                 <p className="text-white font-bold text-lg">Pro Annual</p>
-                <p className="text-slate-400 text-sm">{pricing.annualPriceLabel}</p>
+                <p className="text-[#7a6957] text-sm">{pricing.annualPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
-                <li className="flex items-start gap-2 text-sm text-slate-300"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
               </ul>
               <button
                 onClick={() => checkout('year')}
@@ -211,7 +211,7 @@ export default function SubscriptionPage() {
         {/* Free plan features shown when on free */}
         {!isPro && (
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-            <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Your Current Plan — Free</p>
+            <p className="text-sm font-semibold text-[#7a6957] uppercase tracking-wider mb-3">Your Current Plan — Free</p>
             <ul className="space-y-2">
               {[
                 `${pricing.tierLimits.free.maxQrCodes} Tags`,
@@ -219,8 +219,8 @@ export default function SubscriptionPage() {
                 'Community map access',
                 'Basic safety alerts',
               ].map((f) => (
-                <li key={f} className="flex items-start gap-2 text-sm text-slate-400">
-                  <CheckCircle className="w-4 h-4 text-slate-600 flex-shrink-0 mt-0.5" /> {f}
+                <li key={f} className="flex items-start gap-2 text-sm text-[#7a6957]">
+                  <CheckCircle className="w-4 h-4 text-[#7a6957] flex-shrink-0 mt-0.5" /> {f}
                 </li>
               ))}
             </ul>
@@ -230,13 +230,13 @@ export default function SubscriptionPage() {
         {/* Invoice history */}
         {invoices.length > 0 && (
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Billing History</h2>
+            <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider mb-4">Billing History</h2>
             <div className="space-y-2">
               {invoices.map((inv) => (
                 <div key={inv.id} className="flex items-center justify-between py-2 border-b border-surface-border last:border-0">
                   <div>
                     <p className="text-white text-sm">{new Date(inv.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                    <p className="text-slate-500 text-xs capitalize">{inv.status}</p>
+                    <p className="text-[#9d8c7a] text-xs capitalize">{inv.status}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="text-white text-sm font-medium">

@@ -71,7 +71,7 @@ export function MessagesModal(_: MessagesModalProps) {
       <div className="flex flex-col h-full">
         <button
           onClick={() => setActiveConvo(null)}
-          className="flex items-center gap-2 px-5 py-3 text-sm text-slate-400 hover:text-white border-b border-surface-border flex-shrink-0"
+          className="flex items-center gap-2 px-5 py-3 text-sm text-[#7a6957] hover:text-white border-b border-surface-border flex-shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           {other ? `${other.firstName} ${other.lastName}` : 'Conversation'}
@@ -80,7 +80,7 @@ export function MessagesModal(_: MessagesModalProps) {
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {msgsLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-slate-500" />
+              <Loader2 className="w-5 h-5 animate-spin text-[#9d8c7a]" />
             </div>
           ) : (
             msgs.map((m) => {
@@ -95,7 +95,7 @@ export function MessagesModal(_: MessagesModalProps) {
                     }`}
                   >
                     <p>{m.body}</p>
-                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-slate-500'}`}>
+                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-[#9d8c7a]'}`}>
                       {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -112,7 +112,7 @@ export function MessagesModal(_: MessagesModalProps) {
             onChange={(e) => setReply(e.target.value)}
             placeholder="Type a message…"
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendReply()}
-            className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+            className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500"
           />
           <button
             onClick={sendReply}
@@ -147,7 +147,7 @@ export function MessagesModal(_: MessagesModalProps) {
 
   if (conversations.length === 0) {
     return (
-      <div className="p-5 text-center py-12 text-slate-500 text-sm">
+      <div className="p-5 text-center py-12 text-[#9d8c7a] text-sm">
         No conversations yet. Start a conversation from a user's profile.
       </div>
     );
@@ -175,7 +175,7 @@ export function MessagesModal(_: MessagesModalProps) {
                 {other ? `${other.firstName} ${other.lastName}` : 'Unknown'}
               </p>
               {c.lastMessage && (
-                <p className="text-xs text-slate-400 truncate">{c.lastMessage.body}</p>
+                <p className="text-xs text-[#7a6957] truncate">{c.lastMessage.body}</p>
               )}
             </div>
             {c.unreadCount > 0 && (

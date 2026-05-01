@@ -1,3 +1,4 @@
+import { getFriendlyErrorMessage } from '@safetag/shared';
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1';
@@ -8,7 +9,7 @@ class ApiError extends Error {
     public readonly code: string,
     message: string,
   ) {
-    super(message);
+    super(getFriendlyErrorMessage(message, message));
     this.name = 'ApiError';
   }
 }
@@ -293,6 +294,10 @@ export interface Report {
   locationAddress?: string;
   photoUrl?: string;
   status: string;
+  isPublicBroadcast?: boolean;
+  broadcastApprovedAt?: string | null;
+  broadcastExpiresAt?: string | null;
+  broadcastExtendCount?: number;
   createdAt: string;
   responses?: ReportResponse[];
 }
@@ -328,6 +333,83 @@ export const reports = {
     }),
   uploadPhoto: (reportId: string, formData: FormData) =>
     request<{ photoUrl: string }>(`/public/reports/${reportId}/photo`, { method: 'POST', body: formData }, false, false),
+};
+
+// ── Broadcasts ────────────────────────────────────────────────────────────────
+
+export interface BroadcastListItem {
+  id: string;
+  qrCodeId: string;
+  qrUniqueCode: string;
+  category: string;
+  name?: string | null;
+  photoUrl?: string | null;
+  lastSeenLocation?: string | null;
+  lastSeenNotes?: string | null;
+  broadcastApprovedAt: string;
+  broadcastExpiresAt: string;
+}
+
+export interface BroadcastDetail extends BroadcastListItem {
+  description?: string | null;
+  customFields?: Record<string, unknown> | null;
+  lastSeenLat?: string | null;
+  lastSeenLng?: string | null;
+}
+
+export interface BroadcastAdminItem {
+  id: string;
+  qrCodeId: string;
+  qrUniqueCode: string;
+  qrCategory: string;
+  qrName?: string | null;
+  qrLabel?: string | null;
+  approvedAt: string;
+  expiresAt: string;
+  extendCount: number;
+  guardianUserId: string;
+}
+
+export interface BroadcastConsentLogEntry {
+  id: string;
+  reportId: string;
+  guardianUserId: string | null;
+  action: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  tosVersion: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export const broadcasts = {
+  enable: (reportId: string, tosVersion?: string) =>
+    request<Report>(`/reports/${reportId}/broadcast`, {
+      method: 'POST',
+      body: JSON.stringify(tosVersion ? { tosVersion } : {}),
+    }),
+  disable: (reportId: string, reason?: string) =>
+    request<Report>(`/reports/${reportId}/broadcast`, {
+      method: 'DELETE',
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
+  extend: (reportId: string) =>
+    request<Report>(`/reports/${reportId}/broadcast/extend`, { method: 'POST' }),
+  listPublic: (page = 1, pageSize = 20) =>
+    request<{ page: number; pageSize: number; items: BroadcastListItem[] }>(
+      `/public/broadcasts?page=${page}&pageSize=${pageSize}`,
+    ),
+  getPublic: (id: string) => request<BroadcastDetail>(`/public/broadcasts/${id}`),
+  messageGuardian: (id: string) =>
+    request<{ conversationId: string }>(`/public/broadcasts/${id}/message`, { method: 'POST' }),
+  adminList: () => request<BroadcastAdminItem[]>('/admin/broadcasts'),
+  adminTakedown: (id: string, reason?: string) =>
+    request<{ id: string; takenDown: boolean }>(`/admin/broadcasts/${id}/takedown`, {
+      method: 'POST',
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
+  adminConsentLog: (id: string) =>
+    request<BroadcastConsentLogEntry[]>(`/admin/broadcasts/${id}/consent-log`),
 };
 
 // ── Guardians ─────────────────────────────────────────────────────────────────
@@ -949,6 +1031,21 @@ export const safetyOverlay = {
       {},
       false,
     ),
+};
+
+export const families = {
+  list: () => request<any[]>('/families'),
+  get: (id: string) => request<any>(`/families/${id}`),
+  create: (name: string) => request<any>('/families', { method: 'POST', body: JSON.stringify({ name }) }),
+  addMember: (familyId: string, payload: { userId?: string; email?: string }) =>
+    request<any>(`/families/${familyId}/members`, { method: 'POST', body: JSON.stringify(payload) }),
+  removeMember: (familyId: string, userId: string) =>
+    request<any>(`/families/${familyId}/members/${userId}`, { method: 'DELETE' }),
+  addQrCode: (familyId: string, qrCodeId: string) =>
+    request<any>(`/families/${familyId}/qr-codes`, { method: 'POST', body: JSON.stringify({ qrCodeId }) }),
+  removeQrCode: (familyId: string, qrCodeId: string) =>
+    request<any>(`/families/${familyId}/qr-codes/${qrCodeId}`, { method: 'DELETE' }),
+  delete: (familyId: string) => request<any>(`/families/${familyId}`, { method: 'DELETE' }),
 };
 
 export { ApiError };

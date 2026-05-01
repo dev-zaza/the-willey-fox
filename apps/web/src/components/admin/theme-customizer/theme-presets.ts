@@ -11,8 +11,8 @@ export const THEME_PRESETS: ThemePreset[] = [
   {
     name: 'Orange (Default)',
     value: 'orange',
-    light: { '--admin-primary': '#ea580c', '--admin-primary-dim': 'rgba(234,88,12,0.12)', '--admin-ring': '#f97316' },
-    dark: { '--admin-primary': '#f97316', '--admin-primary-dim': 'rgba(249,115,22,0.15)', '--admin-ring': '#fb923c' },
+    light: { '--admin-primary': '#cc2900', '--admin-primary-dim': 'rgba(234,88,12,0.12)', '--admin-ring': '#ea2e00' },
+    dark: { '--admin-primary': '#ea2e00', '--admin-primary-dim': 'rgba(234,46,0,0.15)', '--admin-ring': '#f25434' },
   },
   {
     name: 'Blue',

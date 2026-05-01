@@ -54,14 +54,14 @@ function PhoneMockup() {
             {/* Route */}
             <path
               d="M 140 480 Q 130 400 120 350 Q 100 280 140 220 Q 160 180 170 140 Q 175 110 160 80"
-              fill="none" stroke="#f97316" strokeWidth="4" strokeLinecap="round"
+              fill="none" stroke="#ea2e00" strokeWidth="4" strokeLinecap="round"
             />
             {/* Current location */}
             <circle cx="140" cy="480" r="12" fill="rgba(59,130,246,0.15)" />
             <circle cx="140" cy="480" r="6" fill="#3B82F6" stroke="white" strokeWidth="2.5" />
             {/* Destination */}
-            <circle cx="160" cy="80" r="8" fill="rgba(249,115,22,0.2)" />
-            <circle cx="160" cy="80" r="4" fill="#f97316" stroke="white" strokeWidth="2" />
+            <circle cx="160" cy="80" r="8" fill="rgba(234,46,0,0.2)" />
+            <circle cx="160" cy="80" r="4" fill="#ea2e00" stroke="white" strokeWidth="2" />
           </svg>
 
           {/* Event pins */}
@@ -107,12 +107,12 @@ function PhoneMockup() {
                     <span className="text-[9px] text-gray-500">· 5.2 km</span>
                   </div>
                 </div>
-                <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-brand-500 flex items-center justify-center">
                   <Navigation className="w-3.5 h-3.5 text-white" />
                 </div>
               </div>
               <div className="mt-1.5 pt-1.5 border-t border-gray-100">
-                <p className="text-[8px] text-orange-600 font-medium">⚠️ 2 events may affect your route</p>
+                <p className="text-[8px] text-brand-600 font-medium">⚠️ 2 events may affect your route</p>
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@ function PhoneMockup() {
             <div className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center">
               <Locate className="w-3.5 h-3.5 text-gray-600" />
             </div>
-            <div className="w-10 h-10 rounded-full bg-orange-500 shadow-lg shadow-orange-500/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-brand-500 shadow-lg shadow-brand-500/30 flex items-center justify-center">
               <Plus className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -145,9 +145,12 @@ function PhoneMockup() {
 
 export function PhoneMockupSection() {
   return (
-    <section className="py-16 sm:py-24 px-4 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+    <section
+      className="py-24 sm:py-32 px-4 overflow-hidden"
+      style={{ background: '#f0e7d6' }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-14 lg:gap-20">
           {/* Text side */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -156,33 +159,59 @@ export function PhoneMockupSection() {
             transition={{ duration: 0.6 }}
             className="flex-1 text-center lg:text-left"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 leading-tight">
+            <span
+              className="text-[11px] font-mono uppercase tracking-[0.18em] block mb-3"
+              style={{ color: '#9d8c7a' }}
+            >
+              In your pocket
+            </span>
+            <h2
+              className="text-4xl sm:text-5xl tracking-tight mb-6 leading-[1.05]"
+              style={{
+                fontFamily: 'var(--font-display, Georgia, serif)',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: '#1b1410',
+              }}
+            >
               Your safety companion,
               <br />
-              <span className="text-orange-500">right in your pocket.</span>
+              <em className="not-italic" style={{ color: '#ea2e00', fontStyle: 'italic' }}>
+                always with you
+              </em>
+              .
             </h2>
-            <p className="text-gray-600 text-lg mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+            <p className="text-lg mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0" style={{ color: '#5a4a3d' }}>
               See real-time incidents on the map, get smart route suggestions that avoid
               hazards, and alert your emergency contacts with a single tap.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                  <Navigation className="w-4 h-4 text-orange-500" />
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#f7eedb', border: '1px solid rgba(234,46,0,0.18)' }}
+                >
+                  <Navigation className="w-4 h-4" style={{ color: '#ea2e00' }} />
                 </div>
-                <span className="text-gray-700 font-medium">Live navigation with hazard avoidance</span>
+                <span className="font-medium" style={{ color: '#1b1410' }}>Live navigation with hazard avoidance</span>
               </div>
               <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <ShieldAlert className="w-4 h-4 text-red-500" />
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#fde7e2', border: '1px solid rgba(220,38,38,0.18)' }}
+                >
+                  <ShieldAlert className="w-4 h-4" style={{ color: '#dc2626' }} />
                 </div>
-                <span className="text-gray-700 font-medium">One-tap SOS to emergency contacts</span>
+                <span className="font-medium" style={{ color: '#1b1410' }}>One-tap SOS to emergency contacts</span>
               </div>
               <div className="flex items-center gap-3 justify-center lg:justify-start">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-4 h-4 text-blue-500" />
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'rgba(157,189,184,0.22)', border: '1px solid rgba(157,189,184,0.45)' }}
+                >
+                  <MapPin className="w-4 h-4" style={{ color: '#5e8a85' }} />
                 </div>
-                <span className="text-gray-700 font-medium">Community-reported pins and alerts</span>
+                <span className="font-medium" style={{ color: '#1b1410' }}>Community-reported pins and alerts</span>
               </div>
             </div>
           </motion.div>

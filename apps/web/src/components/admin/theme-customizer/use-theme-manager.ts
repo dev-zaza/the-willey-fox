@@ -19,14 +19,14 @@ function applyDarkClass(dark: boolean) {
 
 export function useThemeManager() {
   const [selectedTheme, setSelectedTheme] = useState<string>('orange');
-  const [isDark, setIsDark] = useState<boolean>(true);
+  const [isDark, setIsDark] = useState<boolean>(false);
   const [radius, setRadius] = useState<string>('8px');
   const [mounted, setMounted] = useState(false);
 
   // Load persisted settings on mount
   useEffect(() => {
     const theme = localStorage.getItem(STORAGE_KEY) ?? 'orange';
-    const dark = localStorage.getItem(DARK_MODE_KEY) !== 'false';
+    const dark = localStorage.getItem(DARK_MODE_KEY) === 'true';
     const r = localStorage.getItem(RADIUS_KEY) ?? '8px';
     setSelectedTheme(theme);
     setIsDark(dark);
@@ -69,10 +69,10 @@ export function useThemeManager() {
   const reset = useCallback(() => {
     const preset = THEME_PRESETS[0];
     setSelectedTheme('orange');
-    setIsDark(true);
+    setIsDark(false);
     setRadius('8px');
-    applyPresetVars(preset, true);
-    applyDarkClass(true);
+    applyPresetVars(preset, false);
+    applyDarkClass(false);
     document.documentElement.style.setProperty('--admin-radius', '8px');
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(DARK_MODE_KEY);

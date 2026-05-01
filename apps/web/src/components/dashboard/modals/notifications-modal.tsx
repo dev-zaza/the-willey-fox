@@ -54,7 +54,7 @@ export function NotificationsModal({ onMarkRead }: NotificationsModalProps) {
     <div className="p-5 space-y-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Recent Notifications</p>
+        <p className="text-xs font-medium text-[#9d8c7a] uppercase tracking-wider">Recent Notifications</p>
         <button
           onClick={handleMarkRead}
           disabled={marking || items.length === 0}
@@ -79,7 +79,7 @@ export function NotificationsModal({ onMarkRead }: NotificationsModalProps) {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-12 text-slate-500">
+        <div className="flex flex-col items-center gap-3 py-12 text-[#9d8c7a]">
           <Bell className="w-10 h-10 opacity-30" />
           <p className="text-sm">No notifications yet</p>
         </div>
@@ -94,13 +94,13 @@ export function NotificationsModal({ onMarkRead }: NotificationsModalProps) {
                 {item.subject && (
                   <p className="text-sm font-medium text-white truncate">{item.subject}</p>
                 )}
-                <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{item.body}</p>
-                <p className="text-xs text-slate-600 mt-1">{relativeTime(item.createdAt)}</p>
+                <p className="text-xs text-[#7a6957] line-clamp-2 mt-0.5">{item.body}</p>
+                <p className="text-xs text-[#7a6957] mt-1">{relativeTime(item.createdAt)}</p>
               </div>
               <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
                 item.status === 'sent' ? 'bg-green-500/15 text-green-400' :
                 item.status === 'failed' ? 'bg-red-500/15 text-red-400' :
-                'bg-slate-500/15 text-slate-400'
+                'bg-slate-500/15 text-[#7a6957]'
               }`}>
                 {item.status}
               </span>

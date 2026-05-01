@@ -64,7 +64,7 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
       )}
 
       {!loading && !error && tags.length === 0 && (
-        <div className="text-center py-10 text-slate-500 text-sm">
+        <div className="text-center py-10 text-[#9d8c7a] text-sm">
           No tags yet. Register your first tag above.
         </div>
       )}
@@ -81,7 +81,7 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-white text-sm truncate">{tag.label}</p>
-              <p className="text-xs text-slate-500 capitalize">{tag.category}</p>
+              <p className="text-xs text-[#9d8c7a] capitalize">{tag.category}</p>
             </div>
             {tag.isLost && (
               <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full flex-shrink-0">

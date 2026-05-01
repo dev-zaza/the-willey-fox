@@ -8,7 +8,7 @@ interface RouteLayerProps {
   color?: string;
 }
 
-export function RouteLayer({ route, color = '#f97316' }: RouteLayerProps) {
+export function RouteLayer({ route, color = '#ea2e00' }: RouteLayerProps) {
   if (route.length < 2) return null;
 
   const positions = route.map((p) => [p.lat, p.lng] as [number, number]);

@@ -25,13 +25,13 @@ export function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
     open: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-    resolved: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
-    dismissed: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
-    expired: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
+    resolved: 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20',
+    dismissed: 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20',
+    expired: 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20',
     flagged: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     contacted: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
-    closed: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
-    free: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20',
+    closed: 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20',
+    free: 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20',
     premium: 'admin-accent-bg-dim admin-accent-text border-zinc-700',
     basic: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
     success: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
@@ -40,7 +40,7 @@ export function StatusBadge({ status }: { status: string }) {
     pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     lost: 'bg-red-500/15 text-red-400 border-red-500/20',
   };
-  const cls = map[status.toLowerCase()] ?? 'bg-zinc-500/15 text-zinc-400 border-zinc-500/20';
+  const cls = map[status.toLowerCase()] ?? 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20';
   return (
     <span className={cn('inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium', cls)}>
       {status}

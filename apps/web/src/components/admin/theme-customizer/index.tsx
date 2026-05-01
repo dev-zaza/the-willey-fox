@@ -25,7 +25,7 @@ export function ThemeCustomizerTrigger({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       title="Customize theme"
-      className="fixed right-4 bottom-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 shadow-lg hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+      className="fixed right-4 bottom-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 border border-zinc-700 text-[#7a6957] shadow-lg hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
     >
       <Settings className="h-4 w-4" />
     </button>
@@ -101,7 +101,7 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
                 'flex-1 py-2.5 text-xs font-medium capitalize transition-colors border-b-2',
                 activeTab === tab
                   ? 'admin-accent-border admin-accent-text'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-300',
+                  : 'border-transparent text-[#9d8c7a] hover:text-[#5a4a3d]',
               )}
             >
               {tab === 'theme' ? (

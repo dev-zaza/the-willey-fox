@@ -45,7 +45,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
   return (
     <form onSubmit={handleSubmit} className="p-5 space-y-4">
       {location ? (
-        <div className="flex items-center gap-2 text-xs text-slate-400 bg-surface-elevated rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-[#7a6957] bg-surface-elevated rounded-lg px-3 py-2">
           <MapPin className="w-3.5 h-3.5 text-brand-400" />
           <span>{location.lat.toFixed(5)}, {location.lng.toFixed(5)}</span>
         </div>
@@ -57,7 +57,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
 
       {/* Category selector */}
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-2">Category</label>
+        <label className="block text-xs font-medium text-[#7a6957] mb-2">Category</label>
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => {
             const color = PIN_COLORS[cat];
@@ -82,7 +82,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
+        <label className="block text-xs font-medium text-[#7a6957] mb-1.5">Title</label>
         <input
           type="text"
           value={title}
@@ -90,19 +90,19 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
           required
           maxLength={80}
           placeholder="Brief, descriptive title…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
+        <label className="block text-xs font-medium text-[#7a6957] mb-1.5">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           maxLength={300}
           placeholder="Add more context…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors resize-none"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors resize-none"
         />
       </div>
 
@@ -116,7 +116,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2.5 rounded-xl border border-surface-border text-slate-400 hover:text-white transition-colors text-sm"
+          className="flex-1 py-2.5 rounded-xl border border-surface-border text-[#7a6957] hover:text-white transition-colors text-sm"
         >
           Cancel
         </button>
