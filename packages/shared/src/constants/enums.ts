@@ -8,10 +8,10 @@ export const REPORT_STATUSES = ['open', 'contacted', 'resolved', 'closed'] as co
 export const NOTIFICATION_TYPES = ['email', 'sms', 'push'] as const;
 export const NOTIFICATION_STATUSES = ['pending', 'sent', 'failed', 'retrying'] as const;
 
-export const PIN_TYPES = ['hazard', 'roadblock', 'construction', 'safety_alert', 'traffic', 'event', 'other'] as const;
+export const PIN_TYPES = ['hazard', 'roadblock', 'construction', 'safety_alert', 'traffic', 'event', 'pickpocket', 'recommendation', 'harassment', 'unsafe_area', 'other'] as const;
 export const PIN_STATUSES = ['active', 'expired', 'deactivated'] as const;
 
-export const SAFETY_SOURCES = ['uk_police', 'eurostat', 'fbi', 'numbeo', 'city_portal', 'community'] as const;
+export const SAFETY_SOURCES = ['uk_police', 'eurostat', 'fbi', 'numbeo', 'city_portal', 'community', 'us_travel_advisory'] as const;
 export const SAFETY_GRANULARITIES = ['street', 'neighbourhood', 'city', 'country'] as const;
 
 export const EMERGENCY_CONTACT_STATUSES = ['pending', 'accepted', 'declined'] as const;

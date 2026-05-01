@@ -34,5 +34,8 @@ logs/
 pgdata/
 redisdata/
 
+# Backups
+backups/
+
 .agents/*
 .claude/*

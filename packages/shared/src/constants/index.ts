@@ -19,3 +19,4 @@ export {
 } from './enums';
 export type { ErrorCode } from './enums';
 export { TIER_LIMITS, STRIPE_PRICE_KEYS, SUBSCRIPTION_PRICES_USD, STRIPE_TRIAL_DAYS } from './limits';
+export { ERROR_MESSAGES, getFriendlyErrorMessage } from './error-messages';
