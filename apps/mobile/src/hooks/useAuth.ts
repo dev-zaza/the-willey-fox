@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getFriendlyErrorMessage } from '@safetag/shared';
 import { storage } from '@/lib/storage';
 import { isServiceUnavailable } from '@/lib/api-error';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/services/api';
@@ -21,15 +22,17 @@ function extractAuthError(error: unknown): AuthError {
         isServiceUnavailable: isUnavailable,
       };
     }
-    const msg = (error.response.data as { message?: string })?.message;
+    const raw = (error.response.data as { message?: string | string[] })?.message;
     return {
-      message: msg ?? "Something went wrong. Please try again.",
+      message: getFriendlyErrorMessage(raw, 'Something went wrong. Please try again.'),
       isServiceUnavailable: isUnavailable,
     };
   }
   if (error instanceof Error) {
     return {
-      message: isUnavailable ? "We're having trouble connecting. Please try again." : error.message,
+      message: isUnavailable
+        ? "We're having trouble connecting. Please try again."
+        : getFriendlyErrorMessage(error.message, 'Something went wrong. Please try again.'),
       isServiceUnavailable: isUnavailable,
     };
   }

@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/auth.service';
 import { apiClient } from '@/services/api';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type Screen = 'main' | 'edit';
 
@@ -71,7 +72,7 @@ export default function ProfileScreen() {
 
       setUser({ ...user!, avatarUrl: data.avatarUrl } as any);
     } catch (e: any) {
-      Alert.alert('Upload failed', e?.response?.data?.message ?? e?.message ?? 'Could not upload photo');
+      Alert.alert('Upload failed', extractApiErrorMessage(e, 'Could not upload photo'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -88,7 +89,7 @@ export default function ProfileScreen() {
       setUser(data);
       setScreen('main');
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to save');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to save'));
     } finally {
       setSaving(false);
     }

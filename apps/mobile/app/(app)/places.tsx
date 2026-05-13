@@ -23,6 +23,7 @@ import {
   type PlaceReview,
   type PlaceWithReviews,
 } from '@/services/places.service';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ function PlaceDetailSheet({
         reviewCount: initialPlace.reviewCount + 1,
       });
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to submit review');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to submit review'));
     } finally {
       setSubmittingReview(false);
     }
@@ -158,7 +159,7 @@ function PlaceDetailSheet({
           await placesService.flagReview(initialPlace.id, review.id, reason.trim());
           Alert.alert('Flagged', 'Thank you. This review has been flagged for moderation.');
         } catch (e: any) {
-          Alert.alert('Error', e?.message ?? 'Failed to flag review');
+          Alert.alert('Error', extractApiErrorMessage(e, 'Failed to flag review'));
         }
       },
       'plain-text',
@@ -400,7 +401,7 @@ function AddPlaceForm({
       });
       onCreated(place);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to create place');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to create place'));
     } finally {
       setSaving(false);
     }
@@ -560,7 +561,7 @@ export default function PlacesScreen() {
       });
       setPlaces(results);
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Could not load places');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Could not load places'));
     } finally {
       setLoading(false);
     }

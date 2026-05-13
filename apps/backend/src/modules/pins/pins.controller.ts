@@ -15,7 +15,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { PinsService } from './pins.service';
 import { CreatePinDto, UpdatePinDto, ListPinsDto, VotePinDto, FlagPinDto } from './dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('pins')
 @Controller('pins')
 export class PinsController {
   constructor(private readonly pinsService: PinsService) {}

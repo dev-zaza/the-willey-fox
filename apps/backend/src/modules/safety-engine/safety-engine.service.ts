@@ -32,7 +32,7 @@ export class SafetyEngineService {
    * Trigger ingestion for all sources.
    */
   async triggerAllIngestion(): Promise<void> {
-    for (const source of ['uk_police', 'eurostat', 'fbi']) {
+    for (const source of ['uk_police', 'eurostat', 'fbi', 'us_travel_advisory']) {
       await this.triggerIngestion(source);
     }
   }
@@ -265,6 +265,9 @@ export class SafetyEngineService {
       case 'fbi':
         // Annual data — expire after 400 days
         return new Date(now.getTime() + 400 * 24 * 60 * 60 * 1000);
+      case 'us_travel_advisory':
+        // Travel advisories update irregularly — expire after 90 days
+        return new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
       default:
         return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     }

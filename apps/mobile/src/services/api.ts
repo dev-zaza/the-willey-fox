@@ -45,12 +45,19 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = [];
 }
 
+const AUTH_ENDPOINT_PREFIXES = ['/auth/login', '/auth/signup', '/auth/refresh', '/auth/2fa', '/auth/google', '/auth/forgot-password', '/auth/reset-password'];
+
+function isAuthEndpoint(url?: string) {
+  if (!url) return false;
+  return AUTH_ENDPOINT_PREFIXES.some((prefix) => url.startsWith(prefix));
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401 || originalRequest._retry || isAuthEndpoint(originalRequest.url)) {
       return Promise.reject(error);
     }
 

@@ -9,6 +9,10 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://your-staging-api.example.com/api/v1"
+      },
       "android": {
         "buildType": "apk"
       }

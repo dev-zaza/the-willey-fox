@@ -14,6 +14,7 @@ import {
 import * as Location from 'expo-location';
 import { emergencyService, type EmergencyContactRecord } from '@/services/emergency.service';
 import { usersService, type UserSearchResult } from '@/services/users.service';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 type Screen = 'main' | 'add';
 
@@ -57,7 +58,7 @@ export default function EmergencyScreen() {
       setSearchResults([]);
       setScreen('main');
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to add contact');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to add contact'));
     } finally {
       setAddLoading(false);
     }
@@ -68,7 +69,7 @@ export default function EmergencyScreen() {
       const updated = await emergencyService.acceptContact(contactId);
       setContacts((prev) => prev.map((c) => (c.id === contactId ? updated : c)));
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to accept contact');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to accept contact'));
     }
   }
 
@@ -77,7 +78,7 @@ export default function EmergencyScreen() {
       const updated = await emergencyService.declineContact(contactId);
       setContacts((prev) => prev.map((c) => (c.id === contactId ? updated : c)));
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to decline contact');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to decline contact'));
     }
   }
 
@@ -92,7 +93,7 @@ export default function EmergencyScreen() {
             await emergencyService.removeContact(contactId);
             setContacts((prev) => prev.filter((c) => c.id !== contactId));
           } catch (e: any) {
-            Alert.alert('Error', e?.message ?? 'Failed to remove contact');
+            Alert.alert('Error', extractApiErrorMessage(e, 'Failed to remove contact'));
           }
         },
       },
@@ -135,7 +136,7 @@ export default function EmergencyScreen() {
                 `Alert sent to ${result.notifiedCount} contact${result.notifiedCount !== 1 ? 's' : ''}. Help is on the way.`,
               );
             } catch (e: any) {
-              Alert.alert('Error', e?.message ?? 'Failed to send SOS');
+              Alert.alert('Error', extractApiErrorMessage(e, 'Failed to send SOS'));
             } finally {
               setSosLoading(false);
             }

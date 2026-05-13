@@ -6,7 +6,6 @@ import {
   Image,
   Linking,
   Modal,
-  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -20,6 +19,8 @@ import { qrService, type QrCode } from '@/services/qr.service';
 import { reportsService, type Report } from '@/services/reports.service';
 import { notificationsService } from '@/services/notifications.service';
 import { useModal } from '@/context/ModalContext';
+import { openNativeNavigation } from '@/lib/open-native-maps';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 interface AlertItem {
   report: Report;
@@ -43,17 +44,6 @@ function getCoords(report: Report): { lat: number; lng: number } | null {
   const lng = report.longitude ?? report.locationLng;
   if (lat != null && lng != null) return { lat, lng };
   return null;
-}
-
-function openMapsRoute(lat: number, lng: number) {
-  const label = encodeURIComponent('Item found here');
-  const url = Platform.OS === 'ios'
-    ? `maps://?daddr=${lat},${lng}&dirflg=d`
-    : `google.navigation:q=${lat},${lng}`;
-  Linking.openURL(url).catch(() => {
-    // Fallback to browser maps
-    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
-  });
 }
 
 export default function AlertsScreen() {
@@ -117,7 +107,7 @@ export default function AlertsScreen() {
         ),
       );
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to send reply');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to send reply'));
     } finally {
       setReplying(false);
     }
@@ -396,7 +386,7 @@ export default function AlertsScreen() {
                       {report.locationAddress ?? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`}
                     </Text>
                     <TouchableOpacity
-                      onPress={() => openMapsRoute(coords.lat, coords.lng)}
+                      onPress={() => openNativeNavigation({ lat: coords.lat, lng: coords.lng })}
                       style={{
                         backgroundColor: '#3b82f6',
                         borderRadius: 12, paddingVertical: 12,

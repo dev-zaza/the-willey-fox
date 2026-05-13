@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 import { SettingsService } from './settings.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('settings')
 @Controller('settings')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}

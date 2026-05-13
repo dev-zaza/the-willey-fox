@@ -32,6 +32,7 @@ import {
   GoogleMobileDto,
 } from './dto';
 import { ConfigService } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
 
 function normalizePublicBaseUrl(raw: string): string {
   let u = raw.trim();
@@ -42,6 +43,7 @@ function normalizePublicBaseUrl(raw: string): string {
   return u;
 }
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);

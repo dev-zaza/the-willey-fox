@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { emergencyService } from '@/services/emergency.service';
 import { useModal } from '@/context/ModalContext';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ── In-app confirmation modal (replaces Alert.alert) ─────────────────────────
 function SosConfirmModal({
@@ -77,7 +78,7 @@ export function SosButton() {
         message: `SOS sent to ${result.notifiedCount} contact${result.notifiedCount !== 1 ? 's' : ''}. Help is on the way.`,
       });
     } catch (e: any) {
-      const msg: string = e?.response?.data?.message ?? e?.message ?? 'Failed to send SOS';
+      const msg: string = extractApiErrorMessage(e, 'Failed to send SOS');
       let friendly = msg;
       if (msg === 'SOS_RATE_LIMIT_EXCEEDED') friendly = 'Too many SOS alerts in 24 hours.';
       else if (msg === 'SOS_COOLDOWN_ACTIVE') friendly = 'Please wait before sending another SOS.';

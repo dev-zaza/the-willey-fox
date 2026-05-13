@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { desc, eq, ilike, or, count, sql } from 'drizzle-orm';
+import { desc, eq, ilike, or, count, sql, and, gt } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { users, qrCodes, reports, pins, dataIngestionLogs, safetyZones, adminAuditLogs, userReports } from '../../database/schema';
@@ -7,6 +7,7 @@ import { QrService } from '../qr/qr.service';
 import { SettingsService } from '../settings/settings.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuditLogService } from './audit-log.service';
+import { BroadcastConsentLogService } from '../broadcasts/broadcast-consent-log.service';
 import { UpdatePricingDto } from './dto/update-pricing.dto';
 import { BanUserDto } from './dto/ban-user.dto';
 
@@ -18,7 +19,72 @@ export class AdminService {
     private readonly settingsService: SettingsService,
     private readonly notificationsService: NotificationsService,
     private readonly auditLogService: AuditLogService,
+    private readonly consentLogService: BroadcastConsentLogService,
   ) {}
+
+  async listActiveBroadcasts(limit = 100, offset = 0) {
+    const now = new Date();
+    return this.db
+      .select({
+        id: reports.id,
+        qrCodeId: qrCodes.id,
+        qrUniqueCode: qrCodes.uniqueCode,
+        qrCategory: qrCodes.category,
+        qrName: qrCodes.name,
+        qrLabel: qrCodes.label,
+        approvedAt: reports.broadcastApprovedAt,
+        expiresAt: reports.broadcastExpiresAt,
+        extendCount: reports.broadcastExtendCount,
+        guardianUserId: qrCodes.userId,
+      })
+      .from(reports)
+      .innerJoin(qrCodes, eq(reports.qrCodeId, qrCodes.id))
+      .where(
+        and(
+          eq(reports.isPublicBroadcast, true),
+          gt(reports.broadcastExpiresAt, now),
+        ),
+      )
+      .orderBy(desc(reports.broadcastApprovedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async takedownBroadcast(adminId: string, reportId: string, reason?: string) {
+    const [report] = await this.db
+      .select({ id: reports.id, isPublicBroadcast: reports.isPublicBroadcast })
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
+    if (!report) throw new NotFoundException('BROADCAST_NOT_FOUND');
+
+    await this.db
+      .update(reports)
+      .set({ isPublicBroadcast: false, updatedAt: new Date() })
+      .where(eq(reports.id, reportId));
+
+    await this.consentLogService.log({
+      reportId,
+      guardianUserId: adminId,
+      action: 'admin_takedown',
+      metadata: reason ? { reason, takedownBy: adminId } : { takedownBy: adminId },
+    });
+
+    this.auditLogService.log(adminId, 'broadcast.takedown', 'report', reportId, { reason });
+
+    return { id: reportId, takenDown: true };
+  }
+
+  async getBroadcastConsentLog(reportId: string) {
+    const [report] = await this.db
+      .select({ id: reports.id })
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+    if (!report) throw new NotFoundException('BROADCAST_NOT_FOUND');
+    return this.consentLogService.getForReport(reportId);
+  }
 
   async listUsers(query?: string, limit = 50, offset = 0) {
     const base = this.db

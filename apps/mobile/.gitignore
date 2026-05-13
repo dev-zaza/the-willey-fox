@@ -46,6 +46,10 @@ coverage/
 # EAS — local credentials (use EAS servers or env in CI)
 credentials.json
 
+# Firebase / FCM — never commit
+google-services.json
+GoogleService-Info.plist
+
 # Android prebuild / bare workflow (when present)
 android/app/build/
 android/build/

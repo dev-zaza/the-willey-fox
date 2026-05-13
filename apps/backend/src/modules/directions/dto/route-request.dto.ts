@@ -17,6 +17,14 @@ class RoutePreferencesDto {
   @IsOptional()
   @IsEnum(['safety', 'speed', 'balanced'])
   prioritize?: 'safety' | 'speed' | 'balanced';
+
+  /**
+   * Safety Mode: when enabled, applies additional penalty for harassment,
+   * pickpocket, and unsafe_area pins near the route. Designed for women
+   * and vulnerable travelers.
+   */
+  @IsOptional()
+  safetyMode?: boolean;
 }
 
 export class RouteRequestDto {

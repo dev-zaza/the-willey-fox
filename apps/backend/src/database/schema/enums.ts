@@ -56,6 +56,10 @@ export const pinTypeEnum = pgEnum('pin_type', [
   'safety_alert',
   'traffic',
   'event',
+  'pickpocket',
+  'recommendation',
+  'harassment',
+  'unsafe_area',
   'other',
 ]);
 
@@ -72,6 +76,7 @@ export const safetySourceEnum = pgEnum('safety_source', [
   'numbeo',
   'city_portal',
   'community',
+  'us_travel_advisory',
 ]);
 
 export const safetyGranularityEnum = pgEnum('safety_granularity', [

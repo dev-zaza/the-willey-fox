@@ -35,6 +35,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow TheWileyfox to use your location for safety pins and map features."
         }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox"
+        }
       ]
     ],
     "ios": {
@@ -49,6 +55,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "googleServicesFile": "./google-services.json",
       "package": "com.thewileyfox.app",
       "intentFilters": [
         {
@@ -61,8 +68,17 @@
               "pathPrefix": "/q/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
+      ],
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
@@ -72,6 +88,15 @@
     },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d3425889-6f07-42bb-9a00-1837f0ecb082"
+      }
+    },
+    "owner": "wileyfoxdev"
   }
 }

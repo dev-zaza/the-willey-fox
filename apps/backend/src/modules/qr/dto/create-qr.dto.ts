@@ -53,4 +53,23 @@ export class CreateQrDto {
   @IsOptional()
   @IsObject()
   customFields?: Record<string, unknown>;
+
+  /**
+   * Structured medical info for medical/ID card QR codes.
+   * Stored in customFields.medicalInfo.
+   */
+  @IsOptional()
+  @IsObject()
+  medicalInfo?: {
+    allergies?: string;
+    bloodType?: string;
+    medicalConditions?: string;
+    medications?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    doctorName?: string;
+    doctorPhone?: string;
+    insuranceInfo?: string;
+    notes?: string;
+  };
 }

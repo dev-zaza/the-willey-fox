@@ -17,7 +17,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { ListMessagesDto } from './dto/list-messages.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('messages')
 @Controller('messages')
 export class MessagesController {
   constructor(

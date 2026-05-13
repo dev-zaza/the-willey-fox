@@ -2,7 +2,10 @@ import { Controller, Post, Get, Body, HttpCode, HttpStatus } from '@nestjs/commo
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RouteRatingsService } from './route-ratings.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('route-ratings')
 @Controller('route-ratings')
 export class RouteRatingsController {
   constructor(private readonly routeRatingsService: RouteRatingsService) {}

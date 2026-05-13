@@ -1,10 +1,21 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { eq, and, inArray, lt } from 'drizzle-orm';
+import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
+import { eq, and, inArray, lt, isNotNull } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { reports, qrCodes, guardianMappings, reportResponses, users } from '../../database/schema';
 import { UpdateReportStatusDto, CreateResponseDto, FlagReportDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { BroadcastConsentLogService } from '../broadcasts/broadcast-consent-log.service';
+
+const BROADCAST_INITIAL_DAYS = 30;
+const BROADCAST_EXTEND_DAYS = 30;
+const BROADCAST_MAX_EXTENDS = 2;
+
+export interface BroadcastRequestContext {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  tosVersion?: string | null;
+}
 
 @Injectable()
 export class ReportsService {
@@ -13,6 +24,7 @@ export class ReportsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly notificationsService: NotificationsService,
+    private readonly consentLog: BroadcastConsentLogService,
   ) {}
 
   async findByUserQrCodes(userId: string) {
@@ -105,6 +117,10 @@ export class ReportsService {
       .where(eq(reports.id, reportId))
       .returning();
 
+    if (dto.status === 'resolved') {
+      await this.autoRetractBroadcastOnFound(reportId);
+    }
+
     return updated;
   }
 
@@ -165,6 +181,244 @@ export class ReportsService {
 
     this.logger.log(`Expired ${result.length} stale reports`);
     return result.length;
+  }
+
+  async expireBroadcasts(): Promise<{ total: number; failed: number }> {
+    const now = new Date();
+    const due = await this.db
+      .select({ id: reports.id })
+      .from(reports)
+      .where(
+        and(
+          eq(reports.isPublicBroadcast, true),
+          isNotNull(reports.broadcastExpiresAt),
+          lt(reports.broadcastExpiresAt, now),
+        ),
+      );
+
+    if (due.length === 0) return { total: 0, failed: 0 };
+
+    const BATCH = 100;
+    let failed = 0;
+    let succeeded = 0;
+
+    for (let i = 0; i < due.length; i += BATCH) {
+      const chunk = due.slice(i, i + BATCH);
+      for (const row of chunk) {
+        try {
+          await this.db
+            .update(reports)
+            .set({ isPublicBroadcast: false, updatedAt: new Date() })
+            .where(eq(reports.id, row.id));
+          await this.consentLog.log({
+            reportId: row.id,
+            action: 'auto_expire',
+          });
+          succeeded += 1;
+        } catch (err) {
+          failed += 1;
+          this.logger.error(
+            `Failed to expire broadcast ${row.id}`,
+            err instanceof Error ? err.stack : String(err),
+          );
+        }
+      }
+    }
+
+    this.logger.log(`Broadcast expiry sweep: ${succeeded} expired, ${failed} failed`);
+    return { total: succeeded, failed };
+  }
+
+  private async assertCanToggleBroadcast(reportId: string, userId: string) {
+    const report = await this.findByIdForUser(reportId, userId);
+
+    if (report.status === 'expired' || report.status === 'resolved') {
+      throw new BadRequestException('BROADCAST_REPORT_NOT_ACTIVE');
+    }
+    return report;
+  }
+
+  async enableBroadcast(
+    reportId: string,
+    guardianUserId: string,
+    dto: { tosVersion?: string },
+    ctx: BroadcastRequestContext,
+  ) {
+    const report = await this.assertCanToggleBroadcast(reportId, guardianUserId);
+
+    if (report.isPublicBroadcast && report.broadcastExpiresAt && report.broadcastExpiresAt > new Date()) {
+      return report;
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + BROADCAST_INITIAL_DAYS * 24 * 60 * 60 * 1000);
+
+    const [updated] = await this.db
+      .update(reports)
+      .set({
+        isPublicBroadcast: true,
+        broadcastApprovedAt: now,
+        broadcastExpiresAt: expiresAt,
+        broadcastExtendCount: 0,
+        updatedAt: now,
+      })
+      .where(eq(reports.id, reportId))
+      .returning();
+
+    await this.consentLog.log({
+      reportId,
+      guardianUserId,
+      action: 'enable',
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+      tosVersion: dto.tosVersion ?? ctx.tosVersion,
+      metadata: { expiresAt: expiresAt.toISOString() },
+    });
+
+    return updated;
+  }
+
+  async disableBroadcast(
+    reportId: string,
+    guardianUserId: string,
+    dto: { reason?: string },
+    ctx: BroadcastRequestContext,
+  ) {
+    await this.findByIdForUser(reportId, guardianUserId);
+
+    const [updated] = await this.db
+      .update(reports)
+      .set({ isPublicBroadcast: false, updatedAt: new Date() })
+      .where(eq(reports.id, reportId))
+      .returning();
+
+    await this.consentLog.log({
+      reportId,
+      guardianUserId,
+      action: 'disable',
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+      metadata: dto.reason ? { reason: dto.reason } : null,
+    });
+
+    return updated;
+  }
+
+  async extendBroadcast(
+    reportId: string,
+    guardianUserId: string,
+    ctx: BroadcastRequestContext,
+  ) {
+    const report = await this.assertCanToggleBroadcast(reportId, guardianUserId);
+
+    if (!report.isPublicBroadcast) {
+      throw new BadRequestException('BROADCAST_NOT_ACTIVE');
+    }
+    if ((report.broadcastExtendCount ?? 0) >= BROADCAST_MAX_EXTENDS) {
+      throw new BadRequestException('BROADCAST_EXTEND_LIMIT_REACHED');
+    }
+
+    const base = report.broadcastExpiresAt && report.broadcastExpiresAt > new Date()
+      ? report.broadcastExpiresAt
+      : new Date();
+    const newExpiresAt = new Date(base.getTime() + BROADCAST_EXTEND_DAYS * 24 * 60 * 60 * 1000);
+
+    const [updated] = await this.db
+      .update(reports)
+      .set({
+        broadcastExpiresAt: newExpiresAt,
+        broadcastExtendCount: (report.broadcastExtendCount ?? 0) + 1,
+        updatedAt: new Date(),
+      })
+      .where(eq(reports.id, reportId))
+      .returning();
+
+    await this.consentLog.log({
+      reportId,
+      guardianUserId,
+      action: 'extend',
+      ipAddress: ctx.ipAddress,
+      userAgent: ctx.userAgent,
+      metadata: {
+        newExpiresAt: newExpiresAt.toISOString(),
+        extendCount: (report.broadcastExtendCount ?? 0) + 1,
+      },
+    });
+
+    return updated;
+  }
+
+  async autoRetractBroadcastOnFound(reportId: string) {
+    const [report] = await this.db
+      .select({ isPublicBroadcast: reports.isPublicBroadcast })
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
+    if (!report || !report.isPublicBroadcast) return;
+
+    await this.db
+      .update(reports)
+      .set({ isPublicBroadcast: false, updatedAt: new Date() })
+      .where(eq(reports.id, reportId));
+
+    await this.consentLog.log({
+      reportId,
+      action: 'auto_retract_found',
+    });
+  }
+
+  async autoRetractBroadcastsForUser(userId: string): Promise<number> {
+    const ownedQrs = await this.db
+      .select({ id: qrCodes.id })
+      .from(qrCodes)
+      .where(eq(qrCodes.userId, userId));
+
+    const guardianQrs = await this.db
+      .select({ qrCodeId: guardianMappings.qrCodeId })
+      .from(guardianMappings)
+      .where(
+        and(
+          eq(guardianMappings.userId, userId),
+          eq(guardianMappings.status, 'active'),
+        ),
+      );
+
+    const qrIds = [
+      ...ownedQrs.map((q) => q.id),
+      ...guardianQrs.map((g) => g.qrCodeId),
+    ];
+    if (qrIds.length === 0) return 0;
+
+    const uniqueQrIds = [...new Set(qrIds)];
+
+    const affected = await this.db
+      .select({ id: reports.id })
+      .from(reports)
+      .where(
+        and(
+          inArray(reports.qrCodeId, uniqueQrIds),
+          eq(reports.isPublicBroadcast, true),
+        ),
+      );
+
+    if (affected.length === 0) return 0;
+
+    await this.db
+      .update(reports)
+      .set({ isPublicBroadcast: false, photoUrl: null, updatedAt: new Date() })
+      .where(inArray(reports.id, affected.map((r) => r.id)));
+
+    for (const row of affected) {
+      await this.consentLog.log({
+        reportId: row.id,
+        guardianUserId: userId,
+        action: 'auto_retract_user_delete',
+      });
+    }
+
+    this.logger.log(`Retracted ${affected.length} broadcasts for deleted user ${userId}`);
+    return affected.length;
   }
 
   async getResponses(reportId: string, userId: string) {

@@ -2,6 +2,7 @@ import './instrument';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -44,10 +45,39 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Swagger / OpenAPI setup
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('TheWileyfox API')
+    .setDescription('QR-based lost item/person/pet recovery platform with community safety features')
+    .setVersion('1.0')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'JWT')
+    .addTag('auth', 'Authentication & registration')
+    .addTag('users', 'User profile management')
+    .addTag('qr-codes', 'QR code CRUD & management')
+    .addTag('guardians', 'Guardian co-ownership system')
+    .addTag('families', 'Family unit management')
+    .addTag('reports', 'Lost/found reporting')
+    .addTag('public', 'Public QR scan & reporting endpoints')
+    .addTag('pins', 'Community safety pins')
+    .addTag('directions', 'Route planning & safety scoring')
+    .addTag('messages', 'Messaging system')
+    .addTag('emergency', 'Emergency contacts & SOS')
+    .addTag('payments', 'Stripe subscriptions & billing')
+    .addTag('notifications', 'Notification management')
+    .addTag('places', 'Places & reviews')
+    .addTag('settings', 'Public platform settings')
+    .addTag('admin', 'Admin dashboard & moderation')
+    .addTag('health', 'Health checks')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
+
   await app.listen(port);
 
   const logger = new Logger('Bootstrap');
   logger.log(`TheWileyfox API running on http://localhost:${port}/api/v1`);
+  logger.log(`Swagger docs available at http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

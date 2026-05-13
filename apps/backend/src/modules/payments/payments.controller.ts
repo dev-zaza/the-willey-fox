@@ -17,7 +17,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PaymentsService } from './payments.service';
 import { ShopifyWebhookService } from './shopify-webhook.service';
 import { CreateCheckoutDto, UpdateSubscriptionDto } from './dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(

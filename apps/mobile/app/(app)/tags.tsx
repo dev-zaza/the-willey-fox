@@ -19,7 +19,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
 import QRCode from 'react-native-qrcode-svg';
-import { isQrLimitReached } from '@/lib/api-error';
+import { isQrLimitReached, extractApiErrorMessage } from '@/lib/api-error';
 import { qrService, type QrCode } from '@/services/qr.service';
 import { guardiansService, type GuardianMapping } from '@/services/guardians.service';
 import { settingsService, type QrTemplateConfig } from '@/services/settings.service';
@@ -107,7 +107,7 @@ export default function TagsScreen() {
       const data = await qrService.list();
       setTags(data);
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to load tags');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to load tags'));
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export default function TagsScreen() {
       if (isQrLimitReached(e)) {
         setLimitReached(true);
       } else {
-        Alert.alert('Error', (e as { message?: string })?.message ?? 'Failed to register tag');
+        Alert.alert('Error', extractApiErrorMessage(e, 'Failed to register tag'));
       }
     } finally {
       setSubmitting(false);
@@ -149,7 +149,7 @@ export default function TagsScreen() {
       setTags((prev) => prev.map((t) => (t.id === id ? updated : t)));
       if (selectedTag?.id === id) setSelectedTag(updated);
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to update tag');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to update tag'));
     }
   }
 
@@ -159,7 +159,7 @@ export default function TagsScreen() {
       setTags((prev) => prev.map((t) => (t.id === id ? updated : t)));
       if (selectedTag?.id === id) setSelectedTag(updated);
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to update tag');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to update tag'));
     }
   }
 
@@ -176,7 +176,7 @@ export default function TagsScreen() {
             setStep('list');
             setSelectedTag(null);
           } catch (e: any) {
-            Alert.alert('Error', e?.message ?? 'Failed to delete tag');
+            Alert.alert('Error', extractApiErrorMessage(e, 'Failed to delete tag'));
           }
         },
       },
@@ -206,7 +206,7 @@ export default function TagsScreen() {
       Alert.alert('Invite Sent', `An invitation has been sent to ${inviteEmail.trim()}.`);
       loadGuardians(selectedTag.id);
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to send invite');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to send invite'));
     } finally {
       setInviteSending(false);
     }
@@ -218,7 +218,7 @@ export default function TagsScreen() {
       await guardiansService.reject(selectedTag.id, userId);
       setGuardians((prev) => prev.filter((g) => g.userId !== userId));
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to reject guardian');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to reject guardian'));
     }
   }
 
@@ -234,7 +234,7 @@ export default function TagsScreen() {
             await guardiansService.remove(selectedTag.id, userId);
             setGuardians((prev) => prev.filter((g) => g.userId !== userId));
           } catch (e: any) {
-            Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to remove guardian');
+            Alert.alert('Error', extractApiErrorMessage(e, 'Failed to remove guardian'));
           }
         },
       },
@@ -248,7 +248,7 @@ export default function TagsScreen() {
       await tagCustomizationService.setTheme(selectedTag.id, themeId);
       setSelectedThemeId(themeId);
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to set theme');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to set theme'));
     } finally {
       setSettingTheme(false);
     }
@@ -289,7 +289,7 @@ export default function TagsScreen() {
       const { uri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share or print your tag' });
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Failed to generate PDF');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to generate PDF'));
     } finally {
       setPrinting(false);
     }

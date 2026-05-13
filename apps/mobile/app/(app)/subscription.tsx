@@ -12,6 +12,7 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import { useRouter } from 'expo-router';
 import { paymentsService, type Subscription } from '@/services/payments.service';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ─── Plan feature lists ───────────────────────────────────────────────────────
 
@@ -115,7 +116,7 @@ export default function SubscriptionScreen() {
       }
     } catch (e: any) {
       checkoutInProgress.current = false;
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Could not start checkout');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Could not start checkout'));
     } finally {
       setCheckoutLoading(null);
     }
@@ -128,7 +129,7 @@ export default function SubscriptionScreen() {
       await WebBrowser.openAuthSessionAsync(url, 'thewileyfox://subscription');
       await fetchSubscription();
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Could not open billing portal');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Could not open billing portal'));
     } finally {
       setPortalLoading(false);
     }
@@ -150,7 +151,7 @@ export default function SubscriptionScreen() {
               setSubscription((prev) => prev ? { ...prev, cancelAtPeriodEnd: true } : prev);
               Alert.alert('Cancelled', 'Your subscription will end at the current period.');
             } catch (e: any) {
-              Alert.alert('Error', e?.message ?? 'Failed to cancel subscription');
+              Alert.alert('Error', extractApiErrorMessage(e, 'Failed to cancel subscription'));
             } finally {
               setCancelLoading(false);
             }

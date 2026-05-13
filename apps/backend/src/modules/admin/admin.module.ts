@@ -6,9 +6,10 @@ import { TagCustomizationService } from './tag-customization.service';
 import { QrModule } from '../qr/qr.module';
 import { SettingsModule } from '../settings/settings.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { BroadcastsModule } from '../broadcasts/broadcasts.module';
 
 @Module({
-  imports: [QrModule, SettingsModule, NotificationsModule],
+  imports: [QrModule, SettingsModule, NotificationsModule, BroadcastsModule],
   controllers: [AdminController],
   providers: [AdminService, AuditLogService, TagCustomizationService],
 })

@@ -12,6 +12,7 @@ import {
 import { storage } from '@/lib/storage';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, apiClient } from '@/services/api';
 import { useAuthStore } from '@/stores';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 export default function TwoFactorScreen() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function TwoFactorScreen() {
       (useAuthStore.setState as any)({ mfaToken: null });
       router.replace('/(app)/map');
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Invalid code. Please try again.');
+      setError(extractApiErrorMessage(e, 'Invalid code. Please try again.'));
     } finally {
       setLoading(false);
     }

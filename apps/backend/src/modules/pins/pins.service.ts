@@ -17,7 +17,7 @@ import { MessagesGateway } from '../messages/messages.gateway';
 import { UsersService } from '../users/users.service';
 
 // Pin types that auto-expire after 4 hours
-const AUTO_EXPIRE_TYPES = ['hazard', 'roadblock', 'safety_alert', 'traffic'] as const;
+const AUTO_EXPIRE_TYPES = ['hazard', 'roadblock', 'safety_alert', 'traffic', 'pickpocket', 'harassment', 'unsafe_area'] as const;
 const AUTO_EXPIRE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 // Downvote deactivation threshold: downvotes > upvotes + 5

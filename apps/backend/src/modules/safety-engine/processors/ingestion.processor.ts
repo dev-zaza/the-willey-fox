@@ -5,6 +5,7 @@ import { SafetyEngineService, INGESTION_QUEUE } from '../safety-engine.service';
 import { UkPoliceAdapter } from '../adapters/uk-police.adapter';
 import { EurostatAdapter } from '../adapters/eurostat.adapter';
 import { FbiAdapter } from '../adapters/fbi.adapter';
+import { TravelAdvisoryAdapter } from '../adapters/travel-advisory.adapter';
 
 @Processor(INGESTION_QUEUE)
 export class IngestionProcessor extends WorkerHost {
@@ -15,6 +16,7 @@ export class IngestionProcessor extends WorkerHost {
     private readonly ukPoliceAdapter: UkPoliceAdapter,
     private readonly eurostatAdapter: EurostatAdapter,
     private readonly fbiAdapter: FbiAdapter,
+    private readonly travelAdvisoryAdapter: TravelAdvisoryAdapter,
   ) {
     super();
   }
@@ -37,6 +39,7 @@ export class IngestionProcessor extends WorkerHost {
       case 'uk_police': return this.ukPoliceAdapter;
       case 'eurostat': return this.eurostatAdapter;
       case 'fbi': return this.fbiAdapter;
+      case 'us_travel_advisory': return this.travelAdvisoryAdapter;
       default: return null;
     }
   }

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Location from 'expo-location';
+import Constants from 'expo-constants';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Alert,
@@ -17,12 +18,20 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Circle, Marker, Polyline, Region } from 'react-native-maps';
 import { pinsService } from '@/services/pins.service';
 import { directionsService, type SafetyZone, type RouteResult } from '@/services/directions.service';
 import { emergencyService, type ActiveSosNear } from '@/services/emergency.service';
 import { usersService } from '@/services/users.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { openNativeNavigation } from '@/lib/open-native-maps';
+import { extractApiErrorMessage } from '@/lib/api-error';
+
+type Region = {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+};
 
 // ── Polyline decoder (Google encoded polyline algorithm) ─────────────────────
 function decodePolyline(encoded: string): Array<{ latitude: number; longitude: number }> {
@@ -61,8 +70,11 @@ const PIN_TYPES = [
   { id: 'traffic',        label: 'Traffic',      emoji: '🚗', color: '#EF4444' },
   { id: 'construction',   label: 'Construction', emoji: '🚧', color: '#F97316' },
   { id: 'event',          label: 'Event',        emoji: '📅', color: '#3B82F6' },
+  { id: 'pickpocket',     label: 'Pickpocket',   emoji: '🤚', color: '#DC2626' },
+  { id: 'recommendation', label: 'Recommendation', emoji: '👍', color: '#10B981' },
+  { id: 'harassment',    label: 'Harassment',    emoji: '🚫', color: '#BE185D' },
+  { id: 'unsafe_area',   label: 'Unsafe Area',   emoji: '⛔', color: '#991B1B' },
   { id: 'safety',         label: 'Safety',       emoji: '⚠️', color: '#EAB308' },
-  { id: 'recommendation', label: 'Recommend',    emoji: '👍', color: '#22C55E' },
 ] as const;
 
 type PinType = (typeof PIN_TYPES)[number]['id'];
@@ -85,8 +97,97 @@ const FALLBACK_REGION: Region = {
   longitudeDelta: 0.05,
 };
 
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
+
+let nativeMapsModule: any = null;
+try {
+  nativeMapsModule = require('react-native-maps');
+} catch {
+  nativeMapsModule = null;
+}
+
+const MapView = nativeMapsModule?.default as any;
+const Circle = nativeMapsModule?.Circle as any;
+const Marker = nativeMapsModule?.Marker as any;
+const Polyline = nativeMapsModule?.Polyline as any;
+
+let mapboxModule: any = null;
+try {
+  mapboxModule = require('@rnmapbox/maps');
+} catch {
+  mapboxModule = null;
+}
+
+const Mapbox = mapboxModule?.default;
+const MapboxMapView = mapboxModule?.MapView as any;
+const MapboxCamera = mapboxModule?.Camera as any;
+const PointAnnotation = mapboxModule?.PointAnnotation as any;
+const ShapeSource = mapboxModule?.ShapeSource as any;
+const MapboxCircleLayer = mapboxModule?.CircleLayer as any;
+const MapboxLineLayer = mapboxModule?.LineLayer as any;
+
+const HAS_MAPBOX_TOKEN = Boolean(MAPBOX_TOKEN);
+const HAS_GOOGLE_NATIVE = Boolean(MapView && Marker && Circle && Polyline);
+const HAS_MAPBOX_NATIVE = Boolean(
+  Mapbox &&
+    MapboxMapView &&
+    MapboxCamera &&
+    PointAnnotation &&
+    ShapeSource &&
+    MapboxCircleLayer &&
+    MapboxLineLayer,
+);
+const IS_MAPBOX_ENABLED = HAS_MAPBOX_TOKEN && HAS_MAPBOX_NATIVE;
+
+function regionFromCenterZoom(centerLat: number, centerLng: number, zoomLevel: number): Region {
+  const worldDelta = 360 / Math.pow(2, Math.max(zoomLevel, 1));
+  const latitudeDelta = Math.max(0.0025, Math.min(180, worldDelta));
+  const longitudeDelta = Math.max(0.0025, Math.min(180, worldDelta));
+  return {
+    latitude: centerLat,
+    longitude: centerLng,
+    latitudeDelta,
+    longitudeDelta,
+  };
+}
+
 function getPinConfig(type: PinType) {
   return PIN_TYPES.find((p) => p.id === type) ?? PIN_TYPES[0];
+}
+
+function getMapboxPressCoords(event: any): { lat: number; lng: number } | null {
+  const candidates: unknown[] = [
+    event?.geometry?.coordinates,
+    event?.coordinates,
+    event?.nativeEvent?.coordinates,
+    event?.nativeEvent?.geometry?.coordinates,
+    event?.nativeEvent?.payload?.geometry?.coordinates,
+    event?.nativeEvent?.coordinate,
+    event?.coordinate,
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length >= 2) {
+      const lng = Number(candidate[0]);
+      const lat = Number(candidate[1]);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat, lng };
+      }
+    }
+    if (candidate && typeof candidate === 'object') {
+      const asObj = candidate as Record<string, unknown>;
+      const lat = Number(asObj.latitude ?? asObj.lat);
+      const lng = Number(asObj.longitude ?? asObj.lng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat, lng };
+      }
+    }
+  }
+  return null;
+}
+
+function isMapboxFeatureTap(event: any): boolean {
+  const features = event?.features ?? event?.nativeEvent?.payload?.features ?? event?.nativeEvent?.features;
+  return Array.isArray(features) && features.length > 0;
 }
 
 // ── Custom pin marker ────────────────────────────────────────────────────────
@@ -136,15 +237,17 @@ export default function MapScreen() {
   const { openAddPin } = useLocalSearchParams<{ openAddPin?: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null);
+  const mapboxCameraRef = useRef<any>(null);
   const pinsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locationWatcherRef = useRef<Location.LocationSubscription | null>(null);
 
   const [pins, setPins] = useState<Pin[]>([]);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<PinType | 'all'>('all');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationReady, setLocationReady] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [votedPins, setVotedPins] = useState<Record<string, 'up' | 'down'>>({});
   const currentRegionRef = useRef<Region | null>(null);
@@ -178,6 +281,135 @@ export default function MapScreen() {
   const [pendingRoutePin, setPendingRoutePin] = useState<Pin | null>(null);
   const [pendingPoiDest, setPendingPoiDest] = useState<{ lat: number; lng: number } | null>(null);
 
+  const safetyZonesGeoJson = useMemo(() => {
+    return {
+      type: 'FeatureCollection',
+      features: safetyZones
+        .map((zone) => {
+          const lat = zone.centerLat ? parseFloat(zone.centerLat) : null;
+          const lng = zone.centerLng ? parseFloat(zone.centerLng) : null;
+          if (!lat || !lng) return null;
+          return {
+            type: 'Feature',
+            properties: {
+              id: zone.id,
+              color:
+                Number(zone.safetyScore) >= 70
+                  ? '#16a34a'
+                  : Number(zone.safetyScore) >= 40
+                    ? '#f59e0b'
+                    : '#ef4444',
+              radius: zone.radiusMetres ?? 2000,
+            },
+            geometry: { type: 'Point', coordinates: [lng, lat] },
+          };
+        })
+        .filter(Boolean),
+    } as any;
+  }, [safetyZones]);
+
+  const sosGeoJson = useMemo(() => {
+    return {
+      type: 'FeatureCollection',
+      features: sosBeacons.map((beacon) => ({
+        type: 'Feature',
+        properties: { id: beacon.id },
+        geometry: {
+          type: 'Point',
+          coordinates: [parseFloat(beacon.lng), parseFloat(beacon.lat)],
+        },
+      })),
+    } as any;
+  }, [sosBeacons]);
+
+  const routeGeoJson = useMemo(() => {
+    if (routePolyline.length === 0) return null;
+    return {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: routePolyline.map((p) => [p.longitude, p.latitude]),
+          },
+        },
+      ],
+    } as any;
+  }, [routePolyline]);
+
+  function animateToRegionLike(
+    region: Region,
+    duration = 600,
+    zoomLevel = 14,
+  ) {
+    if (IS_MAPBOX_ENABLED) {
+      mapboxCameraRef.current?.setCamera({
+        centerCoordinate: [region.longitude, region.latitude],
+        zoomLevel,
+        animationDuration: duration,
+        animationMode: 'easeTo',
+      });
+      return;
+    }
+    mapRef.current?.animateToRegion(region, duration);
+  }
+
+  function fitToRouteCoords(
+    origin: { latitude: number; longitude: number },
+    destination: { latitude: number; longitude: number },
+  ) {
+    if (IS_MAPBOX_ENABLED) {
+      const ne: [number, number] = [
+        Math.max(origin.longitude, destination.longitude),
+        Math.max(origin.latitude, destination.latitude),
+      ];
+      const sw: [number, number] = [
+        Math.min(origin.longitude, destination.longitude),
+        Math.min(origin.latitude, destination.latitude),
+      ];
+      mapboxCameraRef.current?.fitBounds(ne, sw, [120, 40, 200, 40], 900);
+      return;
+    }
+    mapRef.current?.fitToCoordinates([origin, destination], {
+      edgePadding: { top: 120, right: 40, bottom: 200, left: 40 },
+      animated: true,
+    });
+  }
+
+  useEffect(() => {
+    if (!HAS_MAPBOX_NATIVE && !HAS_GOOGLE_NATIVE) {
+      Alert.alert(
+        'Unsupported runtime',
+        'Neither Mapbox nor react-native-maps native modules are available. Use an Android development build.',
+      );
+      return;
+    }
+    if (HAS_MAPBOX_TOKEN && !HAS_MAPBOX_NATIVE) {
+      Alert.alert(
+        'Mapbox requires a development build',
+        'Mapbox token is set, but native Mapbox module is unavailable (likely Expo Go). Build and run the app with `pnpm --filter @safetag/mobile android` or use an EAS dev build.',
+      );
+      return;
+    }
+    if (IS_MAPBOX_ENABLED) {
+      Mapbox.setAccessToken(MAPBOX_TOKEN);
+      return;
+    }
+    if (Platform.OS !== 'android') return;
+    const androidConfig = Constants.expoConfig?.android as
+      | { config?: { googleMaps?: { apiKey?: string } } }
+      | undefined;
+    const hasMapsKey = Boolean(androidConfig?.config?.googleMaps?.apiKey);
+    if (!hasMapsKey) {
+      Alert.alert(
+        'Map setup required',
+        'Google Maps API key is missing for Android build. Set GOOGLE_MAPS_API_KEY in apps/mobile/.env and rebuild the app.',
+      );
+    }
+  }, []);
+
   useEffect(() => {
     if (openAddPin === '1') setShowAddModal(true);
   }, [openAddPin]);
@@ -209,18 +441,105 @@ export default function MapScreen() {
     }
   }
 
+  function applyCurrentLocation(coords: { lat: number; lng: number }, shouldCenter = false) {
+    setUserLocation(coords);
+    usersService.updateLocation(coords.lat, coords.lng).catch(() => {});
+    if (shouldCenter) {
+      const targetRegion: Region = {
+        latitude: coords.lat,
+        longitude: coords.lng,
+        latitudeDelta: 0.03,
+        longitudeDelta: 0.03,
+      };
+      currentRegionRef.current = targetRegion;
+      animateToRegionLike(targetRegion, 800, 15);
+    }
+  }
+
+  async function getCurrentCoords(accuracy: Location.Accuracy) {
+    const loc = await Location.getCurrentPositionAsync({ accuracy });
+    return { lat: loc.coords.latitude, lng: loc.coords.longitude };
+  }
+
+  async function recenterToCurrentLocation() {
+    try {
+      setLocating(true);
+      const permission = await Location.getForegroundPermissionsAsync();
+      if (permission.status !== 'granted') {
+        const requested = await Location.requestForegroundPermissionsAsync();
+        if (requested.status !== 'granted') {
+          Alert.alert('Location permission denied', 'Enable location in Settings to use current location.');
+          return;
+        }
+      }
+
+      let coords: { lat: number; lng: number } | null = null;
+      try {
+        coords = await getCurrentCoords(Location.Accuracy.Highest);
+      } catch {
+        try {
+          coords = await getCurrentCoords(Location.Accuracy.High);
+        } catch {
+          coords = await getCurrentCoords(Location.Accuracy.Balanced);
+        }
+      }
+
+      applyCurrentLocation(coords, true);
+      emergencyService.getActiveSosNear(coords.lat, coords.lng, 2000).then(setSosBeacons).catch(() => {});
+    } catch {
+      Alert.alert('Location unavailable', 'Could not fetch your current location. Please check device GPS settings.');
+    } finally {
+      setLocating(false);
+    }
+  }
+
   useEffect(() => {
+    let isMounted = true;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Location permission denied', 'Enable location in Settings to place pins.');
-        setLocationReady(true);
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
-      setUserLocation(coords);
-      setLocationReady(true);
+
+      if (Platform.OS === 'android') {
+        // Ask Android to improve provider accuracy (GPS/network) before first fix.
+        await Location.enableNetworkProviderAsync().catch(() => {});
+      }
+
+      let lastKnownCoords: { lat: number; lng: number } | null = null;
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown && isMounted) {
+          lastKnownCoords = { lat: lastKnown.coords.latitude, lng: lastKnown.coords.longitude };
+          applyCurrentLocation(
+            lastKnownCoords,
+            false,
+          );
+        }
+      } catch {
+        // Ignore last-known lookup failures
+      }
+
+      let coords: { lat: number; lng: number };
+      try {
+        coords = await getCurrentCoords(Location.Accuracy.High);
+      } catch {
+        try {
+          coords = await getCurrentCoords(Location.Accuracy.Balanced);
+        } catch {
+          if (lastKnownCoords) {
+            // Keep last known centered location when live GPS is unavailable.
+            return;
+          }
+          Alert.alert('Location unavailable', 'Could not detect your current location. Please check device location settings.');
+          return;
+        }
+      }
+
+      if (!isMounted) return;
+
+      applyCurrentLocation(coords, true);
       const initialRegion: Region = {
         latitude: coords.lat,
         longitude: coords.lng,
@@ -229,10 +548,29 @@ export default function MapScreen() {
       };
       currentRegionRef.current = initialRegion;
       await loadPinsForRegion(initialRegion);
-      usersService.updateLocation(coords.lat, coords.lng).catch(() => {});
       emergencyService.getActiveSosNear(coords.lat, coords.lng, 2000).then(setSosBeacons).catch(() => {});
-      mapRef.current?.animateToRegion(initialRegion, 800);
+
+      locationWatcherRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 10,
+        },
+        (update) => {
+          if (!isMounted) return;
+          applyCurrentLocation(
+            { lat: update.coords.latitude, lng: update.coords.longitude },
+            false,
+          );
+        },
+      );
     })();
+
+    return () => {
+      isMounted = false;
+      locationWatcherRef.current?.remove();
+      locationWatcherRef.current = null;
+    };
   }, []);
 
   const visiblePins =
@@ -279,9 +617,13 @@ export default function MapScreen() {
       setActiveFilter('all');
       setTapLocation(null);
       setShowAddModal(false);
-      mapRef.current?.animateToRegion({ latitude: lat, longitude: lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 600);
+      animateToRegionLike(
+        { latitude: lat, longitude: lng, latitudeDelta: 0.02, longitudeDelta: 0.02 },
+        600,
+        15,
+      );
     } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message ?? e?.message ?? 'Failed to add pin');
+      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to add pin'));
     } finally {
       setSubmitting(false);
     }
@@ -309,9 +651,10 @@ export default function MapScreen() {
     setSearchResults([]);
     setSearchFocused(false);
     // Fly map to the result
-    mapRef.current?.animateToRegion(
+    animateToRegionLike(
       { latitude: result.lat, longitude: result.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 },
       600,
+      16,
     );
     // Open POI sheet so user can get directions
     setSelectedPoi({ lat: result.lat, lng: result.lng, name: result.name });
@@ -367,12 +710,12 @@ export default function MapScreen() {
       const destCoord = pendingRoutePin
         ? { latitude: pendingRoutePin.lat, longitude: pendingRoutePin.lng }
         : { latitude: dest.lat, longitude: dest.lng };
-      mapRef.current?.fitToCoordinates(
-        [{ latitude: userLocation.lat, longitude: userLocation.lng }, destCoord],
-        { edgePadding: { top: 120, right: 40, bottom: 200, left: 40 }, animated: true },
+      fitToRouteCoords(
+        { latitude: userLocation.lat, longitude: userLocation.lng },
+        destCoord,
       );
     } catch (e: any) {
-      Alert.alert('Directions failed', e?.response?.data?.message ?? e?.message ?? 'Could not get directions.');
+      Alert.alert('Directions failed', extractApiErrorMessage(e, 'Could not get directions.'));
     } finally {
       setRouteLoading(false);
     }
@@ -397,107 +740,170 @@ export default function MapScreen() {
     setPendingPoiDest(null);
   }
 
+  function startNavigation() {
+    const dest = pendingRoutePin
+      ? { lat: pendingRoutePin.lat, lng: pendingRoutePin.lng }
+      : pendingPoiDest;
+    if (!dest) return;
+    openNativeNavigation(dest, userLocation);
+  }
+
+  function openAddPinAtCoords(coords: { lat: number; lng: number }) {
+    setSelectedPin(null);
+    setSelectedPoi(null);
+    setTapLocation(coords);
+    setShowAddModal(true);
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
       {/* Full-screen map */}
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        initialRegion={FALLBACK_REGION}
-        showsUserLocation
-        showsMyLocationButton={false}
-        zoomEnabled
-        scrollEnabled
-        rotateEnabled
-        pitchEnabled
-        onLongPress={(e) => {
-          const { latitude, longitude } = e.nativeEvent.coordinate;
-          setTapLocation({ lat: latitude, lng: longitude });
-          setShowAddModal(true);
-        }}
-        onPoiClick={(e) => {
-          const { coordinate, name } = e.nativeEvent;
-          setSelectedPoi({ lat: coordinate.latitude, lng: coordinate.longitude, name });
-        }}
-        onRegionChangeComplete={(region) => {
-          currentRegionRef.current = region;
-          if (pinsDebounceRef.current) clearTimeout(pinsDebounceRef.current);
-          pinsDebounceRef.current = setTimeout(() => loadPinsForRegion(region), 400);
-        }}
-      >
-        {visiblePins.map((pin) => (
-          <Marker
-            key={pin.id}
-            coordinate={{ latitude: pin.lat, longitude: pin.lng }}
-            onPress={() => setSelectedPin(pin)}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <PinMarker type={pin.type} selected={selectedPin?.id === pin.id} />
-          </Marker>
-        ))}
+      {IS_MAPBOX_ENABLED ? (
+        <MapboxMapView
+          style={StyleSheet.absoluteFill}
+          styleURL="mapbox://styles/mapbox/streets-v12"
+          zoomEnabled
+          scrollEnabled
+          rotateEnabled
+          pitchEnabled
+          gestureSettings={{
+            longPressEnabled: true,
+          }}
+          onLongPress={(e: any) => {
+            const coords = getMapboxPressCoords(e);
+            if (!coords) {
+              Alert.alert('Map tap failed', 'Could not read tapped location. Try long-pressing again.');
+              return;
+            }
+            openAddPinAtCoords(coords);
+          }}
+          onPress={(e: any) => {
+            // Some Android Mapbox builds do not consistently emit long-press.
+            // Fallback: single tap on empty map area opens add-pin modal.
+            if (isMapboxFeatureTap(e)) return;
+            const coords = getMapboxPressCoords(e);
+            if (!coords) return;
+            openAddPinAtCoords(coords);
+          }}
+          onCameraChanged={(state: any) => {
+            const center = state.properties.center;
+            const zoom = state.properties.zoom;
+            if (!center) return;
+            const region = regionFromCenterZoom(center[1], center[0], zoom ?? 12);
+            currentRegionRef.current = region;
+            if (pinsDebounceRef.current) clearTimeout(pinsDebounceRef.current);
+            pinsDebounceRef.current = setTimeout(() => loadPinsForRegion(region), 400);
+          }}
+        >
+          <MapboxCamera
+            ref={mapboxCameraRef}
+            defaultSettings={{
+              centerCoordinate: [FALLBACK_REGION.longitude, FALLBACK_REGION.latitude],
+              zoomLevel: 12,
+            }}
+          />
+          {userLocation && (
+            <PointAnnotation
+              id="current-user-location"
+              coordinate={[userLocation.lng, userLocation.lat]}
+            >
+              <View style={styles.currentLocationMarker} />
+            </PointAnnotation>
+          )}
+          {visiblePins.map((pin) => (
+            <PointAnnotation
+              key={pin.id}
+              id={`pin-${pin.id}`}
+              coordinate={[pin.lng, pin.lat]}
+              onSelected={() => setSelectedPin(pin)}
+            >
+              <PinMarker type={pin.type} selected={selectedPin?.id === pin.id} />
+            </PointAnnotation>
+          ))}
 
-        {sosBeacons.map((beacon) => (
-          <React.Fragment key={beacon.id}>
-            <Circle
-              center={{ latitude: parseFloat(beacon.lat), longitude: parseFloat(beacon.lng) }}
-              radius={200}
-              strokeColor="#ef4444"
-              strokeWidth={2}
-              fillColor="#ef444420"
-            />
-            <Marker
-              coordinate={{ latitude: parseFloat(beacon.lat), longitude: parseFloat(beacon.lng) }}
-              anchor={{ x: 0.5, y: 0.5 }}
+          {sosGeoJson.features.length > 0 && (
+            <ShapeSource id="sos-circles" shape={sosGeoJson}>
+              <MapboxCircleLayer
+                id="sos-circles-layer"
+                style={{
+                  circleColor: '#ef4444',
+                  circleRadius: 28,
+                  circleOpacity: 0.2,
+                  circleStrokeColor: '#ef4444',
+                  circleStrokeWidth: 2,
+                }}
+              />
+            </ShapeSource>
+          )}
+
+          {sosBeacons.map((beacon) => (
+            <PointAnnotation
+              key={`sos-${beacon.id}`}
+              id={`sos-${beacon.id}`}
+              coordinate={[parseFloat(beacon.lng), parseFloat(beacon.lat)]}
             >
               <SosBeaconMarker />
-            </Marker>
-          </React.Fragment>
-        ))}
+            </PointAnnotation>
+          ))}
 
-        {safetyZones.map((zone) => {
-          const lat = zone.centerLat ? parseFloat(zone.centerLat) : null;
-          const lng = zone.centerLng ? parseFloat(zone.centerLng) : null;
-          if (!lat || !lng) return null;
-          const score = Number(zone.safetyScore);
-          const color = score >= 70 ? '#16a34a' : score >= 40 ? '#f59e0b' : '#ef4444';
-          return (
-            <Circle key={zone.id} center={{ latitude: lat, longitude: lng }} radius={zone.radiusMetres ?? 2000} strokeColor={color} strokeWidth={1} fillColor={color + '33'} />
-          );
-        })}
+          {safetyZonesGeoJson.features.length > 0 && (
+            <ShapeSource id="safety-zones" shape={safetyZonesGeoJson}>
+              <MapboxCircleLayer
+                id="safety-zones-layer"
+                style={{
+                  circleColor: ['get', 'color'],
+                  circleRadius: ['interpolate', ['linear'], ['zoom'], 8, 20, 12, 45, 15, 80],
+                  circleOpacity: 0.2,
+                  circleStrokeColor: ['get', 'color'],
+                  circleStrokeWidth: 1,
+                }}
+              />
+            </ShapeSource>
+          )}
 
-        {/* ── Route polyline ── */}
-        {routePolyline.length > 0 && (
-          <Polyline
-            coordinates={routePolyline}
-            strokeColor="#3b82f6"
-            strokeWidth={4}
-            lineDashPattern={undefined}
-          />
-        )}
+          {routeGeoJson && (
+            <ShapeSource id="route-shape" shape={routeGeoJson}>
+              <MapboxLineLayer
+                id="route-line"
+                style={{
+                  lineColor: '#3b82f6',
+                  lineWidth: 4,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                }}
+              />
+            </ShapeSource>
+          )}
 
-        {/* Preview marker for new pin location (long-press) */}
-        {showAddModal && tapLocation && (
-          <Marker
-            coordinate={{ latitude: tapLocation.lat, longitude: tapLocation.lng }}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <View style={styles.tapPreviewMarker}>
-              <Text style={{ fontSize: 18 }}>📍</Text>
-            </View>
-          </Marker>
-        )}
+          {showAddModal && tapLocation && (
+            <PointAnnotation
+              id="preview-pin"
+              coordinate={[tapLocation.lng, tapLocation.lat]}
+            >
+              <View style={styles.tapPreviewMarker}>
+                <Text style={{ fontSize: 18 }}>📍</Text>
+              </View>
+            </PointAnnotation>
+          )}
 
-        {/* Destination marker when route active */}
-        {activeRoute && pendingRoutePin && (
-          <Marker
-            coordinate={{ latitude: pendingRoutePin.lat, longitude: pendingRoutePin.lng }}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <PinMarker type={pendingRoutePin.type} selected />
-          </Marker>
-        )}
-      </MapView>
+          {activeRoute && pendingRoutePin && (
+            <PointAnnotation
+              id="destination-pin"
+              coordinate={[pendingRoutePin.lng, pendingRoutePin.lat]}
+            >
+              <PinMarker type={pendingRoutePin.type} selected />
+            </PointAnnotation>
+          )}
+        </MapboxMapView>
+      ) : (
+        <View style={[StyleSheet.absoluteFill, styles.fallbackWrap]}>
+          <Text style={styles.fallbackTitle}>Map unavailable in this runtime</Text>
+          <Text style={styles.fallbackText}>
+            Open the app using the installed development build instead of Expo Go.
+          </Text>
+        </View>
+      )}
 
       {/* ── Floating top bar: Search + Location + Profile ── */}
       <View style={styles.topBar} pointerEvents="box-none">
@@ -508,8 +914,8 @@ export default function MapScreen() {
             onPress={() => router.push('/(app)/profile')}
             activeOpacity={0.8}
           >
-            {user?.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatarImg} />
+            {(user as any)?.avatarUrl ? (
+              <Image source={{ uri: (user as any).avatarUrl }} style={styles.avatarImg} />
             ) : (
               <View style={styles.avatarFallback}>
                 <Ionicons name="person" size={18} color="#f97316" />
@@ -608,13 +1014,13 @@ export default function MapScreen() {
       {/* ── Left-side: My location ── */}
       <TouchableOpacity
         style={styles.locationBtn}
-        onPress={() => {
-          if (userLocation) {
-            mapRef.current?.animateToRegion({ latitude: userLocation.lat, longitude: userLocation.lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 600);
-          }
-        }}
+        onPress={recenterToCurrentLocation}
       >
-        <Ionicons name="navigate" size={20} color={userLocation ? '#f97316' : '#9ca3af'} />
+        <Ionicons
+          name={locating ? 'locate' : 'navigate'}
+          size={20}
+          color={userLocation ? '#f97316' : '#9ca3af'}
+        />
       </TouchableOpacity>
 
       {/* ── Route loading overlay ── */}
@@ -651,6 +1057,14 @@ export default function MapScreen() {
               </Text>
             )}
           </View>
+          <TouchableOpacity
+            style={styles.routeNavBtn}
+            onPress={startNavigation}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="navigate" size={14} color="#ffffff" />
+            <Text style={styles.routeNavBtnText}>Navigate</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.routeClearBtn} onPress={clearRoute}>
             <Ionicons name="close" size={18} color="#6b7280" />
           </TouchableOpacity>
@@ -1124,6 +1538,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  routeNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f97316',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  routeNavBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 
   // ── Pin marker ───────────────────────────────────────────
   pinOuter: {
@@ -1484,5 +1912,37 @@ const styles = StyleSheet.create({
     borderColor: '#3b82f6',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  currentLocationMarker: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#3b82f6',
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  fallbackWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: '#f8fafc',
+  },
+  fallbackTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  fallbackText: {
+    fontSize: 14,
+    color: '#4b5563',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

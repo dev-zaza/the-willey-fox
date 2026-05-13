@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { guardiansService } from '@/services/guardians.service';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 export default function GuardianAcceptScreen() {
   const { token } = useLocalSearchParams<{ token?: string }>();
@@ -23,7 +24,7 @@ export default function GuardianAcceptScreen() {
       .acceptInvite(token)
       .then(() => setStatus('success'))
       .catch((err: any) => {
-        const code: string = err?.response?.data?.message ?? err?.message ?? 'Unknown error';
+        const code: string = extractApiErrorMessage(err, 'Unknown error');
         if (code === 'INVITE_EXPIRED') {
           setErrorMsg('This invite has expired. Ask the owner to send a new one.');
         } else if (code === 'INVITE_ALREADY_USED') {

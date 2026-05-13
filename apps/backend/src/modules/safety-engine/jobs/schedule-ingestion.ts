@@ -36,4 +36,14 @@ export class ScheduleIngestionJob {
     this.logger.log('Scheduled: triggering FBI ingestion');
     await this.safetyEngineService.triggerIngestion('fbi');
   }
+
+  /**
+   * US Travel Advisory: quarterly on 1st of Jan/Apr/Jul/Oct at 05:00 UTC.
+   * Advisory data updates irregularly; quarterly refresh is sufficient.
+   */
+  @Cron('0 5 1 1,4,7,10 *')
+  async runTravelAdvisoryIngestion() {
+    this.logger.log('Scheduled: triggering US Travel Advisory ingestion');
+    await this.safetyEngineService.triggerIngestion('us_travel_advisory');
+  }
 }

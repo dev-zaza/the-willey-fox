@@ -18,7 +18,10 @@ import { EmergencyService } from './emergency.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AddContactDto } from './dto/add-contact.dto';
 import { TriggerSosDto } from './dto/trigger-sos.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('emergency')
 @Controller('emergency')
 export class EmergencyController {
   constructor(private readonly emergencyService: EmergencyService) {}

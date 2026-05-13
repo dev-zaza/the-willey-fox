@@ -155,12 +155,31 @@ export class DirectionsService {
       adjustedScore = Math.max(0, adjustedScore - penalty);
     }
 
+    // Safety Mode: extra penalty for harassment/pickpocket/unsafe_area pins
+    const safetyMode = dto.preferences?.safetyMode ?? false;
+    if (safetyMode && adjustedScore != null && affectedPins.length > 0) {
+      const vulnerabilityPinTypes = ['harassment', 'pickpocket', 'unsafe_area'];
+      const vulnerabilityPinCount = affectedPins.filter(
+        (p: any) => vulnerabilityPinTypes.includes(p.type),
+      ).length;
+      if (vulnerabilityPinCount > 0) {
+        const safetyModePenalty = vulnerabilityPinCount * 10;
+        adjustedScore = Math.max(0, adjustedScore - safetyModePenalty);
+      }
+    }
+
     const warnings: string[] = [];
     if (affectedPins.length > 0) {
       warnings.push(`${affectedPins.length} active community alert${affectedPins.length > 1 ? 's' : ''} near this route`);
     }
     if (adjustedScore != null && adjustedScore < 40) {
       warnings.push('This route passes through areas with elevated crime rates');
+    }
+    if (safetyMode) {
+      const vulnPins = affectedPins.filter((p: any) => ['harassment', 'pickpocket', 'unsafe_area'].includes(p.type));
+      if (vulnPins.length > 0) {
+        warnings.push(`Safety Mode: ${vulnPins.length} harassment/safety alert${vulnPins.length > 1 ? 's' : ''} reported near this route`);
+      }
     }
 
     return {

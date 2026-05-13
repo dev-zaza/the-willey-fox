@@ -21,10 +21,13 @@ import { UsersService } from './users.service';
 import { UpdateProfileDto, UpdateLocationDto, ReportUserDto, VerifyPhoneOtpDto } from './dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import type { Express } from 'express';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
+@ApiBearerAuth('JWT')
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

@@ -18,7 +18,10 @@ import { QrAccessGuard } from './guards/qr-access.guard';
 import { CreateQrDto, UpdateQrDto, BulkCreateQrDto } from './dto';
 import { SetQrThemeDto } from './dto/set-qr-theme.dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('qr-codes')
 @Controller('qr-codes')
 export class QrController {
   constructor(private readonly qrService: QrService) {}

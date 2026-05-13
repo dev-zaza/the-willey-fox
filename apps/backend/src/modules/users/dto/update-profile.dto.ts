@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsObject, MaxLength, ValidateNested } from 'class-validator';
+import { IsOptional, IsString, IsObject, IsBoolean, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class NotificationPreferencesDto {
@@ -48,4 +48,8 @@ export class UpdateProfileDto {
   @IsString()
   @MaxLength(512)
   fcmToken?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  safetyMode?: boolean;
 }

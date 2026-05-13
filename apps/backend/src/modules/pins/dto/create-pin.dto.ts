@@ -1,7 +1,7 @@
 import { IsIn, IsString, IsOptional, IsNumber, Min, Max, MaxLength, IsDateString } from 'class-validator';
 
 // Keep in sync with PIN_TYPES in @safetag/shared
-const PIN_TYPES = ['hazard', 'roadblock', 'construction', 'safety_alert', 'traffic', 'event', 'other'] as const;
+const PIN_TYPES = ['hazard', 'roadblock', 'construction', 'safety_alert', 'traffic', 'event', 'pickpocket', 'recommendation', 'harassment', 'unsafe_area', 'other'] as const;
 type PinType = (typeof PIN_TYPES)[number];
 
 export class CreatePinDto {

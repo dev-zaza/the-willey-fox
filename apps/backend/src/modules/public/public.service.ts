@@ -1,8 +1,15 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  GoneException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { qrCodes, reports, users, visualThemes } from '../../database/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc, gt } from 'drizzle-orm';
 import { CreateReportDto } from '../reports/dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { QrService } from '../qr/qr.service';
@@ -190,5 +197,148 @@ export class PublicService {
       conversationId,
       message: 'Report submitted successfully. The owner has been notified.',
     };
+  }
+
+  async listBroadcasts(page = 1, pageSize = 20) {
+    const offset = Math.max(0, (page - 1) * pageSize);
+    const limit = Math.min(Math.max(pageSize, 1), 50);
+    const now = new Date();
+
+    const rows = await this.db
+      .select({
+        reportId: reports.id,
+        createdAt: reports.createdAt,
+        approvedAt: reports.broadcastApprovedAt,
+        expiresAt: reports.broadcastExpiresAt,
+        photoUrl: reports.photoUrl,
+        locationAddress: reports.locationAddress,
+        finderNotes: reports.finderNotes,
+        qrCodeId: qrCodes.id,
+        qrUniqueCode: qrCodes.uniqueCode,
+        qrCategory: qrCodes.category,
+        qrName: qrCodes.name,
+        qrLabel: qrCodes.label,
+        qrPhotoUrl: qrCodes.photoUrl,
+      })
+      .from(reports)
+      .innerJoin(qrCodes, eq(reports.qrCodeId, qrCodes.id))
+      .where(
+        and(
+          eq(reports.isPublicBroadcast, true),
+          gt(reports.broadcastExpiresAt, now),
+        ),
+      )
+      .orderBy(desc(reports.broadcastApprovedAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      page,
+      pageSize: limit,
+      items: rows.map((r) => ({
+        id: r.reportId,
+        qrCodeId: r.qrCodeId,
+        qrUniqueCode: r.qrUniqueCode,
+        category: r.qrCategory,
+        name: r.qrLabel ?? r.qrName,
+        photoUrl: r.qrPhotoUrl ?? r.photoUrl ?? null,
+        lastSeenLocation: r.locationAddress,
+        lastSeenNotes: r.finderNotes,
+        broadcastApprovedAt: r.approvedAt,
+        broadcastExpiresAt: r.expiresAt,
+      })),
+    };
+  }
+
+  async getBroadcast(reportId: string) {
+    const rows = await this.db
+      .select({
+        reportId: reports.id,
+        isPublicBroadcast: reports.isPublicBroadcast,
+        approvedAt: reports.broadcastApprovedAt,
+        expiresAt: reports.broadcastExpiresAt,
+        photoUrl: reports.photoUrl,
+        locationAddress: reports.locationAddress,
+        locationLat: reports.locationLat,
+        locationLng: reports.locationLng,
+        finderNotes: reports.finderNotes,
+        createdAt: reports.createdAt,
+        qrCodeId: qrCodes.id,
+        qrUniqueCode: qrCodes.uniqueCode,
+        qrCategory: qrCodes.category,
+        qrName: qrCodes.name,
+        qrLabel: qrCodes.label,
+        qrPhotoUrl: qrCodes.photoUrl,
+        qrDescription: qrCodes.description,
+        qrCustomFields: qrCodes.customFields,
+        guardianUserId: qrCodes.userId,
+      })
+      .from(reports)
+      .innerJoin(qrCodes, eq(reports.qrCodeId, qrCodes.id))
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
+    if (rows.length === 0) {
+      throw new NotFoundException('BROADCAST_NOT_FOUND');
+    }
+    const r = rows[0];
+
+    const now = new Date();
+    const active = r.isPublicBroadcast && r.expiresAt && r.expiresAt > now;
+    if (!active) {
+      throw new GoneException('BROADCAST_EXPIRED');
+    }
+
+    return {
+      id: r.reportId,
+      qrCodeId: r.qrCodeId,
+      qrUniqueCode: r.qrUniqueCode,
+      category: r.qrCategory,
+      name: r.qrLabel ?? r.qrName,
+      description: r.qrDescription,
+      photoUrl: r.qrPhotoUrl ?? r.photoUrl ?? null,
+      customFields: r.qrCustomFields,
+      lastSeenLocation: r.locationAddress,
+      lastSeenLat: r.locationLat,
+      lastSeenLng: r.locationLng,
+      lastSeenNotes: r.finderNotes,
+      broadcastApprovedAt: r.approvedAt,
+      broadcastExpiresAt: r.expiresAt,
+    };
+  }
+
+  async messageBroadcastGuardian(reportId: string, finderUserId: string) {
+    const rows = await this.db
+      .select({
+        isPublicBroadcast: reports.isPublicBroadcast,
+        expiresAt: reports.broadcastExpiresAt,
+        guardianUserId: qrCodes.userId,
+      })
+      .from(reports)
+      .innerJoin(qrCodes, eq(reports.qrCodeId, qrCodes.id))
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
+    if (rows.length === 0) {
+      throw new NotFoundException('BROADCAST_NOT_FOUND');
+    }
+    const r = rows[0];
+    const now = new Date();
+    if (!r.isPublicBroadcast || !r.expiresAt || r.expiresAt <= now) {
+      throw new GoneException('BROADCAST_EXPIRED');
+    }
+    if (!r.guardianUserId) {
+      throw new NotFoundException('GUARDIAN_UNAVAILABLE');
+    }
+    if (r.guardianUserId === finderUserId) {
+      throw new ForbiddenException('CANNOT_MESSAGE_SELF');
+    }
+
+    const convo = await this.messagesService.getOrCreateConversation(
+      finderUserId,
+      r.guardianUserId,
+    );
+
+    return { conversationId: convo.id };
   }
 }

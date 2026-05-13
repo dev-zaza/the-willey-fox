@@ -26,7 +26,10 @@ import { CreatePrintTemplateDto } from './dto/create-print-template.dto';
 import { UpdatePrintTemplateDto } from './dto/update-print-template.dto';
 import { CreateVisualThemeDto } from './dto/create-visual-theme.dto';
 import { UpdateVisualThemeDto } from './dto/update-visual-theme.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('admin')
 @Controller('admin')
 @UseGuards(AdminGuard)
 export class AdminController {
@@ -268,5 +271,27 @@ export class AdminController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.tagCustomizationService.deleteVisualTheme(user.id, id);
+  }
+
+  @Get('broadcasts')
+  listBroadcasts(
+    @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit: number,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset: number,
+  ) {
+    return this.adminService.listActiveBroadcasts(limit, offset);
+  }
+
+  @Post('broadcasts/:id/takedown')
+  takedownBroadcast(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { reason?: string },
+  ) {
+    return this.adminService.takedownBroadcast(user.id, id, body?.reason);
+  }
+
+  @Get('broadcasts/:id/consent-log')
+  getBroadcastConsentLog(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.getBroadcastConsentLog(id);
   }
 }

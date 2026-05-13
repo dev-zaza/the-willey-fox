@@ -3,7 +3,10 @@ import { Public } from '../../common/decorators/public.decorator';
 import { DirectionsService } from './directions.service';
 import { RouteRequestDto } from './dto/route-request.dto';
 import { SafetyOverlayDto } from './dto/safety-overlay.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('directions')
 @Controller('directions')
 export class DirectionsController {
   constructor(private readonly directionsService: DirectionsService) {}

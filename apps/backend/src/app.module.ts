@@ -22,6 +22,7 @@ import { EmergencyModule } from './modules/emergency/emergency.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PlacesModule } from './modules/places/places.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { FamiliesModule } from './modules/families/families.module';
 import { getRedisConnectionOptions } from './config/redis-connection';
 
 @Module({
@@ -62,6 +63,7 @@ import { getRedisConnectionOptions } from './config/redis-connection';
     AdminModule,
     PlacesModule,
     SettingsModule,
+    FamiliesModule,
   ],
   providers: [
     {

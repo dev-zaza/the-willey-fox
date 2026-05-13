@@ -15,7 +15,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { PlacesService } from './places.service';
 import { SearchPlacesDto, CreatePlaceDto, CreateReviewDto, FlagReviewDto } from './dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth('JWT')
+@ApiTags('places')
 @Controller('places')
 export class PlacesController {
   constructor(private readonly placesService: PlacesService) {}

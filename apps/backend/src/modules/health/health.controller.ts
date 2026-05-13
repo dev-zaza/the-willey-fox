@@ -6,7 +6,9 @@ import type { DrizzleDB } from '../../database/database.module';
 import { sql } from 'drizzle-orm';
 import Redis from 'ioredis';
 import { getRedisConnectionOptions } from '../../config/redis-connection';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('health')
 @Controller('health')
 export class HealthController {
   constructor(

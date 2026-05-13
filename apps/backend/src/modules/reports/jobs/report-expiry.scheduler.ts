@@ -8,13 +8,27 @@ export class ReportExpiryScheduler {
 
   constructor(private readonly reportsService: ReportsService) {}
 
-  /**
-   * Run daily at midnight UTC: expire reports older than 30 days with status open/contacted.
-   */
   @Cron('0 0 * * *')
-  async expireOldReports() {
-    this.logger.log('Scheduled: running report expiry');
-    const count = await this.reportsService.expireOldReports();
-    this.logger.log(`Scheduled expiry complete: ${count} report(s) expired`);
+  async runDailyExpiry() {
+    this.logger.log('Scheduled: running report + broadcast expiry sweep');
+    try {
+      const reportsCount = await this.reportsService.expireOldReports();
+      this.logger.log(`Scheduled expiry: ${reportsCount} report(s) marked expired`);
+    } catch (err) {
+      this.logger.error(
+        'Report expiry sweep failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
+
+    try {
+      const { total, failed } = await this.reportsService.expireBroadcasts();
+      this.logger.log(`Scheduled expiry: ${total} broadcast(s) expired, ${failed} failed`);
+    } catch (err) {
+      this.logger.error(
+        'Broadcast expiry sweep failed',
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
   }
 }

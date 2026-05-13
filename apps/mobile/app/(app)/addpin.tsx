@@ -13,13 +13,17 @@ import {
   View,
 } from 'react-native';
 import { pinsService } from '@/services/pins.service';
+import { extractApiErrorMessage } from '@/lib/api-error';
 
 const PIN_TYPES = [
   { id: 'traffic', label: 'Traffic', emoji: '🚗' },
   { id: 'construction', label: 'Construction', emoji: '🚧' },
   { id: 'event', label: 'Event', emoji: '📅' },
   { id: 'safety', label: 'Safety', emoji: '⚠️' },
-  { id: 'recommendation', label: 'Recommend', emoji: '👍' },
+  { id: 'pickpocket', label: 'Pickpocket', emoji: '🤚' },
+  { id: 'recommendation', label: 'Recommendation', emoji: '👍' },
+  { id: 'harassment', label: 'Harassment', emoji: '🚫' },
+  { id: 'unsafe_area', label: 'Unsafe Area', emoji: '⛔' },
 ] as const;
 
 type PinType = (typeof PIN_TYPES)[number]['id'];
@@ -72,7 +76,7 @@ export default function AddPinScreen() {
       });
       router.replace('/(app)/map');
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? 'Failed to create pin.';
+      const msg = extractApiErrorMessage(err, 'Failed to create pin.');
       Alert.alert('Error', msg);
     } finally {
       setSubmitting(false);

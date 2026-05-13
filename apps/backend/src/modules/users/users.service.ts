@@ -160,6 +160,7 @@ export class UsersService implements OnModuleInit, OnModuleDestroy {
       };
     }
     if (dto.fcmToken !== undefined) updateData.fcmToken = dto.fcmToken;
+    if (dto.safetyMode !== undefined) updateData.safetyMode = dto.safetyMode;
 
     await this.db.update(users).set(updateData).where(eq(users.id, userId));
 

@@ -1,6 +1,5 @@
 import '../global.css';
 import { QueryClientProvider } from '@tanstack/react-query';
-import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useURL } from 'expo-linking';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -32,6 +31,11 @@ function extractGuardianToken(url: string): string | null {
   return match ? match[1] : null;
 }
 
+function extractBroadcastId(url: string): string | null {
+  const match = url.match(/\/broadcasts\/([0-9a-f-]{36})/i);
+  return match ? match[1] : null;
+}
+
 function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
@@ -57,10 +61,9 @@ function RootNavigator() {
       const { status } = await Notifications.requestPermissionsAsync();
       if (status !== 'granted') return;
 
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
-      const token = await Notifications.getExpoPushTokenAsync(
-        projectId ? { projectId } : undefined,
-      );
+      // Backend uses firebase-admin (FCM v1) and APNs directly, so we register
+      // the raw native device push token rather than an ExponentPushToken.
+      const token = await Notifications.getDevicePushTokenAsync();
       await apiClient.put('/users/me', { fcmToken: token.data });
     } catch {
       // Non-critical — silently ignore push setup failures
@@ -110,7 +113,11 @@ function RootNavigator() {
     if (guardianToken) {
       pendingGuardianToken.current = guardianToken;
     }
-  }, [url]);
+    const broadcastId = extractBroadcastId(url);
+    if (broadcastId) {
+      router.push({ pathname: '/broadcasts/[id]', params: { id: broadcastId } } as any);
+    }
+  }, [url, router]);
 
   // Foreground notification listener
   useEffect(() => {

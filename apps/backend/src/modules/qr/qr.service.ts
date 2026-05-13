@@ -69,7 +69,10 @@ export class QrService {
         visibilityConfig: dto.visibilityConfig
           ? { ...defaultVisibility, ...dto.visibilityConfig }
           : defaultVisibility,
-        customFields: dto.customFields || {},
+        customFields: {
+          ...(dto.customFields || {}),
+          ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
+        },
       })
       .returning();
 
@@ -158,7 +161,12 @@ export class QrService {
     if (dto.rewardMessage !== undefined) updateData.rewardMessage = dto.rewardMessage;
     if (dto.isLost !== undefined) updateData.isLost = dto.isLost;
     if (dto.visibilityConfig !== undefined) updateData.visibilityConfig = dto.visibilityConfig;
-    if (dto.customFields !== undefined) updateData.customFields = dto.customFields;
+    if (dto.customFields !== undefined || dto.medicalInfo !== undefined) {
+      updateData.customFields = {
+        ...(dto.customFields ?? {}),
+        ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
+      };
+    }
 
     const [updated] = await this.db
       .update(qrCodes)

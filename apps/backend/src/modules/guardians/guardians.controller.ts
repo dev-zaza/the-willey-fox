@@ -13,12 +13,15 @@ import { QrAccessGuard } from '../qr/guards/qr-access.guard';
 import { GuardiansService } from './guardians.service';
 import { InviteGuardianDto } from './dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 /**
  * Top-level accept endpoint so the web page and deep links can call
  * POST /guardians/invite/accept without knowing the QR code UUID.
  * The token itself encodes the invite (and thus the qrCodeId).
  */
+@ApiBearerAuth('JWT')
+@ApiTags('guardians')
 @Controller('guardians')
 export class GuardianInviteController {
   constructor(private readonly guardiansService: GuardiansService) {}
