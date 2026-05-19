@@ -101,6 +101,7 @@ export default function TagsScreen() {
   const userTierIndex = tierIndex(user?.subscriptionTier ?? 'free');
   const colorScheme = useColorScheme();
   const dark = colorScheme === 'dark';
+  const qrSvgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   async function loadTags() {
     try {
@@ -455,8 +456,6 @@ export default function TagsScreen() {
       </KeyboardAvoidingView>
     );
   }
-
-  const qrSvgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   if (step === 'detail' && selectedTag) {
     const cat = selectedTag.category as TagCategory;
