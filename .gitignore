@@ -40,3 +40,16 @@ backups/
 .agents/*
 .claude/*
 .gstack/
+
+# --- Secrets: never commit these ---
+# Firebase / Google service account JSON keys
+*firebase-adminsdk*.json
+*-serviceaccount*.json
+gcp-key*.json
+# Generic key files
+*.pem
+*.p12
+*.key
+# Anything under apps/mobile/secrets/ or repo-level secrets/
+secrets/
+**/secrets/

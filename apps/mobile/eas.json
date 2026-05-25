@@ -6,9 +6,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": {
-        "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "<REDACTED_MAPBOX_SECRET>"
-      },
+      "env": {},
       "android": {
         "buildType": "apk"
       }
