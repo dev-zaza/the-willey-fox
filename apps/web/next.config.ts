@@ -6,6 +6,8 @@ import { withSentryConfig } from '@sentry/nextjs';
 const workspaceRoot = path.join(__dirname, '../..');
 
 const nextConfig: NextConfig = {
+  // Standalone build → minimal node_modules copy used by the Docker image (apps/web/Dockerfile).
+  output: 'standalone',
   outputFileTracingRoot: workspaceRoot,
   transpilePackages: ['@safetag/shared'],
   // Required for three-globe and leaflet which use browser globals

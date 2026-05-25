@@ -1,0 +1,38 @@
+# Dependencies — reinstalled inside the image
+node_modules
+**/node_modules
+
+# Build artifacts — rebuilt inside the image
+dist
+**/dist
+.next
+**/.next
+.expo
+**/.expo
+.turbo
+**/.turbo
+
+# Local env — provided by Dokploy at runtime, never bake into image
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS / editor / OS
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Reference-only dirs (per CLAUDE.md)
+old-files
+poc
+
+# Misc
+*.log
+coverage
+.gstack
+.claude
