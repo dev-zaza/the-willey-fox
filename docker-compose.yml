@@ -1,7 +1,10 @@
 # Host ports 5433 / 6380 avoid clashing with local Postgres (5432) and Redis (6379).
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    # imresamu/postgis is multi-arch (amd64 + arm64).
+    # postgis/postgis:16-3.4 is amd64-only → "exec format error" on ARM hosts
+    # (Hetzner CAX / Apple Silicon).
+    image: imresamu/postgis:16-3.4
     container_name: safetag-postgres
     restart: unless-stopped
     ports:

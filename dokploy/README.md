@@ -18,7 +18,7 @@ Dokploy → **Projects → Create Project** → `safetag`.
 
 Dokploy → Project → **Create → Database → Postgres**.
 
-- **Image override:** `postgis/postgis:16-3.4` (required — backend uses PostGIS).
+- **Image override:** `imresamu/postgis:16-3.4` (required — backend uses PostGIS).
 - **Database name:** `safetag`
 - **User:** `safetag`
 - **Password:** generate strong, save it
