@@ -32,7 +32,7 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Runtime deps: tini for clean PID 1, build-essentials for bcrypt rebuild on first boot if needed.
-RUN apk add --no-cache python3 make g++ tini
+RUN apk add --no-cache python3 make g++ tini netcat-openbsd
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
