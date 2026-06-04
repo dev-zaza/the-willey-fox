@@ -14,9 +14,11 @@ export interface GoogleProfile {
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(configService: ConfigService) {
+    const clientID = configService.get<string>('GOOGLE_CLIENT_ID') ?? 'MISSING';
+    const clientSecret = configService.get<string>('GOOGLE_CLIENT_SECRET') ?? 'MISSING';
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID', ''),
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET', ''),
+      clientID,
+      clientSecret,
       callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL', 'http://localhost:3000/api/v1/auth/google/callback'),
       scope: ['email', 'profile'],
     });
