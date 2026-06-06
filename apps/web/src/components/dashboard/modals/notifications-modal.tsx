@@ -100,7 +100,7 @@ export function NotificationsModal({ onMarkRead }: NotificationsModalProps) {
               <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
                 item.status === 'sent' ? 'bg-green-500/15 text-green-400' :
                 item.status === 'failed' ? 'bg-red-500/15 text-red-400' :
-                'bg-slate-500/15 text-[#7a6957]'
+                'bg-surface-elevated text-[var(--text-muted)]'
               }`}>
                 {item.status}
               </span>

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Map, Tag, Bell, MessageSquare, Shield, Star, Navigation, ShieldCheck } from 'lucide-react';
+import { Map, Tag, Bell, MessageSquare, Shield, Star, Navigation, ShieldCheck, X } from 'lucide-react';
 
 import { BottomDock } from '@/components/ui/bottom-dock';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -134,7 +134,7 @@ export function DashboardClient() {
         <MapView
           pins={pins}
           route={route}
-          safetyZones={safetyZones}
+          safetyZones={safetyOverlayOn ? safetyZones : []}
           center={mapCenter}
           zoom={mapZoom}
           onPinClick={handlePinClick}
@@ -177,6 +177,21 @@ export function DashboardClient() {
           {user?.firstName?.[0]?.toUpperCase() ?? 'U'}
         </button>
       </div>
+
+      {/* Active route banner */}
+      {route && route.length >= 2 && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 glass px-4 py-2 rounded-full border border-surface-border shadow-lg">
+          <Navigation className="w-3.5 h-3.5 text-brand-500" />
+          <span className="text-xs font-medium text-[var(--text-primary)]">Route active</span>
+          <button
+            onClick={() => setRoute(undefined)}
+            className="ml-1 text-[#7a6957] hover:text-brand-500 transition-colors"
+            aria-label="Clear route"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* FAB — create pin */}
       <button
@@ -275,6 +290,18 @@ export function DashboardClient() {
             onRouteSelect={(r) => {
               setRoute(r);
               closeModal();
+              if (r.length > 0) {
+                const lats = r.map(p => p.lat);
+                const lngs = r.map(p => p.lng);
+                const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+                const midLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+                const spanLat = Math.max(...lats) - Math.min(...lats);
+                const spanLng = Math.max(...lngs) - Math.min(...lngs);
+                const span = Math.max(spanLat, spanLng);
+                const zoom = span > 2 ? 9 : span > 1 ? 10 : span > 0.5 ? 11 : span > 0.2 ? 12 : 13;
+                setMapCenter({ lat: midLat, lng: midLng });
+                setMapZoom(zoom);
+              }
             }}
           />
         )}

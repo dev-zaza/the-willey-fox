@@ -112,7 +112,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
           onChange={(e) => setLabel(e.target.value)}
           required
           placeholder="e.g. Max the Dog, Travel Bag"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
@@ -127,7 +127,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
               className={`py-2 rounded-lg text-xs font-medium transition-all border ${
                 cat.value === category
                   ? 'bg-brand-500/20 text-brand-400 border-brand-500/50'
-                  : 'bg-surface-elevated text-[#7a6957] border-surface-border hover:border-slate-500'
+                  : 'bg-surface-elevated text-[#7a6957] border-surface-border hover:border-brand-500/40'
               }`}
             >
               {cat.label}
@@ -144,7 +144,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@email.com"
-            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
         <div>
@@ -154,7 +154,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+1 555 0100"
-            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
+            className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
           />
         </div>
       </div>
@@ -169,7 +169,7 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
           rows={2}
           maxLength={200}
           placeholder="Reward if returned — visible to finders"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors resize-none"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors resize-none"
         />
       </div>
 

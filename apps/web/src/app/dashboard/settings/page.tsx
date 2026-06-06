@@ -157,7 +157,7 @@ export default function SettingsPage() {
                   value={value}
                   onChange={(e) => set(e.target.value)}
                   required={required}
-                  className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
+                  className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
                 />
               </div>
             ))}
@@ -208,7 +208,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-[#9d8c7a]">Add extra security to your account</p>
               </div>
             </div>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-[#7a6957]'}`}>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-surface-elevated text-[var(--text-muted)]'}`}>
               {is2faEnabled ? 'Enabled' : 'Off'}
             </span>
           </Link>

@@ -38,6 +38,44 @@
 }
 
 /* ──────────────────────────────────────────────
+   Dashboard dark skin — scoped to .dashboard wrapper
+   All dashboard pages render inside this class so
+   text-white / bg-surface / glass work correctly.
+   The landing page keeps the cream :root values.
+────────────────────────────────────────────── */
+.dashboard {
+  --bg-primary: #f0e7d6;
+  --bg-card: #ffffff;
+  --bg-elevated: #e6dcc7;
+  --border: rgba(27, 20, 16, 0.10);
+  --text-primary: #1b1410;
+  --text-secondary: #5a4a3d;
+  --text-muted: #7a6957;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Override Tailwind's text-white / hover:text-white inside dashboard.
+   Maps to ink color instead of #fff since bg is cream. */
+.dashboard .text-white,
+.dashboard .hover\:text-white:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Elements that genuinely need white text (on brand/red/green buttons).
+   Add class text-white-force alongside text-white on those elements,
+   OR rely on the bg-* same-element overrides below. */
+.dashboard [class*="bg-brand-5"]:is(.text-white),
+.dashboard [class*="bg-brand-6"]:is(.text-white),
+.dashboard [class*="bg-red-5"]:is(.text-white),
+.dashboard [class*="bg-red-6"]:is(.text-white),
+.dashboard [class*="bg-green-5"]:is(.text-white),
+.dashboard [class*="bg-amber-5"]:is(.text-white),
+.dashboard [class*="bg-rose-5"]:is(.text-white) {
+  color: #ffffff !important;
+}
+
+/* ──────────────────────────────────────────────
    Admin dark mode (when .admin-dark class is set)
 ────────────────────────────────────────────── */
 html.admin-dark {
@@ -139,8 +177,8 @@ body {
 }
 
 .leaflet-control-attribution {
-  background: rgba(240, 231, 214, 0.9) !important;
-  color: var(--text-muted) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #5a4a3d !important;
   font-size: 10px !important;
 }
 
@@ -223,6 +261,12 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
+  }
+
+  /* Dashboard cream skin — glass matches cream surface */
+  .dashboard .glass {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(27, 20, 16, 0.10);
   }
 
   .glass-light {

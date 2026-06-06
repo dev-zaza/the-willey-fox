@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
+import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface BottomSheetProps {
@@ -42,17 +43,26 @@ export function BottomSheet({ open, onClose, children, title, snapPoint = 'half'
             dragElastic={{ top: 0, bottom: 0.4 }}
             onDragEnd={handleDragEnd}
             style={{ height }}
-            className="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-2xl flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-surface-border rounded-t-2xl flex flex-col"
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-2 flex-shrink-0 cursor-grab active:cursor-grabbing">
-              <div className="w-10 h-1 rounded-full bg-surface-border" />
+            {/* Header — drag handle + optional title + close button */}
+            <div className="flex items-center flex-shrink-0 px-4 pt-3 pb-2 cursor-grab active:cursor-grabbing">
+              {/* Drag handle centered */}
+              <div className="flex-1 flex justify-center">
+                <div className="w-10 h-1 rounded-full bg-surface-border" />
+              </div>
             </div>
 
-            {/* Title */}
             {title && (
-              <div className="px-5 pb-3 flex-shrink-0 border-b border-surface-border">
-                <h2 className="font-semibold text-white">{title}</h2>
+              <div className="px-5 pb-3 flex-shrink-0 border-b border-surface-border flex items-center justify-between">
+                <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+                <button
+                  onClick={onClose}
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-surface-elevated transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                </button>
               </div>
             )}
 

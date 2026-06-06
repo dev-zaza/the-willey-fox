@@ -80,7 +80,7 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
               <Tag className={`w-5 h-5 ${tag.isLost ? 'text-red-400' : 'text-brand-400'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-white text-sm truncate">{tag.label}</p>
+              <p className="font-medium text-[var(--text-primary)] text-sm truncate">{tag.label}</p>
               <p className="text-xs text-[#9d8c7a] capitalize">{tag.category}</p>
             </div>
             {tag.isLost && (

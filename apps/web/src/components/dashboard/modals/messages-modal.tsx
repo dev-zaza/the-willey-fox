@@ -71,7 +71,7 @@ export function MessagesModal(_: MessagesModalProps) {
       <div className="flex flex-col h-full">
         <button
           onClick={() => setActiveConvo(null)}
-          className="flex items-center gap-2 px-5 py-3 text-sm text-[#7a6957] hover:text-white border-b border-surface-border flex-shrink-0"
+          className="flex items-center gap-2 px-5 py-3 text-sm text-[#7a6957] hover:text-[var(--text-primary)] border-b border-surface-border flex-shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           {other ? `${other.firstName} ${other.lastName}` : 'Conversation'}
@@ -91,7 +91,7 @@ export function MessagesModal(_: MessagesModalProps) {
                     className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                       isMe
                         ? 'bg-brand-500 text-white rounded-tr-sm'
-                        : 'bg-surface-elevated text-white rounded-tl-sm'
+                        : 'bg-surface-elevated text-[var(--text-primary)] rounded-tl-sm'
                     }`}
                   >
                     <p>{m.body}</p>
@@ -112,7 +112,7 @@ export function MessagesModal(_: MessagesModalProps) {
             onChange={(e) => setReply(e.target.value)}
             placeholder="Type a message…"
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendReply()}
-            className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500"
+            className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500"
           />
           <button
             onClick={sendReply}
@@ -171,7 +171,7 @@ export function MessagesModal(_: MessagesModalProps) {
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-white text-sm truncate">
+              <p className="font-medium text-[var(--text-primary)] text-sm truncate">
                 {other ? `${other.firstName} ${other.lastName}` : 'Unknown'}
               </p>
               {c.lastMessage && (

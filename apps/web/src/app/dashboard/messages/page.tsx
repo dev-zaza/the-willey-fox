@@ -149,12 +149,12 @@ export default function MessagesPage() {
                 placeholder="Describe the issue (e.g. harassment, spam, threats…)"
                 rows={4}
                 maxLength={500}
-                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a] mb-4"
+                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)] mb-4"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowReportModal(false); setReportReason(''); }}
-                  className="flex-1 py-2 rounded-xl border border-surface-border text-[#7a6957] text-sm hover:border-slate-500 transition-colors"
+                  className="flex-1 py-2 rounded-xl border border-surface-border text-[#7a6957] text-sm hover:border-surface-border transition-colors"
                 >
                   Cancel
                 </button>
@@ -185,7 +185,7 @@ export default function MessagesPage() {
                       ? 'bg-brand-500 rounded-tr-sm'
                       : 'bg-surface-card border border-surface-border rounded-tl-sm'
                   }`}>
-                    <p className={`text-sm ${isMe ? 'text-white' : 'text-slate-200'}`}>{msg.body}</p>
+                    <p className={`text-sm ${isMe ? 'text-white' : 'text-white'}`}>{msg.body}</p>
                     <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-[#9d8c7a]'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -206,7 +206,7 @@ export default function MessagesPage() {
             placeholder="Type a message…"
             rows={1}
             maxLength={4000}
-            className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
+            className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
           />
           <button
             type="submit"
@@ -233,7 +233,7 @@ export default function MessagesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search conversations…"
-            className="w-full bg-surface-card border border-surface-border text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[#9d8c7a]"
+            className="w-full bg-surface-card border border-surface-border text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
           />
           {search && (
             <button

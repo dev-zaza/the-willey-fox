@@ -262,7 +262,7 @@ export default function ReportsPage() {
                   value={replyText[report.id] ?? ''}
                   onChange={(e) => setReplyText((prev) => ({ ...prev, [report.id]: e.target.value }))}
                   placeholder="Reply to finder…"
-                  className="flex-1 bg-surface border border-surface-border text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-brand-500 placeholder:text-[#7a6957]"
+                  className="flex-1 bg-surface border border-surface-border text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
                   onKeyDown={(e) => e.key === 'Enter' && sendReply(report.id)}
                 />
                 <button
@@ -299,7 +299,7 @@ export default function ReportsPage() {
             placeholder="Reason for flagging…"
             maxLength={500}
             rows={3}
-            className="w-full bg-surface border border-surface-border rounded-xl px-3 py-2 text-sm text-white placeholder:text-[#7a6957] focus:outline-none focus:border-brand-500 resize-none"
+            className="w-full bg-surface border border-surface-border rounded-xl px-3 py-2 text-sm text-white placeholder:text-[var(--text-muted)] focus:outline-none focus:border-brand-500 resize-none"
           />
           <div className="flex gap-3">
             <button

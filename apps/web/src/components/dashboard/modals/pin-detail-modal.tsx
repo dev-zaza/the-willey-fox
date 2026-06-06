@@ -54,7 +54,7 @@ export function PinDetailModal({ pin: initialPin }: PinDetailModalProps) {
         >
           {label}
         </span>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${pin.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-slate-500/15 text-[#7a6957]'}`}>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${pin.status === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-surface-elevated text-[var(--text-muted)]'}`}>
           {pin.status}
         </span>
       </div>

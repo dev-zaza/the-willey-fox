@@ -11,9 +11,9 @@ import type { PinData, SafetyZoneOverlay } from '@/lib/api';
 const DEFAULT_CENTER: [number, number] = [51.505, -0.09];
 const DEFAULT_ZOOM = 13;
 const TILE_URL =
-  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 const TILE_ATTRIBUTION =
-  '&copy; <a href="https://carto.com/">CARTO</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
 // MapController: sync center/zoom programmatically
 function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
@@ -114,7 +114,7 @@ export function MapInner({ pins = [], route, safetyZones = [], center, zoom, onP
       {safetyZones.map((zone) => {
         const lat = zone.centroidLat ? parseFloat(zone.centroidLat) : null;
         const lng = zone.centroidLng ? parseFloat(zone.centroidLng) : null;
-        if (!lat || !lng) return null;
+        if (!lat || !lng || isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
         const score = Number(zone.safetyScore);
         const color = safetyScoreToColor(score);
         return (

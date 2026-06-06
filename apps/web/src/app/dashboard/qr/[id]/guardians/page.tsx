@@ -74,7 +74,7 @@ export default function GuardiansPage() {
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="guardian@example.com"
               required
-              className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] outline-none focus:border-brand-500"
+              className="flex-1 bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] outline-none focus:border-brand-500"
             />
             <button
               type="submit"

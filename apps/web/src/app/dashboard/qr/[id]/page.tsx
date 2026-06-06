@@ -188,10 +188,10 @@ export default function QrDetailPage() {
                 className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-colors ${
                   selectedThemeId === null
                     ? 'border-brand-500 bg-brand-500/10'
-                    : 'border-surface-border hover:border-slate-500'
+                    : 'border-surface-border hover:border-brand-500/40'
                 }`}
               >
-                <div className="w-8 h-8 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full border-2 border-dashed border-surface-border flex items-center justify-center">
                   <span className="text-[#7a6957] text-xs">✕</span>
                 </div>
                 <span className="text-xs text-[#7a6957]">Default</span>
@@ -210,7 +210,7 @@ export default function QrDetailPage() {
                         ? 'border-brand-500 bg-brand-500/10'
                         : locked
                           ? 'border-surface-border opacity-50 cursor-not-allowed'
-                          : 'border-surface-border hover:border-slate-500'
+                          : 'border-surface-border hover:border-brand-500/40'
                     }`}
                     title={locked ? `Requires ${theme.tierRequired} tier` : theme.name}
                   >
@@ -250,7 +250,7 @@ export default function QrDetailPage() {
                         ? 'border-brand-500 bg-brand-500/10 text-brand-400'
                         : locked
                           ? 'border-surface-border text-[#7a6957] cursor-not-allowed'
-                          : 'border-surface-border text-[#7a6957] hover:border-slate-500'
+                          : 'border-surface-border text-[#7a6957] hover:border-brand-500/40'
                     }`}
                     title={locked ? `Requires ${pt.tierRequired} tier` : pt.name}
                   >

@@ -18,7 +18,7 @@ interface BottomDockProps {
 export function BottomDock({ items, activeId, onSelect }: BottomDockProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
-      <div className="glass border-t border-surface-border">
+      <div className="bg-surface-card border-t border-surface-border">
         <div className="flex items-center justify-around px-2 py-2">
           {items.map((item) => {
             const isActive = item.id === activeId;

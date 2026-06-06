@@ -64,7 +64,7 @@ export function SearchBar({ onSelect, placeholder = 'Search destination…' }: S
           value={query}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 border border-transparent transition-colors"
+          className="w-full glass rounded-xl pl-9 pr-9 py-2.5 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 border border-transparent transition-colors"
         />
         {query && (
           <button

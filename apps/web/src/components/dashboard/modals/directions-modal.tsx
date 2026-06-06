@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Navigation, Loader2, AlertCircle, Search, X, ChevronRight } from 'lucide-react';
-import { directions, type RouteOption, ApiError } from '@/lib/api';
+import { directions, decodePolyline, type RouteOption, ApiError } from '@/lib/api';
 import type { LatLng } from '@/types';
 
 interface DirectionsModalProps {
@@ -24,14 +24,13 @@ function gradeColor(grade: string): string {
   }
 }
 
-function formatDistance(m: number) {
-  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`;
+function formatDistance(km: number) {
+  return km >= 1 ? `${km.toFixed(1)} km` : `${Math.round(km * 1000)} m`;
 }
 
-function formatDuration(s: number) {
-  const mins = Math.round(s / 60);
-  if (mins < 60) return `${mins} min`;
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+function formatDuration(mins: number) {
+  if (mins < 60) return `${Math.round(mins)} min`;
+  return `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}m`;
 }
 
 function LocationInput({
@@ -90,7 +89,7 @@ function LocationInput({
           value={query}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full bg-surface border border-surface-border rounded-xl pl-9 pr-8 py-2.5 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface border border-surface-border rounded-xl pl-9 pr-8 py-2.5 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
         />
         {query && (
           <button
@@ -150,10 +149,7 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
     setError('');
     setLoading(true);
     try {
-      const res = await directions.getRoute(
-        [origin.lng, origin.lat],
-        [destination.lng, destination.lat],
-      );
+      const res = await directions.getRoute(origin, destination);
       setRoutes(res.routes ?? []);
       if ((res.routes ?? []).length === 0) setError('No routes found.');
     } catch (e) {
@@ -164,7 +160,8 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
   }
 
   function handleShowOnMap(route: RouteOption) {
-    const latlngs = route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
+    const coords = decodePolyline(route.polyline);
+    const latlngs = coords.map(([lng, lat]) => ({ lat, lng }));
     onRouteSelect(latlngs);
   }
 
@@ -172,7 +169,7 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Navigation className="w-5 h-5 text-brand-400" />
-        <h2 className="text-white font-semibold">Get Directions</h2>
+        <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Get Directions</h2>
       </div>
 
       {/* Origin */}
@@ -232,7 +229,7 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
             <div key={i} className="bg-surface-card border border-surface-border rounded-2xl p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-white font-semibold text-sm">{route.label}</p>
+                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{route.label}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <span
                       className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -249,8 +246,12 @@ export function DirectionsModal({ onRouteSelect }: DirectionsModalProps) {
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-white text-sm font-medium">{formatDistance(route.distance)}</p>
-                  <p className="text-[#7a6957] text-xs">{formatDuration(route.duration)}</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {route.distanceKm != null ? formatDistance(route.distanceKm) : '—'}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    {route.durationMinutes != null ? formatDuration(route.durationMinutes) : '—'}
+                  </p>
                 </div>
               </div>
 

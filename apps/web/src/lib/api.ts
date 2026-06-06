@@ -596,22 +596,40 @@ export const emergency = {
 // ── Directions ────────────────────────────────────────────────────────────────
 
 export interface RouteOption {
+  id: string;
   label: string;
-  safetyScore: number;
-  safetyGrade: string;
-  distance: number;
-  duration: number;
-  geometry: { coordinates: [number, number][] };
+  safetyScore: number | null;
+  safetyGrade: string | null;
+  distanceKm: number;
+  durationMinutes: number;
+  polyline: string;
   warnings: string[];
-  segments: Array<{
-    coordinates: [number, number][];
+  segmentScores: Array<{
+    polyline: string;
     colour: string;
     safetyScore: number;
   }>;
+  userRating: number | null;
+}
+
+/** Decode a Mapbox/Google encoded polyline string into [lng, lat] pairs. */
+export function decodePolyline(encoded: string): [number, number][] {
+  const coords: [number, number][] = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    let b: number, shift = 0, result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lat += result & 1 ? ~(result >> 1) : result >> 1;
+    shift = 0; result = 0;
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+    lng += result & 1 ? ~(result >> 1) : result >> 1;
+    coords.push([lng / 1e5, lat / 1e5]);
+  }
+  return coords;
 }
 
 export const directions = {
-  getRoute: (origin: [number, number], destination: [number, number]) =>
+  getRoute: (origin: { lat: number; lng: number }, destination: { lat: number; lng: number }) =>
     request<{ routes: RouteOption[] }>('/directions/route', {
       method: 'POST',
       body: JSON.stringify({ origin, destination }),

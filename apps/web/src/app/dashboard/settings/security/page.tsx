@@ -94,7 +94,7 @@ export default function SecuritySettingsPage() {
         {/* 2FA Status Card */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-5">
           <div className="flex items-start gap-4">
-            <div className={`p-2.5 rounded-xl ${is2faEnabled ? 'bg-green-500/10' : 'bg-slate-700/40'}`}>
+            <div className={`p-2.5 rounded-xl ${is2faEnabled ? 'bg-green-500/10' : 'bg-surface-elevated'}`}>
               {is2faEnabled
                 ? <ShieldCheck className="w-6 h-6 text-green-400" />
                 : <Shield className="w-6 h-6 text-[#7a6957]" />}
@@ -107,7 +107,7 @@ export default function SecuritySettingsPage() {
                   : 'Add an extra layer of security to your account with an authenticator app like Google Authenticator or Authy.'}
               </p>
             </div>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-[#7a6957]'}`}>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${is2faEnabled ? 'bg-green-500/10 text-green-400' : 'bg-surface-elevated text-[var(--text-muted)]'}`}>
               {is2faEnabled ? 'Enabled' : 'Disabled'}
             </span>
           </div>

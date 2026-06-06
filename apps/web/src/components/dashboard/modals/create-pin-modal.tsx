@@ -71,7 +71,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
                 style={
                   isActive
                     ? { background: `${color}30`, color, borderColor: color, border: `1px solid ${color}` }
-                    : { background: 'rgba(42,47,69,0.5)', color: '#94a3b8', border: '1px solid #2a2f45' }
+                    : { background: 'rgba(27,20,16,0.06)', color: '#7a6957', border: '1px solid rgba(27,20,16,0.15)' }
                 }
               >
                 {TAG_CATEGORY_LABELS[cat]}
@@ -90,7 +90,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
           required
           maxLength={80}
           placeholder="Brief, descriptive title…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
@@ -102,7 +102,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
           rows={3}
           maxLength={300}
           placeholder="Add more context…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[#9d8c7a] focus:outline-none focus:border-brand-500 transition-colors resize-none"
+          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors resize-none"
         />
       </div>
 
