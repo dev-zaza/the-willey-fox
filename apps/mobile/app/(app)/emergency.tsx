@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -261,7 +262,7 @@ export default function EmergencyScreen() {
           <View style={{ gap: 16, padding: 16 }}>
             {/* SOS Button */}
             <View className="bg-red-500/10 border border-red-500/30 rounded-3xl p-6 items-center" style={{ gap: 12 }}>
-              <Text style={{ fontSize: 48 }}>🆘</Text>
+              <Ionicons name="alert-circle" size={48} color="#ef4444" />
               <Text className="text-white font-bold text-lg">Emergency SOS</Text>
               <Text className="text-slate-400 text-sm text-center leading-5">
                 Instantly alerts all your accepted emergency contacts with your GPS location.
@@ -327,7 +328,7 @@ export default function EmergencyScreen() {
                     style={{ opacity: 0.8 }}
                   >
                     <View className="w-12 h-12 rounded-full bg-amber-500/15 items-center justify-center flex-shrink-0">
-                      <Text style={{ fontSize: 20 }}>⏳</Text>
+                      <Ionicons name="time" size={20} color="#f59e0b" />
                     </View>
                     <View className="flex-1" style={{ gap: 2 }}>
                       <Text className="text-gray-900 dark:text-white font-semibold text-sm" numberOfLines={1}>
@@ -363,7 +364,7 @@ export default function EmergencyScreen() {
 
             {!loading && contacts.length === 0 && (
               <View className="items-center py-8" style={{ gap: 8 }}>
-                <Text style={{ fontSize: 32 }}>👥</Text>
+                <Ionicons name="people" size={32} color="#6b7280" />
                 <Text className="text-gray-900 dark:text-white font-semibold">No Contacts Yet</Text>
                 <Text className="text-gray-500 dark:text-slate-400 text-sm text-center">
                   Add emergency contacts who will be alerted when you trigger SOS.

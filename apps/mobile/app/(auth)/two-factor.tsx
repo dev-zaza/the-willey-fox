@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useState, useRef } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -52,7 +53,7 @@ export default function TwoFactorScreen() {
     >
       <View className="items-center mb-8">
         <View className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/20 items-center justify-center mb-4">
-          <Text className="text-3xl">🔒</Text>
+          <Ionicons name="lock-closed" size={30} color="#6366f1" />
         </View>
         <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
           Two-Factor Auth

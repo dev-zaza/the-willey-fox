@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/components/Icon';
 import { Tabs } from 'expo-router';
 import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { ModalProvider } from '@/context/ModalContext';
@@ -15,12 +15,12 @@ function TabIcon({
   focused: boolean;
   color: string;
   size: number;
-  activeName: keyof typeof Ionicons.glyphMap;
-  inactiveName: keyof typeof Ionicons.glyphMap;
+  activeName: string;
+  inactiveName: string;
 }) {
   return (
     <View style={styles.iconWrap}>
-      <Ionicons name={focused ? activeName : inactiveName} size={size ?? 24} color={color} />
+      <Ionicons name={focused ? activeName : inactiveName as any} size={size ?? 24} color={color} />
       {focused && <View style={[styles.activeDot, { backgroundColor: color }]} />}
     </View>
   );

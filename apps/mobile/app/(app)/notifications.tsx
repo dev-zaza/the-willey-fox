@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,13 +13,13 @@ import {
 import { useRouter } from 'expo-router';
 import { notificationsService, type AppNotification } from '@/services/notifications.service';
 
-const TYPE_CONFIG: Record<string, { emoji: string; color: string }> = {
-  report:        { emoji: '📍', color: '#f97316' },
-  sos:           { emoji: '🆘', color: '#ef4444' },
-  guardian:      { emoji: '🛡️', color: '#8b5cf6' },
-  message:       { emoji: '💬', color: '#3b82f6' },
-  subscription:  { emoji: '⭐', color: '#f59e0b' },
-  default:       { emoji: '🔔', color: '#64748b' },
+const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
+  report:        { icon: 'location', color: '#f97316' },
+  sos:           { icon: 'alert-circle', color: '#ef4444' },
+  guardian:      { icon: 'shield', color: '#8b5cf6' },
+  message:       { icon: 'chatbubble', color: '#3b82f6' },
+  subscription:  { icon: 'star', color: '#f59e0b' },
+  default:       { icon: 'notifications', color: '#64748b' },
 };
 
 function formatTimeAgo(dateStr: string): string {
@@ -95,7 +96,7 @@ export default function NotificationsScreen() {
             flexShrink: 0,
           }}
         >
-          <Text style={{ fontSize: 18 }}>{cfg.emoji}</Text>
+          <Ionicons name={cfg.icon as any} size={18} color={cfg.color} />
         </View>
 
         {/* Content */}
@@ -173,7 +174,7 @@ export default function NotificationsScreen() {
         </View>
       ) : notifications.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 40 }}>🔔</Text>
+          <Ionicons name="notifications" size={40} color={dark ? '#f1f5f9' : '#111827'} />
           <Text style={{ fontSize: 18, fontWeight: '700', color: dark ? '#f1f5f9' : '#111827' }}>
             No notifications yet
           </Text>

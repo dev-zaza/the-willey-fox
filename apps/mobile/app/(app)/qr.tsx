@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { CameraView, useCameraPermissions, scanFromURLAsync } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
@@ -29,14 +30,14 @@ interface QrPublicInfo {
   isLost?: boolean;
 }
 
-const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
-  pet: { label: 'Pet / Animal', emoji: '🐾', color: '#22C55E' },
-  bag: { label: 'Bag / Luggage', emoji: '🎒', color: '#F97316' },
-  key: { label: 'Keys', emoji: '🔑', color: '#EAB308' },
-  person: { label: 'Person', emoji: '👤', color: '#3B82F6' },
-  vehicle: { label: 'Vehicle', emoji: '🚗', color: '#8B5CF6' },
-  other: { label: 'Item / Property', emoji: '📦', color: '#64748b' },
-  medical: { label: 'Medical ID', emoji: '🏥', color: '#EF4444' },
+const CATEGORY_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
+  pet: { label: 'Pet / Animal', icon: 'paw', color: '#22C55E' },
+  bag: { label: 'Bag / Luggage', icon: 'briefcase', color: '#F97316' },
+  key: { label: 'Keys', icon: 'key', color: '#EAB308' },
+  person: { label: 'Person', icon: 'person', color: '#3B82F6' },
+  vehicle: { label: 'Vehicle', icon: 'car', color: '#8B5CF6' },
+  other: { label: 'Item / Property', icon: 'cube', color: '#64748b' },
+  medical: { label: 'Medical ID', icon: 'medkit', color: '#EF4444' },
 };
 
 function extractCode(url: string): string | null {
@@ -210,7 +211,7 @@ export default function QrScreen() {
         </View>
         <View className="flex-1 items-center justify-center px-8" style={{ gap: 16 }}>
           <View className="w-20 h-20 rounded-full bg-brand-500/10 border border-brand-500/20 items-center justify-center">
-            <Text style={{ fontSize: 36 }}>📷</Text>
+            <Ionicons name="camera" size={36} color="#f97316" />
           </View>
           <Text className="text-xl font-bold text-white text-center">Camera Access Needed</Text>
           <Text className="text-sm text-slate-400 text-center leading-6">
@@ -242,7 +243,7 @@ export default function QrScreen() {
 
         <View className="flex-1 items-center justify-center px-8" style={{ gap: 20 }}>
           <View className="w-24 h-24 rounded-full bg-brand-500/10 border border-brand-500/20 items-center justify-center">
-            <Text style={{ fontSize: 44 }}>📷</Text>
+            <Ionicons name="camera" size={44} color="#f97316" />
           </View>
 
           <View style={{ gap: 8, alignItems: 'center' }}>
@@ -273,7 +274,7 @@ export default function QrScreen() {
               <ActivityIndicator color="#f97316" size="small" />
             ) : (
               <>
-                <Text style={{ fontSize: 16 }}>🖼️</Text>
+                <Ionicons name="images" size={16} color="#f97316" />
                 <Text className="text-brand-500 font-semibold text-sm">Upload QR from Gallery</Text>
               </>
             )}
@@ -282,12 +283,12 @@ export default function QrScreen() {
           <View className="w-full bg-surface-card border border-surface-border rounded-2xl p-4" style={{ gap: 12 }}>
             <Text className="text-xs font-semibold text-slate-500 uppercase">How it works</Text>
             {[
-              { emoji: '📱', text: 'Point camera at the QR tag on the item' },
-              { emoji: '🔔', text: 'Owner is notified automatically' },
-              { emoji: '💬', text: 'You can send them a message or your location' },
-            ].map(({ emoji, text }) => (
+              { icon: 'phone-portrait' as const, text: 'Point camera at the QR tag on the item' },
+              { icon: 'notifications' as const, text: 'Owner is notified automatically' },
+              { icon: 'chatbubble' as const, text: 'You can send them a message or your location' },
+            ].map(({ icon, text }) => (
               <View key={text} className="flex-row items-center gap-3">
-                <Text style={{ fontSize: 18 }}>{emoji}</Text>
+                <Ionicons name={icon} size={18} color="#94a3b8" />
                 <Text className="text-sm text-slate-300 flex-1">{text}</Text>
               </View>
             ))}
@@ -380,7 +381,7 @@ export default function QrScreen() {
               /* ── Step 3: Success + optional photo upload ── */
               <View style={{ gap: 16, paddingVertical: 4 }}>
                 <View style={{ alignItems: 'center', gap: 8 }}>
-                  <Text style={{ fontSize: 48 }}>✅</Text>
+                  <Ionicons name="checkmark-circle" size={48} color="#22C55E" />
                   <Text style={{ color: '#fff', fontWeight: '700', fontSize: 18 }}>Report Sent!</Text>
                   <Text style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', lineHeight: 22 }}>
                     The owner has been notified. Thank you for helping reunite them!
@@ -399,14 +400,20 @@ export default function QrScreen() {
                       {photoUploading ? (
                         <ActivityIndicator color="#f97316" />
                       ) : (
-                        <Text style={{ color: '#f97316', fontWeight: '600', fontSize: 14 }}>📷 Attach a Photo</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="camera" size={14} color="#f97316" />
+                          <Text style={{ color: '#f97316', fontWeight: '600', fontSize: 14 }}>Attach a Photo</Text>
+                        </View>
                       )}
                     </TouchableOpacity>
                   </View>
                 )}
                 {photoUploaded && (
                   <View style={{ backgroundColor: '#22C55E11', borderWidth: 1, borderColor: '#22C55E55', borderRadius: 12, padding: 12, alignItems: 'center' }}>
-                    <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>📸 Photo attached!</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="camera" size={13} color="#22C55E" />
+                      <Text style={{ color: '#22C55E', fontWeight: '600', fontSize: 13 }}>Photo attached!</Text>
+                    </View>
                   </View>
                 )}
                 <TouchableOpacity
@@ -476,7 +483,7 @@ export default function QrScreen() {
                       justifyContent: 'center',
                     }}
                   >
-                    <Text style={{ fontSize: 24 }}>{categoryInfo.emoji}</Text>
+                    <Ionicons name={categoryInfo.icon as any} size={24} color={categoryInfo.color} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: categoryInfo.color, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginBottom: 2 }}>
@@ -490,7 +497,10 @@ export default function QrScreen() {
                 {/* Lost banner */}
                 {tagResult.isLost && (
                   <View style={{ backgroundColor: '#dc262611', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12 }}>
-                    <Text style={{ color: '#dc2626', fontWeight: '700', fontSize: 13 }}>⚠️ Reported Lost — Owner is looking for this!</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="warning" size={13} color="#dc2626" />
+                      <Text style={{ color: '#dc2626', fontWeight: '700', fontSize: 13 }}>Reported Lost — Owner is looking for this!</Text>
+                    </View>
                   </View>
                 )}
 
@@ -498,25 +508,39 @@ export default function QrScreen() {
                 <View style={{ backgroundColor: '#21263a', borderRadius: 16, borderWidth: 1, borderColor: '#2a2f45', overflow: 'hidden' }}>
                   {tagResult.description && (
                     <View style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: '#2a2f45', backgroundColor: tagResult.category === 'medical' ? '#EF444411' : undefined }}>
-                      <Text style={{ color: tagResult.category === 'medical' ? '#EF4444' : '#94a3b8', fontSize: 12, fontWeight: tagResult.category === 'medical' ? '700' : '400', marginBottom: 4 }}>
-                        {tagResult.category === 'medical' ? '🚨 Medical / Emergency Info' : 'Description'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                        {tagResult.category === 'medical' && (
+                          <Ionicons name="alert" size={12} color="#EF4444" />
+                        )}
+                        <Text style={{ color: tagResult.category === 'medical' ? '#EF4444' : '#94a3b8', fontSize: 12, fontWeight: tagResult.category === 'medical' ? '700' : '400' }}>
+                          {tagResult.category === 'medical' ? 'Medical / Emergency Info' : 'Description'}
+                        </Text>
+                      </View>
                       <Text style={{ color: '#fff', fontSize: 14 }}>{tagResult.description}</Text>
                     </View>
                   )}
                   {tagResult.rewardMessage && (
                     <View style={{ padding: 14, borderBottomWidth: 1, borderBottomColor: '#2a2f45', backgroundColor: '#22C55E11' }}>
-                      <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '700', marginBottom: 2 }}>🎁 {tagResult.rewardMessage}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="gift" size={12} color="#22C55E" />
+                        <Text style={{ color: '#22C55E', fontSize: 12, fontWeight: '700' }}>{tagResult.rewardMessage}</Text>
+                      </View>
                     </View>
                   )}
                   {(tagResult.ownerContactEmail || tagResult.ownerContactPhone) && (
                     <View style={{ padding: 14 }}>
                       <Text style={{ color: '#94a3b8', fontSize: 12, marginBottom: 4 }}>Contact Owner</Text>
                       {tagResult.ownerContactEmail && (
-                        <Text style={{ color: '#60a5fa', fontSize: 14 }}>📧 {tagResult.ownerContactEmail}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="mail" size={14} color="#60a5fa" />
+                          <Text style={{ color: '#60a5fa', fontSize: 14 }}>{tagResult.ownerContactEmail}</Text>
+                        </View>
                       )}
                       {tagResult.ownerContactPhone && (
-                        <Text style={{ color: '#60a5fa', fontSize: 14, marginTop: 2 }}>📞 {tagResult.ownerContactPhone}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <Ionicons name="call" size={14} color="#60a5fa" />
+                          <Text style={{ color: '#60a5fa', fontSize: 14 }}>{tagResult.ownerContactPhone}</Text>
+                        </View>
                       )}
                     </View>
                   )}

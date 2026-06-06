@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import * as Location from 'expo-location';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -18,7 +19,7 @@ function SosConfirmModal({
       <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
       <View style={modal.card}>
         <View style={modal.iconCircle}>
-          <Text style={modal.iconText}>🆘</Text>
+          <Ionicons name="alert-circle" size={32} color="#ef4444" />
         </View>
         <Text style={modal.title}>Send Emergency SOS?</Text>
         <Text style={modal.body}>
@@ -39,10 +40,10 @@ function SosConfirmModal({
 function SosResultToast({ success, message, onDismiss }: { success: boolean; message: string; onDismiss: () => void }) {
   return (
     <View style={[toast.wrap, success ? toast.wrapSuccess : toast.wrapError]}>
-      <Text style={toast.icon}>{success ? '✅' : '⚠️'}</Text>
+      <Ionicons name={success ? 'checkmark-circle' : 'warning'} size={18} color={success ? '#16a34a' : '#dc2626'} />
       <Text style={toast.msg}>{message}</Text>
       <TouchableOpacity onPress={onDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Text style={toast.dismiss}>✕</Text>
+        <Ionicons name="close" size={13} color="#9ca3af" />
       </TouchableOpacity>
     </View>
   );
@@ -101,7 +102,7 @@ export function SosButton() {
           accessibilityLabel="Send emergency SOS"
           accessibilityRole="button"
         >
-          <Text style={styles.sosIcon}>{loading ? '⏳' : '🆘'}</Text>
+          <Ionicons name={loading ? 'time' : 'alert-circle'} size={18} color="#ffffff" />
           <Text style={styles.sosLabel}>{loading ? '…' : 'SOS'}</Text>
         </TouchableOpacity>
       </View>

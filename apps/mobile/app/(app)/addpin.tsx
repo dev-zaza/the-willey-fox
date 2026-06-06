@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -16,14 +17,14 @@ import { pinsService } from '@/services/pins.service';
 import { extractApiErrorMessage } from '@/lib/api-error';
 
 const PIN_TYPES = [
-  { id: 'traffic', label: 'Traffic', emoji: '🚗' },
-  { id: 'construction', label: 'Construction', emoji: '🚧' },
-  { id: 'event', label: 'Event', emoji: '📅' },
-  { id: 'safety', label: 'Safety', emoji: '⚠️' },
-  { id: 'pickpocket', label: 'Pickpocket', emoji: '🤚' },
-  { id: 'recommendation', label: 'Recommendation', emoji: '👍' },
-  { id: 'harassment', label: 'Harassment', emoji: '🚫' },
-  { id: 'unsafe_area', label: 'Unsafe Area', emoji: '⛔' },
+  { id: 'traffic', label: 'Traffic', icon: 'car' },
+  { id: 'construction', label: 'Construction', icon: 'construct' },
+  { id: 'event', label: 'Event', icon: 'calendar' },
+  { id: 'safety', label: 'Safety', icon: 'warning' },
+  { id: 'pickpocket', label: 'Pickpocket', icon: 'hand-right' },
+  { id: 'recommendation', label: 'Recommendation', icon: 'thumbs-up' },
+  { id: 'harassment', label: 'Harassment', icon: 'ban' },
+  { id: 'unsafe_area', label: 'Unsafe Area', icon: 'stop-circle' },
 ] as const;
 
 type PinType = (typeof PIN_TYPES)[number]['id'];
@@ -122,7 +123,7 @@ export default function AddPinScreen() {
                 borderColor: type === pt.id ? '#f97316' : border,
               }}
             >
-              <Text style={{ fontSize: 16 }}>{pt.emoji}</Text>
+              <Ionicons name={pt.icon as any} size={16} color={type === pt.id ? '#fff' : textPrimary} />
               <Text style={{
                 fontSize: 13,
                 fontWeight: '600',
@@ -194,7 +195,11 @@ export default function AddPinScreen() {
           borderRadius: 10,
           marginBottom: 24,
         }}>
-          <Text style={{ fontSize: 16 }}>{location ? '📍' : locLoading ? '⏳' : '⚠️'}</Text>
+          <Ionicons
+            name={location ? 'location' : locLoading ? 'time' : 'warning'}
+            size={16}
+            color={textSecondary}
+          />
           <Text style={{ fontSize: 14, color: textSecondary, flex: 1 }}>
             {location
               ? `GPS: ${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`

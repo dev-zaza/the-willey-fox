@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import {
   ActivityIndicator,
   Text,
@@ -23,7 +24,7 @@ export function ServiceUnavailable({ onRetry, isRetrying = false }: ServiceUnava
           className="w-20 h-20 rounded-full mb-6 items-center justify-center"
           style={{ backgroundColor: dark ? 'rgba(249, 115, 22, 0.15)' : 'rgba(249, 115, 22, 0.1)' }}
         >
-          <Text className="text-4xl">⚠️</Text>
+          <Ionicons name="warning" size={36} color={dark ? '#f97316' : '#f97316'} />
         </View>
 
         <Text className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">

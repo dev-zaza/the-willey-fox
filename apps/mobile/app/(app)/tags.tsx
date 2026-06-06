@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +28,7 @@ import { tagCustomizationService, type VisualTheme, type PrintTemplate } from '@
 import { buildPrintHtml } from '@/lib/generate-print-html';
 import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'];
 function tierIndex(t: string) { return TIER_ORDER.indexOf(t === 'pro' ? 'premium' : t); }
@@ -37,18 +39,19 @@ const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, '') ?? 'https://
 
 type TagCategory = 'pet' | 'bag' | 'key' | 'person' | 'vehicle' | 'other';
 
-const CATEGORY_CONFIG: Record<TagCategory, { label: string; emoji: string; color: string; namePlaceholder: string; descPlaceholder: string }> = {
-  pet:     { label: 'Pet / Animal',    emoji: '🐾', color: '#22C55E', namePlaceholder: "Pet's name",                     descPlaceholder: 'Breed, age, vet contact...' },
-  bag:     { label: 'Bag / Luggage',   emoji: '🎒', color: '#3B82F6', namePlaceholder: 'Bag description',                descPlaceholder: 'Brand, color, contents...' },
-  key:     { label: 'Keys',            emoji: '🔑', color: '#F59E0B', namePlaceholder: 'Key description (e.g. Car keys)', descPlaceholder: 'What they belong to...' },
-  person:  { label: 'Person',          emoji: '👦', color: '#F97316', namePlaceholder: "Person's name",                  descPlaceholder: 'Allergies, conditions, emergency info...' },
-  vehicle: { label: 'Vehicle',         emoji: '🚗', color: '#8B5CF6', namePlaceholder: 'Vehicle name / plate',           descPlaceholder: 'Make, model, color...' },
-  other:   { label: 'Other',           emoji: '🏷️', color: '#6B7280', namePlaceholder: 'Item name',                     descPlaceholder: 'Description, reward info...' },
+const CATEGORY_CONFIG: Record<TagCategory, { label: string; icon: string; color: string; namePlaceholder: string; descPlaceholder: string }> = {
+  pet:     { label: 'Pet / Animal',    icon: 'paw',           color: '#22C55E', namePlaceholder: "Pet's name",                     descPlaceholder: 'Breed, age, vet contact...' },
+  bag:     { label: 'Bag / Luggage',   icon: 'briefcase',     color: '#3B82F6', namePlaceholder: 'Bag description',                descPlaceholder: 'Brand, color, contents...' },
+  key:     { label: 'Keys',            icon: 'key',           color: '#F59E0B', namePlaceholder: 'Key description (e.g. Car keys)', descPlaceholder: 'What they belong to...' },
+  person:  { label: 'Person',          icon: 'person',        color: '#F97316', namePlaceholder: "Person's name",                  descPlaceholder: 'Allergies, conditions, emergency info...' },
+  vehicle: { label: 'Vehicle',         icon: 'car',           color: '#8B5CF6', namePlaceholder: 'Vehicle name / plate',           descPlaceholder: 'Make, model, color...' },
+  other:   { label: 'Other',           icon: 'pricetag',      color: '#6B7280', namePlaceholder: 'Item name',                     descPlaceholder: 'Description, reward info...' },
 };
 
 type Step = 'list' | 'register-form' | 'register-success' | 'detail';
 
 export default function TagsScreen() {
+  const insets = useSafeAreaInsets();
   const [tags, setTags] = useState<QrCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<Step>('list');
@@ -376,7 +379,7 @@ export default function TagsScreen() {
                         : { backgroundColor: '#fff', borderColor: '#e5e7eb', minWidth: '44%', flex: 1 }
                     }
                   >
-                    <Text style={{ fontSize: 24 }}>{c.emoji}</Text>
+                    <Ionicons name={c.icon as any} size={24} color={c.color} />
                     <Text style={{ color: selected ? c.color : '#6b7280', fontSize: 12, fontWeight: '600' }}>{c.label}</Text>
                   </TouchableOpacity>
                 );
@@ -440,7 +443,7 @@ export default function TagsScreen() {
           </View>
         </ScrollView>
 
-        <View className="bg-white dark:bg-surface-card border-t border-gray-200 dark:border-surface-border px-6 py-4">
+        <View className="bg-white dark:bg-surface-card border-t border-gray-200 dark:border-surface-border px-6 py-4" style={{ paddingBottom: insets.bottom + 80 }}>
           <TouchableOpacity
             className="bg-brand-500 rounded-2xl py-4 items-center"
             onPress={handleRegister}
@@ -478,7 +481,7 @@ export default function TagsScreen() {
           {/* Tag header */}
           <View className="items-center" style={{ gap: 8 }}>
             <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: cfg.color + '22', borderColor: cfg.color, borderWidth: 2, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 36 }}>{cfg.emoji}</Text>
+              <Ionicons name={cfg.icon as any} size={36} color={cfg.color} />
             </View>
             <Text className="text-gray-900 dark:text-white font-bold text-xl">{selectedTag.name}</Text>
             <View style={{ backgroundColor: cfg.color + '22', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
@@ -990,7 +993,7 @@ export default function TagsScreen() {
                 className="bg-white dark:bg-surface-card border border-gray-200 dark:border-surface-border rounded-2xl p-4 flex-row items-center gap-4"
               >
                 <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: cfg.color + '22', borderColor: cfg.color, borderWidth: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 22 }}>{cfg.emoji}</Text>
+                  <Ionicons name={cfg.icon as any} size={22} color={cfg.color} />
                 </View>
                 <View className="flex-1" style={{ gap: 2 }}>
                   <Text className="text-gray-900 dark:text-white font-semibold text-sm">{item.name}</Text>

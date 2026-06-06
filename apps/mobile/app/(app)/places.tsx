@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useState, useCallback } from 'react';
 import {
   ActivityIndicator,
@@ -40,16 +41,16 @@ const CATEGORIES: { label: string; value: PlaceCategory | 'all' }[] = [
   { label: '📍 Other', value: 'other' },
 ];
 
-const CATEGORY_EMOJIS: Record<PlaceCategory, string> = {
-  hotel: '🏨',
-  restaurant: '🍽',
-  cafe: '☕',
-  bar: '🍺',
-  attraction: '🎭',
-  park: '🌳',
-  transport_hub: '🚉',
-  shopping: '🛍',
-  other: '📍',
+const CATEGORY_ICONS: Record<PlaceCategory, string> = {
+  hotel: 'business',
+  restaurant: 'restaurant',
+  cafe: 'cafe',
+  bar: 'beer',
+  attraction: 'color-palette',
+  park: 'leaf',
+  transport_hub: 'train',
+  shopping: 'bag-handle',
+  other: 'location',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -58,9 +59,7 @@ function StarDisplay({ rating, max = 5 }: { rating: number; max?: number }) {
   return (
     <View style={{ flexDirection: 'row', gap: 1 }}>
       {Array.from({ length: max }).map((_, i) => (
-        <Text key={i} style={{ fontSize: 12, color: i < Math.round(rating) ? '#f97316' : '#d1d5db' }}>
-          ★
-        </Text>
+        <Ionicons key={i} name="star" size={12} color={i < Math.round(rating) ? '#f97316' : '#d1d5db'} />
       ))}
     </View>
   );
@@ -71,7 +70,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
     <View style={{ flexDirection: 'row', gap: 4 }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <TouchableOpacity key={n} onPress={() => onChange(n)}>
-          <Text style={{ fontSize: 26, color: n <= value ? '#f97316' : '#d1d5db' }}>★</Text>
+          <Ionicons name="star" size={26} color={n <= value ? '#f97316' : '#d1d5db'} />
         </TouchableOpacity>
       ))}
     </View>
@@ -197,7 +196,7 @@ function PlaceDetailSheet({
           {/* Place info */}
           <View style={{ backgroundColor: cardBg, borderWidth: 1, borderColor: border, borderRadius: 16, padding: 16, gap: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 28 }}>{CATEGORY_EMOJIS[detail?.category ?? initialPlace.category]}</Text>
+              <Ionicons name={CATEGORY_ICONS[detail?.category ?? initialPlace.category] as any} size={28} color={textSecondary} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: textPrimary, fontWeight: '700', fontSize: 16 }}>{detail?.name ?? initialPlace.name}</Text>
                 <Text style={{ color: textSecondary, fontSize: 12, textTransform: 'capitalize' }}>
@@ -693,7 +692,7 @@ export default function PlacesScreen() {
                 flexDirection: 'row', gap: 12, alignItems: 'flex-start',
               }}
             >
-              <Text style={{ fontSize: 28, marginTop: 2 }}>{CATEGORY_EMOJIS[item.category]}</Text>
+              <Ionicons name={CATEGORY_ICONS[item.category] as any} size={28} color={textSecondary} style={{ marginTop: 2 }} />
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={{ color: textPrimary, fontWeight: '600', fontSize: 15 }} numberOfLines={1}>
                   {item.name}
@@ -718,7 +717,7 @@ export default function PlacesScreen() {
           )}
           ListEmptyComponent={
             <View style={{ alignItems: 'center', paddingVertical: 60, gap: 10 }}>
-              <Text style={{ fontSize: 40 }}>🗺</Text>
+              <Ionicons name="map" size={40} color={textSecondary} />
               <Text style={{ color: textPrimary, fontWeight: '600', fontSize: 16 }}>No places found</Text>
               <Text style={{ color: textSecondary, fontSize: 14, textAlign: 'center' }}>
                 Try a different area or tap "Use My Location".

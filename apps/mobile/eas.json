@@ -15,7 +15,8 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://your-staging-api.example.com/api/v1"
+        "EXPO_PUBLIC_API_URL": "https://api.thewileyfox.com/api/v1",
+        "EXPO_PUBLIC_WEB_URL": "https://thewileyfox.com"
       },
       "android": {
         "buildType": "apk"

@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -245,7 +246,7 @@ export default function SubscriptionScreen() {
                   <View style={{ gap: 6 }}>
                     {PLAN_FEATURES[tier].map((feature) => (
                       <View key={feature} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={{ color: '#f97316', fontSize: 14 }}>✓</Text>
+                        <Ionicons name="checkmark-circle" size={14} color="#f97316" />
                         <Text style={{ color: textSecondary, fontSize: 13 }}>{feature}</Text>
                       </View>
                     ))}

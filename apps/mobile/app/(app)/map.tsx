@@ -17,7 +17,7 @@ import {
   View,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/components/Icon';
 import { pinsService } from '@/services/pins.service';
 import { directionsService, type SafetyZone, type RouteResult } from '@/services/directions.service';
 import { emergencyService, type ActiveSosNear } from '@/services/emergency.service';
@@ -67,14 +67,14 @@ function decodePolyline(encoded: string): Array<{ latitude: number; longitude: n
 
 // ── Pin type config ──────────────────────────────────────────────────────────
 const PIN_TYPES = [
-  { id: 'traffic',        label: 'Traffic',      emoji: '🚗', color: '#EF4444' },
-  { id: 'construction',   label: 'Construction', emoji: '🚧', color: '#F97316' },
-  { id: 'event',          label: 'Event',        emoji: '📅', color: '#3B82F6' },
-  { id: 'pickpocket',     label: 'Pickpocket',   emoji: '🤚', color: '#DC2626' },
-  { id: 'recommendation', label: 'Recommendation', emoji: '👍', color: '#10B981' },
-  { id: 'harassment',    label: 'Harassment',    emoji: '🚫', color: '#BE185D' },
-  { id: 'unsafe_area',   label: 'Unsafe Area',   emoji: '⛔', color: '#991B1B' },
-  { id: 'safety',         label: 'Safety',       emoji: '⚠️', color: '#EAB308' },
+  { id: 'traffic',        label: 'Traffic',      icon: 'car',         color: '#EF4444' },
+  { id: 'construction',   label: 'Construction', icon: 'construct',   color: '#F97316' },
+  { id: 'event',          label: 'Event',        icon: 'calendar',    color: '#3B82F6' },
+  { id: 'pickpocket',     label: 'Pickpocket',   icon: 'hand-right',  color: '#DC2626' },
+  { id: 'recommendation', label: 'Recommendation', icon: 'thumbs-up', color: '#10B981' },
+  { id: 'harassment',    label: 'Harassment',    icon: 'ban',         color: '#BE185D' },
+  { id: 'unsafe_area',   label: 'Unsafe Area',   icon: 'stop-circle', color: '#991B1B' },
+  { id: 'safety',         label: 'Safety',       icon: 'warning',     color: '#EAB308' },
 ] as const;
 
 type PinType = (typeof PIN_TYPES)[number]['id'];
@@ -196,7 +196,7 @@ function PinMarker({ type, selected }: { type: PinType; selected?: boolean }) {
   return (
     <View style={[styles.pinOuter, { borderColor: cfg.color, backgroundColor: cfg.color + '20' }, selected && { backgroundColor: cfg.color + '44' }]}>
       <View style={[styles.pinInner, { backgroundColor: cfg.color }]}>
-        <Text style={styles.pinEmoji}>{cfg.emoji}</Text>
+        <Ionicons name={cfg.icon as any} size={17} color="#ffffff" />
       </View>
       <View style={[styles.pinCaret, { borderTopColor: cfg.color }]} />
     </View>
@@ -882,7 +882,7 @@ export default function MapScreen() {
               coordinate={[tapLocation.lng, tapLocation.lat]}
             >
               <View style={styles.tapPreviewMarker}>
-                <Text style={{ fontSize: 18 }}>📍</Text>
+                <Ionicons name="location" size={18} color="#f97316" />
               </View>
             </PointAnnotation>
           )}
@@ -971,7 +971,7 @@ export default function MapScreen() {
               ]}
               onPress={() => setActiveFilter(pt.id)}
             >
-              <Text style={styles.chipEmoji}>{pt.emoji}</Text>
+              <Ionicons name={pt.icon as any} size={12} color={activeFilter === pt.id ? '#ffffff' : pt.color} />
               <Text style={[styles.chipText, activeFilter === pt.id && styles.chipTextActive]}>{pt.label}</Text>
             </TouchableOpacity>
           ))}
@@ -1006,7 +1006,7 @@ export default function MapScreen() {
         >
           {safetyOverlayLoading
             ? <ActivityIndicator size="small" color="#16a34a" />
-            : <Text style={{ fontSize: 20 }}>🛡️</Text>
+            : <Ionicons name="shield" size={20} color="#16a34a" />
           }
         </TouchableOpacity>
       </View>
@@ -1052,9 +1052,10 @@ export default function MapScreen() {
               {activeRoute.durationMinutes} min · {activeRoute.distanceKm} km
             </Text>
             {activeRoute.warnings.length > 0 && (
-              <Text style={styles.routeWarning} numberOfLines={1}>
-                ⚠️ {activeRoute.warnings[0]}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="warning" size={11} color="#f59e0b" />
+                <Text style={styles.routeWarning} numberOfLines={1}>{activeRoute.warnings[0]}</Text>
+              </View>
             )}
           </View>
           <TouchableOpacity
@@ -1079,7 +1080,7 @@ export default function MapScreen() {
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeaderRow}>
               <View style={[styles.sheetIconCircle, { backgroundColor: getPinConfig(selectedPin.type).color + '22', borderColor: getPinConfig(selectedPin.type).color }]}>
-                <Text style={{ fontSize: 22 }}>{getPinConfig(selectedPin.type).emoji}</Text>
+                <Ionicons name={getPinConfig(selectedPin.type).icon as any} size={22} color={getPinConfig(selectedPin.type).color} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetCategory}>{getPinConfig(selectedPin.type).label}</Text>
@@ -1096,7 +1097,7 @@ export default function MapScreen() {
                 style={[styles.voteBtn, votedPins[selectedPin.id] === 'up' && styles.voteBtnUpActive]}
                 onPress={() => handleVote(selectedPin.id, 'up')}
               >
-                <Text style={styles.voteBtnEmoji}>👍</Text>
+                <Ionicons name="thumbs-up" size={20} color={votedPins[selectedPin.id] === 'up' ? '#16a34a' : '#6b7280'} />
                 <Text style={[styles.voteBtnCount, votedPins[selectedPin.id] === 'up' && { color: '#16a34a' }]}>{selectedPin.upvotes}</Text>
                 <Text style={styles.voteBtnLabel}>Helpful</Text>
               </TouchableOpacity>
@@ -1105,7 +1106,7 @@ export default function MapScreen() {
                 style={[styles.voteBtn, votedPins[selectedPin.id] === 'down' && styles.voteBtnDownActive]}
                 onPress={() => handleVote(selectedPin.id, 'down')}
               >
-                <Text style={styles.voteBtnEmoji}>👎</Text>
+                <Ionicons name="thumbs-down" size={20} color={votedPins[selectedPin.id] === 'down' ? '#ef4444' : '#6b7280'} />
                 <Text style={[styles.voteBtnCount, votedPins[selectedPin.id] === 'down' && { color: '#ef4444' }]}>{selectedPin.downvotes}</Text>
                 <Text style={styles.voteBtnLabel}>Not helpful</Text>
               </TouchableOpacity>
@@ -1135,7 +1136,7 @@ export default function MapScreen() {
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeaderRow}>
               <View style={[styles.sheetIconCircle, { backgroundColor: '#f97316' + '22', borderColor: '#f97316' }]}>
-                <Text style={{ fontSize: 22 }}>📍</Text>
+                <Ionicons name="location" size={22} color="#f97316" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetCategory}>Place</Text>
@@ -1161,12 +1162,12 @@ export default function MapScreen() {
             <Text style={styles.prioritySubtitle}>How should we choose your route?</Text>
 
             {([
-              { key: 'balanced' as const, emoji: '⚖️', label: 'Balanced', desc: 'Best mix of safety & speed' },
-              { key: 'safety' as const,   emoji: '🛡️', label: 'Safest',   desc: 'Prioritise low-crime areas' },
-              { key: 'speed' as const,    emoji: '⚡', label: 'Fastest',  desc: 'Shortest travel time' },
-            ]).map((opt) => (
+              { key: 'balanced' as const, icon: 'scale',  label: 'Balanced', desc: 'Best mix of safety & speed' },
+              { key: 'safety' as const,   icon: 'shield', label: 'Safest',   desc: 'Prioritise low-crime areas' },
+              { key: 'speed' as const,    icon: 'flash',  label: 'Fastest',  desc: 'Shortest travel time' },
+            ] as const).map((opt) => (
               <TouchableOpacity key={opt.key} style={styles.priorityOption} onPress={() => fetchRoute(opt.key)}>
-                <Text style={styles.priorityEmoji}>{opt.emoji}</Text>
+                <Ionicons name={opt.icon} size={26} color="#374151" style={styles.priorityEmoji} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.priorityOptionLabel}>{opt.label}</Text>
                   <Text style={styles.priorityOptionDesc}>{opt.desc}</Text>
@@ -1190,8 +1191,9 @@ export default function MapScreen() {
 
           <View style={styles.addSheetHeader}>
             <Text style={styles.addSheetTitle}>Report an incident</Text>
-            <View style={[styles.gpsBadge, tapLocation ? styles.gpsBadgeBlue : userLocation ? styles.gpsBadgeGreen : styles.gpsBadgeYellow]}>
-              <Text style={styles.gpsBadgeText}>{tapLocation ? '📍 Tapped' : userLocation ? '📍 GPS' : '⚠️ No GPS'}</Text>
+            <View style={[styles.gpsBadge, tapLocation ? styles.gpsBadgeBlue : userLocation ? styles.gpsBadgeGreen : styles.gpsBadgeYellow, { flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
+              <Ionicons name={tapLocation || userLocation ? 'location' : 'warning'} size={11} color="#374151" />
+              <Text style={styles.gpsBadgeText}>{tapLocation ? 'Tapped' : userLocation ? 'GPS' : 'No GPS'}</Text>
             </View>
           </View>
 
@@ -1203,7 +1205,7 @@ export default function MapScreen() {
                 style={[styles.typeChip, newPinType === pt.id && { backgroundColor: pt.color + '22', borderColor: pt.color }]}
                 onPress={() => setNewPinType(pt.id)}
               >
-                <Text style={styles.typeEmoji}>{pt.emoji}</Text>
+                <Ionicons name={pt.icon as any} size={22} color={newPinType === pt.id ? pt.color : '#6b7280'} />
                 <Text style={[styles.typeLabel, newPinType === pt.id && { color: pt.color, fontWeight: '700' }]}>{pt.label}</Text>
               </TouchableOpacity>
             ))}
@@ -1779,7 +1781,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f3f4f6',
   },
   priorityEmoji: {
-    fontSize: 26,
     width: 36,
     textAlign: 'center',
   },

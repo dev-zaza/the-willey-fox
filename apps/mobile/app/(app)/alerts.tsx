@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,8 +28,8 @@ interface AlertItem {
   tag: QrCode;
 }
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  pet: '🐾', bag: '🎒', key: '🔑', person: '👦', vehicle: '🚗', other: '🏷️',
+const CATEGORY_ICON: Record<string, React.ComponentProps<typeof Ionicons>['name']> = {
+  pet: 'paw', bag: 'briefcase', key: 'key', person: 'person', vehicle: 'car', other: 'pricetag',
 };
 
 function formatTimeAgo(dateStr: string): string {
@@ -127,7 +128,7 @@ export default function AlertsScreen() {
   const renderCard = ({ item: { report, tag } }: { item: AlertItem }) => {
     const coords = getCoords(report);
     const notes = report.finderNotes ?? report.message;
-    const emoji = CATEGORY_EMOJI[tag.category] ?? '🏷️';
+    const icon = CATEGORY_ICON[tag.category] ?? 'pricetag';
 
     return (
       <TouchableOpacity
@@ -149,7 +150,7 @@ export default function AlertsScreen() {
             backgroundColor: '#f9731622', borderWidth: 1.5, borderColor: '#f9731644',
             alignItems: 'center', justifyContent: 'center',
           }}>
-            <Text style={{ fontSize: 22 }}>{emoji}</Text>
+            <Ionicons name={icon} size={22} color="#f97316" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 14, fontWeight: '700', color: dark ? '#f1f5f9' : '#111827' }}>
@@ -184,9 +185,11 @@ export default function AlertsScreen() {
             backgroundColor: dark ? '#0f1117' : '#f1f5f9',
             borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, flex: 1,
           }}>
-            <Text style={{ fontSize: 11 }}>
-              {report.finderContact?.includes('@') ? '📧' : '📞'}
-            </Text>
+            <Ionicons
+              name={report.finderContact?.includes('@') ? 'mail' : 'call'}
+              size={11}
+              color={dark ? '#94a3b8' : '#6b7280'}
+            />
             <Text style={{ fontSize: 11, color: dark ? '#94a3b8' : '#6b7280', flex: 1 }} numberOfLines={1}>
               {report.finderContact}
             </Text>
@@ -197,7 +200,7 @@ export default function AlertsScreen() {
               flexDirection: 'row', alignItems: 'center', gap: 4,
               backgroundColor: '#3b82f611', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
             }}>
-              <Text style={{ fontSize: 11 }}>📍</Text>
+              <Ionicons name="location" size={11} color="#3b82f6" />
               <Text style={{ fontSize: 11, color: '#3b82f6', fontWeight: '600' }}>GPS</Text>
             </View>
           )}
@@ -233,7 +236,7 @@ export default function AlertsScreen() {
           onPress={() => router.push('/(app)/notifications')}
           style={{ position: 'relative', padding: 6 }}
         >
-          <Text style={{ fontSize: 20 }}>🔔</Text>
+          <Ionicons name="notifications" size={20} color={dark ? '#f1f5f9' : '#111827'} />
           {unreadCount > 0 && (
             <View style={{
               position: 'absolute', top: 2, right: 2,
@@ -256,7 +259,7 @@ export default function AlertsScreen() {
         </View>
       ) : alerts.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 44 }}>🔔</Text>
+          <Ionicons name="notifications" size={44} color={dark ? '#f1f5f9' : '#111827'} />
           <Text style={{ fontSize: 20, fontWeight: '700', color: dark ? '#f1f5f9' : '#111827' }}>No Alerts Yet</Text>
           <Text style={{ fontSize: 14, color: dark ? '#64748b' : '#9ca3af', textAlign: 'center', lineHeight: 22 }}>
             When someone scans one of your tags and submits a report, you'll see it here.
@@ -281,7 +284,7 @@ export default function AlertsScreen() {
           const { report, tag } = selected;
           const coords = getCoords(report);
           const notes = report.finderNotes ?? report.message;
-          const emoji = CATEGORY_EMOJI[tag.category] ?? '🏷️';
+          const icon = CATEGORY_ICON[tag.category] ?? 'pricetag';
           return (
             <View style={{
               backgroundColor: dark ? '#1a1d27' : '#ffffff',
@@ -299,7 +302,7 @@ export default function AlertsScreen() {
                     backgroundColor: '#f9731622', borderWidth: 2, borderColor: '#f9731644',
                     alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <Text style={{ fontSize: 26 }}>{emoji}</Text>
+                    <Ionicons name={icon} size={26} color="#f97316" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 17, fontWeight: '700', color: dark ? '#f1f5f9' : '#111827' }}>
@@ -310,7 +313,7 @@ export default function AlertsScreen() {
                     </Text>
                   </View>
                   <TouchableOpacity onPress={closeDetail} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={{ fontSize: 22, color: dark ? '#475569' : '#9ca3af' }}>×</Text>
+                    <Ionicons name="close" size={22} color={dark ? '#475569' : '#9ca3af'} />
                   </TouchableOpacity>
                 </View>
 
@@ -349,8 +352,12 @@ export default function AlertsScreen() {
                     Contact Finder
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons
+                      name={report.finderContact?.includes('@') ? 'mail' : 'call'}
+                      size={14}
+                      color={dark ? '#f1f5f9' : '#111827'}
+                    />
                     <Text style={{ fontSize: 14, color: dark ? '#f1f5f9' : '#111827', flex: 1 }}>
-                      {report.finderContact?.includes('@') ? '📧 ' : '📞 '}
                       {report.finderContact}
                     </Text>
                     <TouchableOpacity
@@ -379,9 +386,12 @@ export default function AlertsScreen() {
                     borderRadius: 14, padding: 14, gap: 10,
                     borderWidth: 1, borderColor: dark ? '#1e3a5f' : '#bae6fd',
                   }}>
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                      📍 Location Found
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="location" size={11} color="#3b82f6" />
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        Location Found
+                      </Text>
+                    </View>
                     <Text style={{ fontSize: 13, color: dark ? '#93c5fd' : '#1e40af' }}>
                       {report.locationAddress ?? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`}
                     </Text>
@@ -393,7 +403,7 @@ export default function AlertsScreen() {
                         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
                       }}
                     >
-                      <Text style={{ fontSize: 16 }}>🗺️</Text>
+                      <Ionicons name="map" size={16} color="#fff" />
                       <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>
                         Get Directions
                       </Text>

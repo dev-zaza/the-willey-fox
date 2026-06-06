@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -160,7 +161,7 @@ export default function MessagesScreen() {
         </View>
       ) : conversations.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8" style={{ gap: 12 }}>
-          <Text style={{ fontSize: 40 }}>💬</Text>
+          <Ionicons name="chatbubble" size={40} color="#9ca3af" />
           <Text className="text-xl font-bold text-gray-900 dark:text-white">No Messages</Text>
           <Text className="text-gray-500 dark:text-slate-400 text-sm text-center leading-6">
             Conversations with finders and community members will appear here.

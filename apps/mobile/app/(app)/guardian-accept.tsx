@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -76,7 +77,7 @@ export default function GuardianAcceptScreen() {
               justifyContent: 'center',
               marginBottom: 20,
             }}>
-              <Text style={{ fontSize: 32, color: '#fff' }}>✓</Text>
+              <Ionicons name="checkmark-circle" size={32} color="#fff" />
             </View>
             <Text style={{ fontSize: 20, fontWeight: '700', color: textPrimary, marginBottom: 8 }}>
               You're a Guardian!
@@ -109,7 +110,7 @@ export default function GuardianAcceptScreen() {
               justifyContent: 'center',
               marginBottom: 20,
             }}>
-              <Text style={{ fontSize: 32, color: '#fff' }}>✕</Text>
+              <Ionicons name="close" size={32} color="#fff" />
             </View>
             <Text style={{ fontSize: 20, fontWeight: '700', color: textPrimary, marginBottom: 8 }}>
               Invite Failed

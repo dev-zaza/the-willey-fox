@@ -1,3 +1,4 @@
+import { Ionicons } from '@/components/Icon';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -221,7 +222,7 @@ export default function ProfileScreen() {
                 width: 24, height: 24,
                 alignItems: 'center', justifyContent: 'center',
               }}>
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✎</Text>
+                <Ionicons name="pencil" size={12} color="#fff" />
               </View>
             )}
           </TouchableOpacity>
