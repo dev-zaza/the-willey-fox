@@ -14,13 +14,13 @@ interface GeoResult {
   location: LatLng;
 }
 
-function gradeColor(grade: string): string {
+function gradeColor(grade: string | null): string {
   switch (grade?.toUpperCase()) {
     case 'A': return '#16a34a';
     case 'B': return '#65a30d';
     case 'C': return '#f59e0b';
     case 'D': return '#cc2900';
-    default: return '#ef4444';
+    default: return '#6b7280';
   }
 }
 
