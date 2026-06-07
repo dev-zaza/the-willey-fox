@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ICrimeDataAdapter, SafetyZoneInput, NormalizedCrimeData } from './adapter.interface';
-import * as advisoryData from '../data/us-travel-advisories.json';
+import advisoryData from '../data/us-travel-advisories.json';
 import { COUNTRY_BBOXES } from '../data/country-bboxes';
 
 /**

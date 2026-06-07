@@ -4,7 +4,7 @@ import { safetySourceEnum, safetyGranularityEnum } from './enums';
 export const safetyZones = pgTable('safety_zones', {
   id: uuid('id').defaultRandom().primaryKey(),
   source: safetySourceEnum('source').notNull(),
-  sourceRegion: varchar('source_region', { length: 20 }).notNull(),
+  sourceRegion: varchar('source_region', { length: 100 }).notNull(),
   sourceGranularity: safetyGranularityEnum('source_granularity').notNull(),
 
   // Geography — point + radius OR bounding box

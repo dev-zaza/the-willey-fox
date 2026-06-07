@@ -127,6 +127,48 @@
       "when": 1771551500000,
       "tag": "0017_qr_customization",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1771551600000,
+      "tag": "0018_pin_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1771551700000,
+      "tag": "0019_travel_advisory",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1771551800000,
+      "tag": "0020_family_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1771551900000,
+      "tag": "0021_safety_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1771552000000,
+      "tag": "0022_broadcasts",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1780773000000,
+      "tag": "0023_safety_zone_region_length",
+      "breakpoints": true
     }
   ]
 }

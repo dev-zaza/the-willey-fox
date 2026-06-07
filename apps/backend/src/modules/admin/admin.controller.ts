@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { TagCustomizationService } from './tag-customization.service';
@@ -27,6 +28,7 @@ import { UpdatePrintTemplateDto } from './dto/update-print-template.dto';
 import { CreateVisualThemeDto } from './dto/create-visual-theme.dto';
 import { UpdateVisualThemeDto } from './dto/update-visual-theme.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SafetyEngineService } from '../safety-engine/safety-engine.service';
 
 @ApiBearerAuth('JWT')
 @ApiTags('admin')
@@ -36,6 +38,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly tagCustomizationService: TagCustomizationService,
+    private readonly safetyEngineService: SafetyEngineService,
   ) {}
 
   @Get('users')
@@ -173,6 +176,20 @@ export class AdminController {
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
   ) {
     return this.adminService.listSafetyZones(limit, offset);
+  }
+
+  @Post('safety/trigger/:source')
+  async triggerIngestion(@Param('source') source: string) {
+    const valid = ['uk_police', 'fbi', 'eurostat', 'us_travel_advisory', 'all'];
+    if (!valid.includes(source)) {
+      throw new BadRequestException(`Invalid source. Valid: ${valid.join(', ')}`);
+    }
+    if (source === 'all') {
+      await this.safetyEngineService.triggerAllIngestion();
+      return { queued: ['uk_police', 'fbi', 'eurostat', 'us_travel_advisory'] };
+    }
+    await this.safetyEngineService.triggerIngestion(source);
+    return { queued: [source] };
   }
 
   @Get('audit-logs')

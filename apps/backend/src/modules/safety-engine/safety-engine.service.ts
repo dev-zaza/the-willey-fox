@@ -51,10 +51,11 @@ export class SafetyEngineService {
       const zones = await adapter.ingest();
 
       for (const zone of zones) {
+        const isNew = await this.isNewZone(zone);
         const safetyScore = this.zoneScorer.score(zone.crimeData, zone.sourceGranularity);
         await this.upsertZone(zone, safetyScore);
 
-        if (await this.isNewZone(zone)) {
+        if (isNew) {
           zonesCreated++;
         } else {
           zonesUpdated++;
@@ -115,6 +116,7 @@ export class SafetyEngineService {
       .select({
         id: safetyZones.id,
         source: safetyZones.source,
+        sourceRegion: safetyZones.sourceRegion,
         sourceGranularity: safetyZones.sourceGranularity,
         centerLat: safetyZones.centerLat,
         centerLng: safetyZones.centerLng,

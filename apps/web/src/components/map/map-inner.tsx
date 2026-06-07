@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, useMap, useMapEvents, Circle } from 'react-leaflet';
+import { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, useMap, useMapEvents, Circle, GeoJSON, Tooltip } from 'react-leaflet';
+import type { Feature, FeatureCollection, GeoJsonObject, Geometry } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import { EventPin } from './event-pin';
 import { RouteLayer } from './route-layer';
+import { resolveNumericId } from './country-lookup';
 import type { LatLng } from '@/types';
 import type { PinData, SafetyZoneOverlay } from '@/lib/api';
 
@@ -15,7 +17,6 @@ const TILE_URL =
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
-// MapController: sync center/zoom programmatically
 function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
   const map = useMap();
   const prevCenter = useRef<LatLng | undefined>(undefined);
@@ -40,7 +41,6 @@ function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
 
 type BoundsPayload = { minLat: number; minLng: number; maxLat: number; maxLng: number };
 
-// ClickHandler + BoundsEmitter
 function MapEventHandler({
   onMapClick,
   onBoundsChange,
@@ -80,6 +80,91 @@ function safetyScoreToColor(score: number): string {
   return '#ef4444';
 }
 
+// Module-level cache — loaded once for the lifetime of the page
+let countriesCache: Map<number, Feature<Geometry>> | null = null;
+let countriesLoadPromise: Promise<Map<number, Feature<Geometry>>> | null = null;
+
+function loadCountries(): Promise<Map<number, Feature<Geometry>>> {
+  if (countriesCache) return Promise.resolve(countriesCache);
+  if (!countriesLoadPromise) {
+    countriesLoadPromise = Promise.all([
+      fetch('/countries-50m.json').then(r => r.json()),
+      import('topojson-client'),
+    ]).then(([topoRes, topojson]) => {
+      const fc = topojson.feature(topoRes, topoRes.objects.countries) as unknown as FeatureCollection<Geometry>;
+      const map = new Map<number, Feature<Geometry>>();
+      for (const f of fc.features) {
+        if (f.id != null) map.set(Number(f.id), f);
+      }
+      countriesCache = map;
+      return map;
+    });
+  }
+  return countriesLoadPromise;
+}
+
+interface ZoneLayerProps {
+  safetyZones: SafetyZoneOverlay[];
+}
+
+function ZoneLayer({ safetyZones }: ZoneLayerProps) {
+  const [countries, setCountries] = useState<Map<number, Feature<Geometry>> | null>(
+    countriesCache, // use synchronously if already loaded
+  );
+
+  // Always kick off load on mount; set state when done
+  useEffect(() => {
+    if (countriesCache) { setCountries(countriesCache); return; }
+    loadCountries().then(m => setCountries(m)).catch(() => {});
+  }, []);
+
+  return (
+    <>
+      {safetyZones.map((zone) => {
+        const score = Number(zone.safetyScore);
+        const color = safetyScoreToColor(score);
+        const label = zone.sourceRegion ?? zone.source;
+
+        // Country-granularity → actual GeoJSON border, no boxes
+        if (zone.sourceGranularity === 'country' && zone.sourceRegion) {
+          if (!countries) return null; // still loading
+          const numericId = resolveNumericId(zone.sourceRegion);
+          const feature = numericId != null ? countries.get(numericId) : undefined;
+          if (!feature) return null; // country not in 110m dataset
+          const score2 = Number(zone.safetyScore);
+          const color2 = safetyScoreToColor(score2);
+          return (
+            // key includes score so GeoJSON remounts when data changes
+            <GeoJSON
+              key={`${zone.id}-${score2}`}
+              data={feature as GeoJsonObject}
+              style={{ color: color2, fillColor: color2, fillOpacity: 0.25, weight: 1.5 }}
+            >
+              <Tooltip sticky>{label} — {score2.toFixed(0)}</Tooltip>
+            </GeoJSON>
+          );
+        }
+
+        // Point zones (street / neighbourhood) → circle
+        const lat = zone.centerLat ? parseFloat(zone.centerLat) : (zone.centroidLat ? parseFloat(zone.centroidLat) : null);
+        const lng = zone.centerLng ? parseFloat(zone.centerLng) : (zone.centroidLng ? parseFloat(zone.centroidLng) : null);
+        if (!lat || !lng || isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+        const radius = zone.radiusMetres ?? 2000;
+        return (
+          <Circle
+            key={zone.id}
+            center={[lat, lng]}
+            radius={zone.radiusMetres ?? radius}
+            pathOptions={{ color, fillColor: color, fillOpacity: 0.18, weight: 1 }}
+          >
+            <Tooltip sticky>{label} — {score.toFixed(0)}</Tooltip>
+          </Circle>
+        );
+      })}
+    </>
+  );
+}
+
 interface MapInnerProps {
   pins?: PinData[];
   route?: LatLng[];
@@ -94,9 +179,7 @@ interface MapInnerProps {
 export function MapInner({ pins = [], route, safetyZones = [], center, zoom, onPinClick, onMapClick, onBoundsChange }: MapInnerProps) {
   return (
     <MapContainer
-      center={
-        center ? [center.lat, center.lng] : DEFAULT_CENTER
-      }
+      center={center ? [center.lat, center.lng] : DEFAULT_CENTER}
       zoom={zoom ?? DEFAULT_ZOOM}
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
@@ -111,21 +194,7 @@ export function MapInner({ pins = [], route, safetyZones = [], center, zoom, onP
 
       {route && route.length >= 2 && <RouteLayer route={route} />}
 
-      {safetyZones.map((zone) => {
-        const lat = zone.centroidLat ? parseFloat(zone.centroidLat) : null;
-        const lng = zone.centroidLng ? parseFloat(zone.centroidLng) : null;
-        if (!lat || !lng || isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
-        const score = Number(zone.safetyScore);
-        const color = safetyScoreToColor(score);
-        return (
-          <Circle
-            key={zone.id}
-            center={[lat, lng]}
-            radius={2000}
-            pathOptions={{ color, fillColor: color, fillOpacity: 0.2, weight: 1 }}
-          />
-        );
-      })}
+      <ZoneLayer safetyZones={safetyZones} />
     </MapContainer>
   );
 }

@@ -870,7 +870,8 @@ export interface AdminIngestionLog {
   id: string;
   source: string;
   status: string;
-  recordsIngested: number | null;
+  zonesCreated: number;
+  zonesUpdated: number;
   errorMessage: string | null;
   createdAt: string;
 }
@@ -906,6 +907,8 @@ export const admin = {
     request<AdminIngestionLog[]>(`/admin/safety/ingestion-logs?limit=${limit}&offset=${offset}`),
   listSafetyZones: (limit = 50, offset = 0) =>
     request<AdminSafetyZone[]>(`/admin/safety/zones?limit=${limit}&offset=${offset}`),
+  triggerIngestion: (source: 'uk_police' | 'fbi' | 'eurostat' | 'us_travel_advisory' | 'all') =>
+    request<{ queued: string[] }>(`/admin/safety/trigger/${source}`, { method: 'POST' }),
   getPricing: () => request<PricingConfig>('/admin/settings/pricing'),
   updatePricing: (dto: Partial<PricingConfig>) =>
     request<PricingConfig>('/admin/settings/pricing', { method: 'PUT', body: JSON.stringify(dto) }),
@@ -1037,9 +1040,17 @@ export interface SafetyZoneOverlay {
   safetyScore: number;
   source: string;
   sourceRegion: string | null;
+  sourceGranularity: string | null;
   colour: string;
   centroidLat?: string | null;
   centroidLng?: string | null;
+  centerLat?: string | null;
+  centerLng?: string | null;
+  radiusMetres?: number | null;
+  bboxMinLat?: string | null;
+  bboxMinLng?: string | null;
+  bboxMaxLat?: string | null;
+  bboxMaxLng?: string | null;
 }
 
 export const safetyOverlay = {

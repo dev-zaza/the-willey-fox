@@ -112,29 +112,42 @@ export class EurostatAdapter implements ICrimeDataAdapter {
     const result: Record<string, Record<string, number>> = {};
 
     try {
-      const dimensions = data.dataset?.dimension ?? data.dimension;
-      const values = data.dataset?.value ?? data.value ?? {};
+      // SDMX-JSON 1.0: top-level `id` array defines dimension order, `size` gives cardinalities
+      const dimOrder: string[] = data.id ?? [];
+      const sizes: number[] = data.size ?? [];
+      const dimensions = data.dimension ?? {};
+      const values = data.value ?? {};
 
-      if (!dimensions) return result;
+      if (!dimOrder.length || !sizes.length) return result;
 
-      // Build index arrays for each dimension
-      const geoIndex = this.buildIndex(dimensions.geo?.category?.index ?? {});
-      const iccsIndex = this.buildIndex(dimensions.iccs?.category?.index ?? {});
-      const timeIndex = this.buildIndex(dimensions.time?.category?.index ?? {});
+      // Build reverse-lookup: position → code for each dimension
+      const indices: Record<number, string>[] = dimOrder.map((_dim, i) => {
+        const cat = dimensions[dimOrder[i]]?.category?.index ?? {};
+        const rev: Record<number, string> = {};
+        for (const [code, pos] of Object.entries(cat)) rev[pos] = code;
+        return rev;
+      });
 
-      const iccsSize = Object.keys(iccsIndex).length;
-      const timeSize = Object.keys(timeIndex).length;
+      // Compute strides for each dimension (row-major order)
+      const strides = sizes.map((_, i) => sizes.slice(i + 1).reduce((a, b) => a * b, 1));
 
-      // SDMX JSON linear index: geo * iccsSize * timeSize + iccs * timeSize + time
-      for (const [linearIdx, value] of Object.entries(values)) {
+      const iccsPos = dimOrder.indexOf('iccs');
+      const geoPos = dimOrder.indexOf('geo');
+      const unitPos = dimOrder.indexOf('unit');
+
+      if (iccsPos === -1 || geoPos === -1) return result;
+
+      for (const [linearIdxStr, value] of Object.entries(values)) {
         if (typeof value !== 'number') continue;
 
-        const idx = Number(linearIdx);
-        const geoPos = Math.floor(idx / (iccsSize * timeSize));
-        const iccsPos = Math.floor((idx % (iccsSize * timeSize)) / timeSize);
+        const linearIdx = Number(linearIdxStr);
+        const dimPositions = dimOrder.map((_, i) => Math.floor(linearIdx / strides[i]) % sizes[i]);
 
-        const geo = geoIndex[geoPos];
-        const iccs = iccsIndex[iccsPos];
+        // Only take P_HTHAB (rate per 100k) — unit dimension index 1
+        if (unitPos !== -1 && indices[unitPos][dimPositions[unitPos]] !== 'P_HTHAB') continue;
+
+        const geo = indices[geoPos][dimPositions[geoPos]];
+        const iccs = indices[iccsPos][dimPositions[iccsPos]];
 
         if (!geo || !iccs) continue;
 
@@ -148,21 +161,16 @@ export class EurostatAdapter implements ICrimeDataAdapter {
 
     return result;
   }
-
-  private buildIndex(indexObj: Record<string, number>): Record<number, string> {
-    const reversed: Record<number, string> = {};
-    for (const [key, pos] of Object.entries(indexObj)) {
-      reversed[pos] = key;
-    }
-    return reversed;
-  }
 }
 
 interface EurostatResponse {
+  id?: string[];
+  size?: number[];
+  dimension?: Record<string, { category?: { index?: Record<string, number> } }>;
+  value?: Record<string, number>;
+  // legacy nested format (unused but kept for safety)
   dataset?: {
     dimension?: Record<string, { category?: { index?: Record<string, number> } }>;
     value?: Record<string, number>;
   };
-  dimension?: Record<string, { category?: { index?: Record<string, number> } }>;
-  value?: Record<string, number>;
 }

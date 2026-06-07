@@ -7,9 +7,10 @@ import { QrModule } from '../qr/qr.module';
 import { SettingsModule } from '../settings/settings.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BroadcastsModule } from '../broadcasts/broadcasts.module';
+import { SafetyEngineModule } from '../safety-engine/safety-engine.module';
 
 @Module({
-  imports: [QrModule, SettingsModule, NotificationsModule, BroadcastsModule],
+  imports: [QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule],
   controllers: [AdminController],
   providers: [AdminService, AuditLogService, TagCustomizationService],
 })
