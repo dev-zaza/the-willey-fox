@@ -148,6 +148,36 @@ export interface UpdateProfilePayload {
   fcmToken?: string;
 }
 
+async function requestBlob(path: string): Promise<{ blob: Blob; filename: string }> {
+  const headers: Record<string, string> = {};
+  const token = getAccessToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+  if (res.status === 401) {
+    try {
+      const newToken = await silentRefresh();
+      const retryRes = await fetch(`${BASE_URL}${path}`, {
+        headers: { Authorization: `Bearer ${newToken}` },
+      });
+      if (!retryRes.ok) throw new ApiError(retryRes.status, 'DOWNLOAD_FAILED', 'Download failed');
+      const disposition = retryRes.headers.get('Content-Disposition') ?? '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      return { blob: await retryRes.blob(), filename: match?.[1] ?? 'download' };
+    } catch {
+      clearTokens();
+      window.location.href = '/login';
+      throw new ApiError(401, 'AUTH_REQUIRED', 'Unauthorized');
+    }
+  }
+
+  if (!res.ok) throw new ApiError(res.status, 'DOWNLOAD_FAILED', 'Download failed');
+  const disposition = res.headers.get('Content-Disposition') ?? '';
+  const match = disposition.match(/filename="([^"]+)"/);
+  return { blob: await res.blob(), filename: match?.[1] ?? 'download' };
+}
+
 export const auth = {
   login: (payload: LoginPayload) =>
     request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(payload) }, false),
@@ -809,6 +839,39 @@ export interface AdminQrRow {
   createdAt: string;
 }
 
+export interface AdminQrBatch {
+  id: string;
+  count: number;
+  shopifyOrderId: string | null;
+  notes: string | null;
+  createdByAdminId: string | null;
+  createdAt: string;
+  adminFirstName: string | null;
+  adminLastName: string | null;
+  adminEmail: string | null;
+}
+
+export interface AdminQrBatchCode {
+  id: string;
+  uniqueCode: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface AdminQrBatchDetail {
+  batch: AdminQrBatch;
+  codes: AdminQrBatchCode[];
+}
+
+export interface PrintFormatSpec {
+  key: string;
+  label: string;
+  trimMm: { w: number; h: number };
+  mode: 'emergency' | 'lost-found';
+  minQrMm: number;
+  hasReverse: boolean;
+}
+
 export interface AdminReportRow {
   id: string;
   qrCodeId: string;
@@ -894,6 +957,18 @@ export const admin = {
   unbanUser: (id: string) => request<{ message: string }>(`/admin/users/${id}/unban`, { method: 'PUT' }),
   listQrCodes: (limit = 50, offset = 0) =>
     request<AdminQrRow[]>(`/admin/qr-codes?limit=${limit}&offset=${offset}`),
+  bulkGenerateQr: (payload: { count: number; shopifyOrderId?: string; notes?: string }) =>
+    request<{ batch: AdminQrBatch; codes: AdminQrBatchCode[] }>('/admin/qr/bulk-generate', {
+      method: 'POST', body: JSON.stringify(payload),
+    }),
+  listBatches: (limit = 50, offset = 0) =>
+    request<AdminQrBatch[]>(`/admin/qr/batches?limit=${limit}&offset=${offset}`),
+  getBatch: (id: string) => request<AdminQrBatchDetail>(`/admin/qr/batches/${id}`),
+  downloadBatchPdf: (id: string) => requestBlob(`/admin/qr/batches/${id}/download-pdf`),
+  downloadBatchZip: (id: string) => requestBlob(`/admin/qr/batches/${id}/download-zip`),
+  downloadBatchPrint: (id: string, format: string, fox = true) =>
+    requestBlob(`/admin/qr/batches/${id}/download-print?format=${encodeURIComponent(format)}&fox=${fox}`),
+  listPrintFormats: () => request<PrintFormatSpec[]>('/admin/qr/print-formats'),
   listReports: (limit = 50, offset = 0, status?: string) =>
     request<AdminReportRow[]>(
       `/admin/reports?limit=${limit}&offset=${offset}${status ? `&status=${encodeURIComponent(status)}` : ''}`,

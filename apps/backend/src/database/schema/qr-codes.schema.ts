@@ -3,6 +3,7 @@ import { qrCategoryEnum } from './enums';
 import { users } from './users.schema';
 import { visualThemes } from './visual-themes.schema';
 import { familyGroups } from './family-groups.schema';
+import { qrBatches } from './qr-batches.schema';
 
 export const qrCodes = pgTable(
   'qr_codes',
@@ -32,6 +33,7 @@ export const qrCodes = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     status: varchar('status', { length: 20 }).default('active').notNull(),
     shopifyOrderId: varchar('shopify_order_id', { length: 100 }),
+    batchId: uuid('batch_id').references(() => qrBatches.id, { onDelete: 'set null' }),
     themeId: uuid('theme_id').references(() => visualThemes.id, { onDelete: 'set null' }),
     familyId: uuid('family_id').references(() => familyGroups.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),

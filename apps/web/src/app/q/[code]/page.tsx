@@ -28,27 +28,22 @@ interface QrPublicInfo {
     showLogo: boolean;
     logoUrl: string | null;
   };
-  customFields?: Record<string, unknown> & {
+  customFields?: {
     medicalInfo?: Record<string, string>;
+    petInfo?: Record<string, string>;
+    [key: string]: unknown;
   };
-}
-
-interface ActivationFormData {
-  name: string;
-  category: string;
-  ownerContactEmail: string;
-  ownerContactPhone: string;
-  rewardMessage: string;
 }
 
 const categoryLabels: Record<string, string> = {
   pet: 'Pet',
-  bag: 'Bag',
-  key: 'Key',
+  bag: 'Bag / Luggage',
+  key: 'Keys',
   person: 'Person',
   vehicle: 'Vehicle',
-  other: 'Other',
+  other: 'Other Item',
   medical: 'Medical / ID',
+  place: 'Place',
 };
 
 const categoryEmojis: Record<string, string> = {
@@ -59,9 +54,60 @@ const categoryEmojis: Record<string, string> = {
   vehicle: '🚗',
   other: '📦',
   medical: '🏥',
+  place: '📍',
 };
 
-const QR_CATEGORIES = ['pet', 'bag', 'key', 'person', 'vehicle', 'other', 'medical'] as const;
+const QR_CATEGORIES = ['pet', 'bag', 'key', 'person', 'vehicle', 'other', 'medical', 'place'] as const;
+type QrCategory = (typeof QR_CATEGORIES)[number];
+
+// Which categories get medical fields
+const MEDICAL_CATS: QrCategory[] = ['medical', 'person'];
+// Which categories get pet fields
+const PET_CATS: QrCategory[] = ['pet'];
+// Which categories show return/reward fields
+const REWARD_CATS: QrCategory[] = ['pet', 'bag', 'key', 'vehicle', 'other', 'person'];
+
+interface MedicalInfo {
+  bloodType: string;
+  allergies: string;
+  medicalConditions: string;
+  medications: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  doctorName: string;
+  doctorPhone: string;
+  insuranceInfo: string;
+  notes: string;
+}
+
+interface PetInfo {
+  breed: string;
+  color: string;
+  vetName: string;
+  vetPhone: string;
+  microchipId: string;
+}
+
+interface ClaimForm {
+  category: QrCategory;
+  name: string;
+  description: string;
+  ownerContactEmail: string;
+  ownerContactPhone: string;
+  rewardMessage: string;
+  medicalInfo: MedicalInfo;
+  petInfo: PetInfo;
+}
+
+const emptyMedical: MedicalInfo = {
+  bloodType: '', allergies: '', medicalConditions: '', medications: '',
+  emergencyContactName: '', emergencyContactPhone: '',
+  doctorName: '', doctorPhone: '', insuranceInfo: '', notes: '',
+};
+
+const emptyPet: PetInfo = {
+  breed: '', color: '', vetName: '', vetPhone: '', microchipId: '',
+};
 
 async function fetchQrInfo(code: string): Promise<QrPublicInfo | null> {
   try {
@@ -73,23 +119,51 @@ async function fetchQrInfo(code: string): Promise<QrPublicInfo | null> {
   }
 }
 
-async function activateQr(code: string, formData: ActivationFormData): Promise<QrPublicInfo | null> {
+async function activateQr(code: string, form: ClaimForm): Promise<boolean> {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('safetag_access_token') : null;
-    if (!token) return null;
+    if (!token) return false;
+
+    const isMedical = MEDICAL_CATS.includes(form.category);
+    const isPet = PET_CATS.includes(form.category);
+
+    const hasMedical = isMedical && Object.values(form.medicalInfo).some((v) => v.trim());
+    const hasPet = isPet && Object.values(form.petInfo).some((v) => v.trim());
+
+    const body: Record<string, unknown> = {
+      code,
+      category: form.category,
+      name: form.name.trim(),
+      description: form.description.trim() || undefined,
+      ownerContactEmail: form.ownerContactEmail.trim() || undefined,
+      ownerContactPhone: form.ownerContactPhone.trim() || undefined,
+      rewardMessage: form.rewardMessage.trim() || undefined,
+    };
+
+    if (hasMedical) {
+      const cleaned: Partial<MedicalInfo> = {};
+      (Object.keys(form.medicalInfo) as (keyof MedicalInfo)[]).forEach((k) => {
+        if (form.medicalInfo[k].trim()) cleaned[k] = form.medicalInfo[k].trim();
+      });
+      body.medicalInfo = cleaned;
+    }
+
+    if (hasPet) {
+      const cleaned: Partial<PetInfo> = {};
+      (Object.keys(form.petInfo) as (keyof PetInfo)[]).forEach((k) => {
+        if (form.petInfo[k].trim()) cleaned[k] = form.petInfo[k].trim();
+      });
+      body.petInfo = cleaned;
+    }
 
     const res = await fetch(`${API_BASE}/public/qr/activate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ code, ...formData }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
     });
-    if (!res.ok) return null;
-    return res.json();
+    return res.ok;
   } catch {
-    return null;
+    return false;
   }
 }
 
@@ -100,29 +174,41 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Activation form state
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState('');
-  const [form, setForm] = useState<ActivationFormData>({
-    name: '',
+  const [step, setStep] = useState<'category' | 'details'>('category');
+
+  const [form, setForm] = useState<ClaimForm>({
     category: 'other',
+    name: '',
+    description: '',
     ownerContactEmail: '',
     ownerContactPhone: '',
     rewardMessage: '',
+    medicalInfo: { ...emptyMedical },
+    petInfo: { ...emptyPet },
   });
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('safetag_access_token'));
     fetchQrInfo(code).then((info) => {
-      if (!info) {
-        setNotFound(true);
-      } else {
-        setQrInfo(info);
-      }
+      if (!info) setNotFound(true);
+      else setQrInfo(info);
       setLoading(false);
     });
   }, [code]);
+
+  function setField<K extends keyof ClaimForm>(key: K, val: ClaimForm[K]) {
+    setForm((f) => ({ ...f, [key]: val }));
+  }
+
+  function setMedField(key: keyof MedicalInfo, val: string) {
+    setForm((f) => ({ ...f, medicalInfo: { ...f.medicalInfo, [key]: val } }));
+  }
+
+  function setPetField(key: keyof PetInfo, val: string) {
+    setForm((f) => ({ ...f, petInfo: { ...f.petInfo, [key]: val } }));
+  }
 
   async function handleActivate(e: React.FormEvent) {
     e.preventDefault();
@@ -137,13 +223,13 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
     setActivating(true);
     setActivationError('');
 
-    const result = await activateQr(code, form);
-    if (result) {
-      // Re-fetch the public info to show the active card
+    const ok = await activateQr(code, form);
+    if (ok) {
       const updated = await fetchQrInfo(code);
       setQrInfo(updated);
+      setStep('category');
     } else {
-      setActivationError('Failed to register tag. The tag may already be claimed, or your account has reached its tag limit.');
+      setActivationError('Failed to register tag. It may already be claimed, or your account has reached its tag limit.');
     }
     setActivating(false);
   }
@@ -174,79 +260,271 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
     );
   }
 
-  // Unclaimed — show activation/registration form
-  if (qrInfo?.status === 'unclaimed') {
+  const isMedicalCat = MEDICAL_CATS.includes(form.category);
+  const isPetCat = PET_CATS.includes(form.category);
+  const showReward = REWARD_CATS.includes(form.category);
+
+  // ── UNCLAIMED: Step 1 — pick category ──────────────────────────────────────
+  if (qrInfo?.status === 'unclaimed' && step === 'category') {
     return (
       <div style={styles.container}>
         <div style={styles.header}><img src="/logo.png" alt="TheWileyfox" style={styles.logoImg} /></div>
         <main style={styles.main}>
           <div style={styles.card}>
-            <div style={{ fontSize: '48px', marginBottom: '12px', textAlign: 'center' }}>🏷️</div>
-            <h1 style={{ ...styles.itemName, marginBottom: '8px' }}>Register This Tag</h1>
+            <div style={{ fontSize: '40px', marginBottom: '12px', textAlign: 'center' }}>🏷️</div>
+            <h1 style={{ ...styles.itemName, marginBottom: '6px' }}>Register This Tag</h1>
             <p style={{ color: '#666', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>
-              This tag hasn&apos;t been registered yet. Set it up to protect what matters.
+              What are you attaching this tag to?
+            </p>
+
+            <div style={styles.categoryGrid}>
+              {QR_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => { setField('category', cat); setStep('details'); }}
+                  style={{
+                    ...styles.categoryTile,
+                    ...(form.category === cat ? styles.categoryTileActive : {}),
+                  }}
+                >
+                  <span style={{ fontSize: '28px', display: 'block', marginBottom: '6px' }}>
+                    {categoryEmojis[cat]}
+                  </span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>
+                    {categoryLabels[cat]}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {!isLoggedIn && (
+              <div style={{ ...styles.loginCta, marginTop: '20px' }}>
+                <p style={styles.loginCtaText}>You need an account to register this tag.</p>
+                <a href={`/login?redirect=${encodeURIComponent(`/q/${code}`)}`} style={styles.activateBtn}>
+                  Sign in to Register
+                </a>
+                <a href={`/register?redirect=${encodeURIComponent(`/q/${code}`)}`} style={styles.loginCtaLink}>
+                  Create a free account →
+                </a>
+              </div>
+            )}
+          </div>
+        </main>
+        <footer style={styles.footer}><p>Powered by TheWileyfox</p></footer>
+      </div>
+    );
+  }
+
+  // ── UNCLAIMED: Step 2 — fill in details ────────────────────────────────────
+  if (qrInfo?.status === 'unclaimed' && step === 'details') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}><img src="/logo.png" alt="TheWileyfox" style={styles.logoImg} /></div>
+        <main style={styles.main}>
+          <div style={styles.card}>
+            <button
+              type="button"
+              onClick={() => setStep('category')}
+              style={styles.backBtn}
+            >
+              ← Back
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '36px' }}>{categoryEmojis[form.category]}</span>
+            </div>
+            <h1 style={{ ...styles.itemName, marginBottom: '4px' }}>
+              {categoryLabels[form.category]}
+            </h1>
+            <p style={{ color: '#666', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>
+              Fill in the details for this tag
             </p>
 
             <form onSubmit={handleActivate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+              {/* ── Core fields ── */}
               <div>
-                <label style={styles.label}>Name *</label>
+                <label style={styles.label}>
+                  {isPetCat ? 'Pet Name' : form.category === 'person' || isMedicalCat ? 'Full Name' : 'Item Name'} *
+                </label>
                 <input
                   style={styles.input}
                   type="text"
-                  placeholder="e.g. Max the Labrador"
+                  placeholder={
+                    isPetCat ? 'e.g. Buddy' :
+                    isMedicalCat ? 'e.g. John Smith' :
+                    form.category === 'bag' ? 'e.g. Black Samsonite Suitcase' :
+                    form.category === 'key' ? 'e.g. House Keys' :
+                    form.category === 'vehicle' ? 'e.g. Blue Honda Civic' :
+                    'Name or description'
+                  }
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => setField('name', e.target.value)}
                   required
                 />
               </div>
 
-              <div>
-                <label style={styles.label}>Category *</label>
-                <select
-                  style={styles.input}
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                >
-                  {QR_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {categoryEmojis[cat]} {categoryLabels[cat]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* ── Pet-specific fields ── */}
+              {isPetCat && (
+                <fieldset style={styles.fieldset}>
+                  <legend style={styles.fieldsetLegend}>🐾 Pet Details</legend>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={styles.fieldRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Breed</label>
+                        <input style={styles.input} type="text" placeholder="e.g. Labrador"
+                          value={form.petInfo.breed} onChange={(e) => setPetField('breed', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Colour</label>
+                        <input style={styles.input} type="text" placeholder="e.g. Golden"
+                          value={form.petInfo.color} onChange={(e) => setPetField('color', e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={styles.label}>Microchip ID</label>
+                      <input style={styles.input} type="text" placeholder="15-digit chip number"
+                        value={form.petInfo.microchipId} onChange={(e) => setPetField('microchipId', e.target.value)} />
+                    </div>
+                    <div style={styles.fieldRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Vet Name</label>
+                        <input style={styles.input} type="text" placeholder="e.g. City Vets"
+                          value={form.petInfo.vetName} onChange={(e) => setPetField('vetName', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Vet Phone</label>
+                        <input style={styles.input} type="tel" placeholder="+44 7911 123456"
+                          value={form.petInfo.vetPhone} onChange={(e) => setPetField('vetPhone', e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+              )}
 
-              <div>
-                <label style={styles.label}>Contact Email</label>
-                <input
-                  style={styles.input}
-                  type="email"
-                  placeholder="your@email.com"
-                  value={form.ownerContactEmail}
-                  onChange={(e) => setForm((f) => ({ ...f, ownerContactEmail: e.target.value }))}
-                />
-              </div>
+              {/* ── Medical fields ── */}
+              {isMedicalCat && (
+                <fieldset style={{ ...styles.fieldset, borderColor: '#fca5a5', backgroundColor: '#fff8f8' }}>
+                  <legend style={{ ...styles.fieldsetLegend, color: '#dc2626' }}>🚨 Medical Information</legend>
+                  <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#9ca3af' }}>
+                    Only fill what you&apos;re comfortable showing to a finder in an emergency.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={styles.fieldRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Blood Type</label>
+                        <select style={styles.input} value={form.medicalInfo.bloodType}
+                          onChange={(e) => setMedField('bloodType', e.target.value)}>
+                          <option value="">Select…</option>
+                          {['A+','A−','B+','B−','AB+','AB−','O+','O−'].map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Allergies</label>
+                        <input style={styles.input} type="text" placeholder="e.g. Penicillin, nuts"
+                          value={form.medicalInfo.allergies} onChange={(e) => setMedField('allergies', e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={styles.label}>Medical Conditions</label>
+                      <input style={styles.input} type="text" placeholder="e.g. Diabetes Type 1, Epilepsy"
+                        value={form.medicalInfo.medicalConditions} onChange={(e) => setMedField('medicalConditions', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={styles.label}>Medications</label>
+                      <input style={styles.input} type="text" placeholder="e.g. Metformin 500mg"
+                        value={form.medicalInfo.medications} onChange={(e) => setMedField('medications', e.target.value)} />
+                    </div>
+                    <div style={styles.fieldRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Emergency Contact</label>
+                        <input style={styles.input} type="text" placeholder="Name"
+                          value={form.medicalInfo.emergencyContactName} onChange={(e) => setMedField('emergencyContactName', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Emergency Phone</label>
+                        <input style={styles.input} type="tel" placeholder="+44 7911 123456"
+                          value={form.medicalInfo.emergencyContactPhone} onChange={(e) => setMedField('emergencyContactPhone', e.target.value)} />
+                      </div>
+                    </div>
+                    <div style={styles.fieldRow}>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Doctor / GP</label>
+                        <input style={styles.input} type="text" placeholder="Dr. Smith"
+                          value={form.medicalInfo.doctorName} onChange={(e) => setMedField('doctorName', e.target.value)} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={styles.label}>Doctor Phone</label>
+                        <input style={styles.input} type="tel" placeholder="+44 117 900 0000"
+                          value={form.medicalInfo.doctorPhone} onChange={(e) => setMedField('doctorPhone', e.target.value)} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={styles.label}>Insurance Info</label>
+                      <input style={styles.input} type="text" placeholder="Policy number / provider"
+                        value={form.medicalInfo.insuranceInfo} onChange={(e) => setMedField('insuranceInfo', e.target.value)} />
+                    </div>
+                    <div>
+                      <label style={styles.label}>Additional Notes</label>
+                      <input style={styles.input} type="text" placeholder="Anything else a finder should know"
+                        value={form.medicalInfo.notes} onChange={(e) => setMedField('notes', e.target.value)} />
+                    </div>
+                  </div>
+                </fieldset>
+              )}
 
+              {/* ── Description ── */}
               <div>
-                <label style={styles.label}>Contact Phone</label>
-                <input
-                  style={styles.input}
-                  type="tel"
-                  placeholder="+44 7911 123456"
-                  value={form.ownerContactPhone}
-                  onChange={(e) => setForm((f) => ({ ...f, ownerContactPhone: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <label style={styles.label}>Reward Message</label>
+                <label style={styles.label}>
+                  {isPetCat ? 'Additional Notes' : form.category === 'place' ? 'Description' : 'Description / Notes'}
+                </label>
                 <input
                   style={styles.input}
                   type="text"
-                  placeholder="e.g. £50 reward if returned"
-                  value={form.rewardMessage}
-                  onChange={(e) => setForm((f) => ({ ...f, rewardMessage: e.target.value }))}
+                  placeholder={
+                    isPetCat ? 'Any other details about your pet' :
+                    form.category === 'bag' ? 'e.g. Contains laptop and passport' :
+                    form.category === 'vehicle' ? 'e.g. Reg: AB12 CDE' :
+                    'Optional description'
+                  }
+                  value={form.description}
+                  onChange={(e) => setField('description', e.target.value)}
                 />
               </div>
+
+              {/* ── Contact fields ── */}
+              <fieldset style={styles.fieldset}>
+                <legend style={styles.fieldsetLegend}>📞 Contact Info</legend>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={styles.label}>Contact Email</label>
+                    <input style={styles.input} type="email" placeholder="your@email.com"
+                      value={form.ownerContactEmail} onChange={(e) => setField('ownerContactEmail', e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={styles.label}>Contact Phone</label>
+                    <input style={styles.input} type="tel" placeholder="+44 7911 123456"
+                      value={form.ownerContactPhone} onChange={(e) => setField('ownerContactPhone', e.target.value)} />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* ── Reward ── */}
+              {showReward && (
+                <div>
+                  <label style={styles.label}>Reward Message</label>
+                  <input
+                    style={styles.input}
+                    type="text"
+                    placeholder="e.g. £50 reward if returned"
+                    value={form.rewardMessage}
+                    onChange={(e) => setField('rewardMessage', e.target.value)}
+                  />
+                </div>
+              )}
 
               {activationError && (
                 <p style={{ color: '#dc2626', fontSize: '13px', margin: 0 }}>{activationError}</p>
@@ -267,16 +545,10 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
               ) : (
                 <div style={styles.loginCta}>
                   <p style={styles.loginCtaText}>You need an account to register this tag.</p>
-                  <a
-                    href={`/login?redirect=${encodeURIComponent(`/q/${code}`)}`}
-                    style={styles.activateBtn}
-                  >
+                  <a href={`/login?redirect=${encodeURIComponent(`/q/${code}`)}`} style={styles.activateBtn}>
                     Sign in to Register
                   </a>
-                  <a
-                    href={`/register?redirect=${encodeURIComponent(`/q/${code}`)}`}
-                    style={styles.loginCtaLink}
-                  >
+                  <a href={`/register?redirect=${encodeURIComponent(`/q/${code}`)}`} style={styles.loginCtaLink}>
                     Create a free account →
                   </a>
                 </div>
@@ -291,7 +563,9 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
 
   if (!qrInfo) return null;
 
-  const isMedical = qrInfo.category === 'medical';
+  // ── ACTIVE: show profile card ───────────────────────────────────────────────
+  const isMedical = qrInfo.category === 'medical' || qrInfo.category === 'person';
+  const isPet = qrInfo.category === 'pet';
   const accentColor = qrInfo.theme?.accentColor ?? '#ea2e00';
   const isDark = qrInfo.theme?.backgroundStyle === 'dark';
 
@@ -327,16 +601,16 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
 
           {qrInfo.name && <h1 style={styles.itemName}>{qrInfo.name}</h1>}
 
-          {/* Medical info — shown prominently with red alert box */}
-          {isMedical && (qrInfo.description || qrInfo.customFields?.medicalInfo) ? (
+          {/* Medical info */}
+          {isMedical && (qrInfo.description || qrInfo.customFields?.medicalInfo) && (
             <div style={styles.medicalBox}>
               <p style={styles.medicalHeading}>🚨 Medical / Emergency Info</p>
               {qrInfo.description && <p style={styles.medicalText}>{qrInfo.description}</p>}
               {qrInfo.customFields?.medicalInfo && (() => {
                 const med = qrInfo.customFields.medicalInfo as Record<string, string>;
                 const fields = [
-                  { key: 'allergies', label: 'Allergies' },
                   { key: 'bloodType', label: 'Blood Type' },
+                  { key: 'allergies', label: 'Allergies' },
                   { key: 'medicalConditions', label: 'Medical Conditions' },
                   { key: 'medications', label: 'Medications' },
                   { key: 'emergencyContactName', label: 'Emergency Contact' },
@@ -359,8 +633,36 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
                 );
               })()}
             </div>
-          ) : (
-            qrInfo.description && <p style={styles.description}>{qrInfo.description}</p>
+          )}
+
+          {/* Pet info */}
+          {isPet && qrInfo.customFields?.petInfo && (() => {
+            const pet = qrInfo.customFields.petInfo as Record<string, string>;
+            const fields = [
+              { key: 'breed', label: 'Breed' },
+              { key: 'color', label: 'Colour' },
+              { key: 'microchipId', label: 'Microchip ID' },
+              { key: 'vetName', label: 'Vet' },
+              { key: 'vetPhone', label: 'Vet Phone' },
+            ];
+            const hasAny = fields.some(({ key }) => pet[key]);
+            if (!hasAny) return null;
+            return (
+              <div style={styles.petBox}>
+                <p style={styles.petHeading}>🐾 Pet Details</p>
+                {fields.map(({ key, label }) =>
+                  pet[key] ? (
+                    <p key={key} style={{ margin: '4px 0', fontSize: '14px', color: '#064e3b' }}>
+                      <strong>{label}:</strong> {pet[key]}
+                    </p>
+                  ) : null
+                )}
+              </div>
+            );
+          })()}
+
+          {!isMedical && qrInfo.description && (
+            <p style={styles.description}>{qrInfo.description}</p>
           )}
 
           {qrInfo.ownerName && (
@@ -435,21 +737,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '16px',
     marginBottom: '16px',
   },
-  lostIcon: {
-    fontSize: '24px',
-    flexShrink: 0,
-  },
-  lostTitle: {
-    margin: '0 0 4px',
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#dc2626',
-  },
-  lostSubtitle: {
-    margin: 0,
-    fontSize: '13px',
-    color: '#ef4444',
-  },
+  lostIcon: { fontSize: '24px', flexShrink: 0 },
+  lostTitle: { margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: '#dc2626' },
+  lostSubtitle: { margin: 0, fontSize: '13px', color: '#ef4444' },
   card: {
     backgroundColor: '#fff',
     borderRadius: '12px',
@@ -475,18 +765,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     marginBottom: '16px',
   },
-  itemName: {
-    margin: '0 0 8px',
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#1a1a1a',
-  },
-  description: {
-    margin: '0 0 12px',
-    fontSize: '15px',
-    color: '#555',
-    lineHeight: 1.5,
-  },
+  itemName: { margin: '0 0 8px', fontSize: '24px', fontWeight: 700, color: '#1a1a1a' },
+  description: { margin: '0 0 12px', fontSize: '15px', color: '#555', lineHeight: 1.5 },
   medicalBox: {
     backgroundColor: '#fef2f2',
     border: '2px solid #fca5a5',
@@ -495,24 +775,18 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '12px',
     textAlign: 'left' as const,
   },
-  medicalHeading: {
-    margin: '0 0 8px',
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#dc2626',
+  medicalHeading: { margin: '0 0 8px', fontSize: '15px', fontWeight: 700, color: '#dc2626' },
+  medicalText: { margin: 0, fontSize: '15px', color: '#7f1d1d', lineHeight: 1.6, fontWeight: 500 },
+  petBox: {
+    backgroundColor: '#f0fdf4',
+    border: '1px solid #86efac',
+    borderRadius: '10px',
+    padding: '14px 16px',
+    marginBottom: '12px',
+    textAlign: 'left' as const,
   },
-  medicalText: {
-    margin: 0,
-    fontSize: '15px',
-    color: '#7f1d1d',
-    lineHeight: 1.6,
-    fontWeight: 500,
-  },
-  ownerInfo: {
-    margin: '0 0 16px',
-    fontSize: '14px',
-    color: '#888',
-  },
+  petHeading: { margin: '0 0 8px', fontSize: '15px', fontWeight: 700, color: '#15803d' },
+  ownerInfo: { margin: '0 0 16px', fontSize: '14px', color: '#888' },
   contactBox: {
     backgroundColor: '#f0f9ff',
     border: '1px solid #bae6fd',
@@ -532,12 +806,7 @@ const styles: Record<string, React.CSSProperties> = {
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
   },
-  contactLink: {
-    fontSize: '14px',
-    color: '#0284c7',
-    textDecoration: 'none',
-    fontWeight: 500,
-  },
+  contactLink: { fontSize: '14px', color: '#0284c7', textDecoration: 'none', fontWeight: 500 },
   rewardBox: {
     backgroundColor: '#fffbeb',
     border: '1px solid #fde68a',
@@ -545,21 +814,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 16px',
     marginTop: '12px',
   },
-  rewardText: {
-    margin: 0,
-    fontSize: '14px',
-    color: '#92400e',
-    fontWeight: 500,
-  },
-  formSection: {
-    marginBottom: '20px',
-  },
-  footer: {
-    textAlign: 'center' as const,
-    padding: '20px',
-    fontSize: '13px',
-    color: '#999',
-  },
+  rewardText: { margin: 0, fontSize: '14px', color: '#92400e', fontWeight: 500 },
+  formSection: { marginBottom: '20px' },
+  footer: { textAlign: 'center' as const, padding: '20px', fontSize: '13px', color: '#999' },
   label: {
     display: 'block',
     fontSize: '13px',
@@ -594,23 +851,57 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: 'none',
     boxSizing: 'border-box' as const,
   },
-  loginCta: {
+  loginCta: { display: 'flex', flexDirection: 'column' as const, gap: '10px', marginTop: '4px' },
+  loginCtaText: { margin: 0, fontSize: '13px', color: '#6b7280', textAlign: 'center' as const },
+  loginCtaLink: { textAlign: 'center' as const, fontSize: '13px', color: '#ea2e00', textDecoration: 'none', fontWeight: 500 },
+  categoryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '10px',
+    marginBottom: '8px',
+  },
+  categoryTile: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
-    marginTop: '4px',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 6px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '10px',
+    backgroundColor: '#fff',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
   },
-  loginCtaText: {
-    margin: 0,
-    fontSize: '13px',
+  categoryTileActive: {
+    borderColor: '#ea2e00',
+    backgroundColor: '#fff5f5',
+  },
+  backBtn: {
+    background: 'none',
+    border: 'none',
     color: '#6b7280',
-    textAlign: 'center' as const,
-  },
-  loginCtaLink: {
-    textAlign: 'center' as const,
     fontSize: '13px',
-    color: '#ea2e00',
-    textDecoration: 'none',
-    fontWeight: 500,
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: '0 0 16px 0',
+    display: 'block',
+    textAlign: 'left' as const,
+  },
+  fieldset: {
+    border: '1px solid #e5e7eb',
+    borderRadius: '10px',
+    padding: '14px 14px 10px',
+    margin: 0,
+    backgroundColor: '#fafafa',
+  },
+  fieldsetLegend: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#374151',
+    padding: '0 6px',
+  },
+  fieldRow: {
+    display: 'flex',
+    gap: '10px',
   },
 };

@@ -8,12 +8,15 @@ import {
   Param,
   Query,
   Body,
+  Res,
   ParseUUIDPipe,
   ParseIntPipe,
   DefaultValuePipe,
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { AdminService } from './admin.service';
 import { TagCustomizationService } from './tag-customization.service';
 import { AdminGuard } from './guards/admin.guard';
@@ -29,6 +32,7 @@ import { CreateVisualThemeDto } from './dto/create-visual-theme.dto';
 import { UpdateVisualThemeDto } from './dto/update-visual-theme.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SafetyEngineService } from '../safety-engine/safety-engine.service';
+import { PrintExportService, PRINT_FORMATS, type PrintFormatKey } from './print-export.service';
 
 @ApiBearerAuth('JWT')
 @ApiTags('admin')
@@ -39,6 +43,8 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly tagCustomizationService: TagCustomizationService,
     private readonly safetyEngineService: SafetyEngineService,
+    private readonly configService: ConfigService,
+    private readonly printExportService: PrintExportService,
   ) {}
 
   @Get('users')
@@ -114,7 +120,118 @@ export class AdminController {
     @CurrentUser() user: { id: string },
     @Body() dto: BulkGenerateQrDto,
   ) {
-    return this.adminService.bulkGenerateUnclaimed(user.id, dto.count, dto.shopifyOrderId);
+    return this.adminService.bulkGenerateUnclaimed(user.id, dto.count, dto.shopifyOrderId, dto.notes);
+  }
+
+  // ── QR Batches ───────────────────────────────────────────────────────────────
+
+  /**
+   * GET /api/v1/admin/qr/batches
+   * List all QR batches with admin info.
+   */
+  @Get('qr/batches')
+  listBatches(
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+  ) {
+    return this.adminService.listBatches(limit, offset);
+  }
+
+  /**
+   * GET /api/v1/admin/qr/batches/:id
+   * Get a single batch + its QR codes.
+   */
+  @Get('qr/batches/:id')
+  getBatchCodes(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.getBatchCodes(id);
+  }
+
+  /**
+   * GET /api/v1/admin/qr/batches/:id/download-pdf
+   * Download a printable PDF with QR images for the batch.
+   */
+  @Get('qr/batches/:id/download-pdf')
+  async downloadBatchPdf(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3000');
+    const pdf = await this.adminService.exportBatchPdf(id, baseUrl);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="safetag-batch-${id}.pdf"`,
+      'Content-Length': pdf.length.toString(),
+    });
+    res.send(pdf);
+  }
+
+  /**
+   * GET /api/v1/admin/qr/batches/:id/download-zip
+   * Download a ZIP archive of individual PNG QR images for the batch.
+   */
+  @Get('qr/batches/:id/download-zip')
+  async downloadBatchZip(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3000');
+    const zip = await this.adminService.exportBatchZip(id, baseUrl);
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="safetag-batch-${id}.zip"`,
+      'Content-Length': zip.length.toString(),
+    });
+    res.send(zip);
+  }
+
+  /**
+   * GET /api/v1/admin/qr/batches/:id/download-print?format=name-tag&fox=true
+   * Download a print-ready PDF for a specific physical format with optional fox QR overlay.
+   */
+  @Get('qr/batches/:id/download-print')
+  async downloadBatchPrint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('format') format: string,
+    @Query('fox') fox: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const validFormats = Object.keys(PRINT_FORMATS);
+    if (!format || !validFormats.includes(format)) {
+      throw new BadRequestException(
+        `Invalid format. Must be one of: ${validFormats.join(', ')}`,
+      );
+    }
+    const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3000');
+    const useFox = fox !== 'false';
+    const pdf = await this.printExportService.exportBatchPrintPdf(
+      id,
+      baseUrl,
+      format as PrintFormatKey,
+      useFox,
+    );
+    const safeName = `safetag-${format}-batch-${id.slice(0, 8)}.pdf`;
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${safeName}"`,
+      'Content-Length': pdf.length.toString(),
+    });
+    res.send(pdf);
+  }
+
+  /**
+   * GET /api/v1/admin/qr/print-formats
+   * List available print format types with labels and specs.
+   */
+  @Get('qr/print-formats')
+  getPrintFormats() {
+    return Object.entries(PRINT_FORMATS).map(([key, fmt]) => ({
+      key,
+      label: fmt.label,
+      trimMm: fmt.trimMm,
+      mode: fmt.mode,
+      minQrMm: fmt.minQrMm,
+      hasReverse: 'hasReverse' in fmt ? fmt.hasReverse : false,
+    }));
   }
 
   @Get('settings/pricing')

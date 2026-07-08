@@ -73,6 +73,19 @@ export class EmergencyController {
   }
 
   /**
+   * PATCH /api/v1/emergency/contacts/:contactId/set-primary
+   * Mark one accepted contact as the primary SOS recipient (clears others).
+   */
+  @Patch('contacts/:contactId/set-primary')
+  @HttpCode(HttpStatus.OK)
+  setPrimaryContact(
+    @CurrentUser() user: { id: string },
+    @Param('contactId', ParseUUIDPipe) contactId: string,
+  ) {
+    return this.emergencyService.setPrimaryContact(contactId, user.id);
+  }
+
+  /**
    * DELETE /api/v1/emergency/contacts/:contactId
    * Remove an emergency contact (either party can remove).
    */

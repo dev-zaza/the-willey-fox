@@ -217,6 +217,7 @@ export class EmergencyService {
       .select({
         id: emergencyContacts.id,
         status: emergencyContacts.status,
+        isPrimarySos: emergencyContacts.isPrimarySos,
         acceptedAt: emergencyContacts.acceptedAt,
         createdAt: emergencyContacts.createdAt,
         direction: emergencyContacts.userId,
@@ -250,6 +251,7 @@ export class EmergencyService {
         return {
           id: row.id,
           status: row.status,
+          isPrimarySos: row.isPrimarySos,
           acceptedAt: row.acceptedAt,
           createdAt: row.createdAt,
           isRequester: row.requesterUserId === userId,
@@ -259,6 +261,45 @@ export class EmergencyService {
     );
 
     return enriched;
+  }
+
+  async setPrimaryContact(contactId: string, userId: string): Promise<{ message: string }> {
+    // Verify the contact belongs to this user and is accepted
+    const [contact] = await this.db
+      .select({ id: emergencyContacts.id, status: emergencyContacts.status })
+      .from(emergencyContacts)
+      .where(
+        and(
+          eq(emergencyContacts.id, contactId),
+          or(
+            eq(emergencyContacts.userId, userId),
+            eq(emergencyContacts.contactUserId, userId),
+          ),
+          eq(emergencyContacts.status, 'accepted'),
+        ),
+      )
+      .limit(1);
+
+    if (!contact) throw new NotFoundException('CONTACT_NOT_FOUND');
+
+    // Clear any existing primary on all contacts for this user
+    await this.db
+      .update(emergencyContacts)
+      .set({ isPrimarySos: false })
+      .where(
+        or(
+          eq(emergencyContacts.userId, userId),
+          eq(emergencyContacts.contactUserId, userId),
+        ),
+      );
+
+    // Set the new primary
+    await this.db
+      .update(emergencyContacts)
+      .set({ isPrimarySos: true })
+      .where(eq(emergencyContacts.id, contactId));
+
+    return { message: 'Primary SOS contact updated.' };
   }
 
   // ─── SOS Alerts ──────────────────────────────────────────────────────

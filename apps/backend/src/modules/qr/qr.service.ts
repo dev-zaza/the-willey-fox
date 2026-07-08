@@ -288,7 +288,11 @@ export class QrService {
         visibilityConfig: dto.visibilityConfig
           ? { ...defaultVisibility, ...dto.visibilityConfig }
           : defaultVisibility,
-        customFields: dto.customFields || {},
+        customFields: {
+          ...(dto.customFields || {}),
+          ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
+          ...(dto.petInfo ? { petInfo: dto.petInfo } : {}),
+        },
         updatedAt: new Date(),
       })
       .where(eq(qrCodes.id, qrCode.id))
@@ -297,7 +301,7 @@ export class QrService {
     return updated;
   }
 
-  async bulkGenerateUnclaimed(count: number, shopifyOrderId?: string) {
+  async bulkGenerateUnclaimed(count: number, shopifyOrderId?: string, batchId?: string) {
     if (count < 1 || count > 500) {
       throw new BadRequestException('QR_BULK_LIMIT_EXCEEDED');
     }
@@ -307,6 +311,7 @@ export class QrService {
       status: 'unclaimed' as const,
       isActive: false,
       shopifyOrderId: shopifyOrderId ?? null,
+      batchId: batchId ?? null,
       // required non-null fields — placeholder values for unclaimed tags
       category: 'other' as const,
       name: 'Unclaimed Tag',

@@ -53,3 +53,5 @@ gcp-key*.json
 # Anything under apps/mobile/secrets/ or repo-level secrets/
 secrets/
 **/secrets/
+
+apps/backend/scripts/output/*

@@ -10,4 +10,9 @@ export class BulkGenerateQrDto {
   @IsString()
   @MaxLength(100)
   shopifyOrderId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  notes?: string;
 }

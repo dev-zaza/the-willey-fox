@@ -48,4 +48,5 @@ export { visualThemes } from './visual-themes.schema';
 export { printTemplates } from './print-templates.schema';
 export { familyGroups, familyMembers } from './family-groups.schema';
 export { broadcastConsentLog } from './broadcast-consent-log.schema';
+export { qrBatches } from './qr-batches.schema';
 export type { BroadcastConsentAction } from './broadcast-consent-log.schema';

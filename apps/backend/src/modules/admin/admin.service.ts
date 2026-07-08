@@ -2,7 +2,11 @@ import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { desc, eq, ilike, or, count, sql, and, gt } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
-import { users, qrCodes, reports, pins, dataIngestionLogs, safetyZones, adminAuditLogs, userReports } from '../../database/schema';
+import { users, qrCodes, reports, pins, dataIngestionLogs, safetyZones, adminAuditLogs, userReports, qrBatches } from '../../database/schema';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PDFDocument = require('pdfkit');
+import * as archiver from 'archiver';
+import * as QRCode from 'qrcode';
 import { QrService } from '../qr/qr.service';
 import { SettingsService } from '../settings/settings.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -262,10 +266,139 @@ export class AdminService {
       .offset(offset);
   }
 
-  async bulkGenerateUnclaimed(adminId: string, count: number, shopifyOrderId?: string) {
-    const result = await this.qrService.bulkGenerateUnclaimed(count, shopifyOrderId);
-    this.auditLogService.log(adminId, 'BULK_GENERATE_QR', 'qr', undefined, { count });
-    return result;
+  async bulkGenerateUnclaimed(adminId: string, count: number, shopifyOrderId?: string, notes?: string) {
+    const [batch] = await this.db
+      .insert(qrBatches)
+      .values({ createdByAdminId: adminId, count, shopifyOrderId: shopifyOrderId ?? null, notes: notes ?? null })
+      .returning();
+
+    const codes = await this.qrService.bulkGenerateUnclaimed(count, shopifyOrderId, batch.id);
+    this.auditLogService.log(adminId, 'BULK_GENERATE_QR', 'qr_batch', batch.id, { count, batchId: batch.id });
+    return { batch, codes };
+  }
+
+  async listBatches(limit = 50, offset = 0) {
+    const rows = await this.db
+      .select({
+        id: qrBatches.id,
+        count: qrBatches.count,
+        shopifyOrderId: qrBatches.shopifyOrderId,
+        notes: qrBatches.notes,
+        createdByAdminId: qrBatches.createdByAdminId,
+        createdAt: qrBatches.createdAt,
+        adminFirstName: users.firstName,
+        adminLastName: users.lastName,
+        adminEmail: users.email,
+      })
+      .from(qrBatches)
+      .leftJoin(users, eq(qrBatches.createdByAdminId, users.id))
+      .orderBy(desc(qrBatches.createdAt))
+      .limit(limit)
+      .offset(offset);
+    return rows;
+  }
+
+  async getBatchCodes(batchId: string) {
+    const [batch] = await this.db
+      .select()
+      .from(qrBatches)
+      .where(eq(qrBatches.id, batchId))
+      .limit(1);
+    if (!batch) throw new NotFoundException('BATCH_NOT_FOUND');
+
+    const codes = await this.db
+      .select({ id: qrCodes.id, uniqueCode: qrCodes.uniqueCode, status: qrCodes.status, createdAt: qrCodes.createdAt })
+      .from(qrCodes)
+      .where(eq(qrCodes.batchId, batchId))
+      .orderBy(qrCodes.uniqueCode);
+
+    return { batch, codes };
+  }
+
+  async exportBatchPdf(batchId: string, publicBaseUrl: string): Promise<Buffer> {
+    const { batch, codes } = await this.getBatchCodes(batchId);
+
+    const qrImages = await Promise.all(
+      codes.map(async (c) => ({
+        code: c.uniqueCode,
+        status: c.status,
+        png: await QRCode.toBuffer(`${publicBaseUrl}/q/${c.uniqueCode}`, {
+          type: 'png', width: 120, margin: 1, errorCorrectionLevel: 'M',
+        }),
+      })),
+    );
+
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 40, size: 'A4' });
+      const chunks: Buffer[] = [];
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Title
+      doc.fontSize(18).font('Helvetica-Bold').text('SafeTag QR Batch', { align: 'center' });
+      doc.fontSize(10).font('Helvetica').fillColor('#666666')
+        .text(`Batch ID: ${batch.id}`, { align: 'center' })
+        .text(`Generated: ${new Date(batch.createdAt).toISOString().split('T')[0]}  ·  Count: ${batch.count}`, { align: 'center' });
+      if (batch.notes) doc.text(`Notes: ${batch.notes}`, { align: 'center' });
+      doc.moveDown(1.5);
+
+      const pageWidth = doc.page.width - 80;
+      const colCount = 4;
+      const cellW = pageWidth / colCount;
+      const cellH = 155;
+      const perPage = colCount * 4;
+
+      let pageStartY = doc.y;
+
+      qrImages.forEach((item, i) => {
+        const posOnPage = i % perPage;
+        const col = posOnPage % colCount;
+        const row = Math.floor(posOnPage / colCount);
+
+        if (i > 0 && posOnPage === 0) {
+          doc.addPage();
+          pageStartY = 40;
+        }
+
+        const x = 40 + col * cellW;
+        const y = pageStartY + row * cellH;
+
+        doc.image(item.png, x + (cellW - 100) / 2, y, { width: 100, height: 100 });
+        doc.fontSize(7).font('Helvetica-Bold').fillColor('#1a1a1a')
+          .text(item.code, x, y + 104, { width: cellW, align: 'center' });
+        doc.fontSize(6).font('Helvetica').fillColor(item.status === 'unclaimed' ? '#059669' : '#6b7280')
+          .text(item.status.toUpperCase(), x, y + 116, { width: cellW, align: 'center' });
+      });
+
+      doc.end();
+    });
+  }
+
+  async exportBatchZip(batchId: string, publicBaseUrl: string): Promise<Buffer> {
+    const { codes } = await this.getBatchCodes(batchId);
+
+    return new Promise((resolve, reject) => {
+      const archive = (archiver as any)('zip', { zlib: { level: 6 } });
+      const chunks: Buffer[] = [];
+      archive.on('data', (chunk: Buffer) => chunks.push(chunk));
+      archive.on('end', () => resolve(Buffer.concat(chunks)));
+      archive.on('error', reject);
+
+      const appendNext = async (i: number) => {
+        if (i >= codes.length) { archive.finalize(); return; }
+        const c = codes[i];
+        try {
+          const png = await QRCode.toBuffer(`${publicBaseUrl}/q/${c.uniqueCode}`, {
+            type: 'png', width: 400, margin: 2, errorCorrectionLevel: 'M',
+          });
+          archive.append(png, { name: `${c.uniqueCode}.png` });
+          appendNext(i + 1);
+        } catch (err) { reject(err); }
+      };
+
+      appendNext(0);
+    });
   }
 
   getPricingConfig() {
