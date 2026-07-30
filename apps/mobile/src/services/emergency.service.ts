@@ -3,6 +3,7 @@ import { apiClient } from './api';
 export interface EmergencyContactRecord {
   id: string;
   status: 'pending' | 'accepted' | 'declined';
+  isPrimarySos: boolean;
   acceptedAt?: string;
   createdAt: string;
   isRequester: boolean;
@@ -75,6 +76,11 @@ export const emergencyService = {
 
   acknowledgeSos: async (alertId: string): Promise<SosAlert> => {
     const { data } = await apiClient.patch<SosAlert>(`/emergency/sos/${alertId}/acknowledge`);
+    return data;
+  },
+
+  setPrimary: async (contactId: string): Promise<{ message: string }> => {
+    const { data } = await apiClient.patch<{ message: string }>(`/emergency/contacts/${contactId}/set-primary`);
     return data;
   },
 

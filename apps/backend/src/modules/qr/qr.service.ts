@@ -11,7 +11,7 @@ import { customAlphabet } from 'nanoid';
 import * as QRCode from 'qrcode';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
-import { qrCodes, guardianMappings, visualThemes } from '../../database/schema';
+import { qrCodes, guardianMappings, visualThemes, familyGroups, familyMembers } from '../../database/schema';
 import { TIER_LIMITS } from '@safetag/shared';
 import { CreateQrDto, UpdateQrDto, ClaimQrDto, BulkCreateQrDto } from './dto';
 import { SetQrThemeDto } from './dto/set-qr-theme.dto';
@@ -271,6 +271,30 @@ export class QrService {
       showCustomFields: false,
     };
 
+    // Validate family ownership and optional member mapping
+    let resolvedFamilyId: string | null = dto.familyId ?? null;
+    let resolvedMappedMemberId: string | null = dto.mappedMemberId ?? null;
+
+    if (resolvedFamilyId) {
+      const [family] = await this.db
+        .select({ id: familyGroups.id })
+        .from(familyGroups)
+        .where(and(eq(familyGroups.id, resolvedFamilyId), eq(familyGroups.ownerId, userId)))
+        .limit(1);
+      if (!family) throw new BadRequestException('FAMILY_NOT_FOUND');
+
+      if (resolvedMappedMemberId) {
+        const [member] = await this.db
+          .select({ id: familyMembers.id })
+          .from(familyMembers)
+          .where(and(eq(familyMembers.id, resolvedMappedMemberId), eq(familyMembers.familyId, resolvedFamilyId)))
+          .limit(1);
+        if (!member) throw new BadRequestException('FAMILY_MEMBER_NOT_FOUND');
+      }
+    } else if (resolvedMappedMemberId) {
+      resolvedMappedMemberId = null; // ignore mappedMemberId without familyId
+    }
+
     const [updated] = await this.db
       .update(qrCodes)
       .set({
@@ -293,6 +317,8 @@ export class QrService {
           ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
           ...(dto.petInfo ? { petInfo: dto.petInfo } : {}),
         },
+        familyId: resolvedFamilyId,
+        mappedMemberId: resolvedMappedMemberId,
         updatedAt: new Date(),
       })
       .where(eq(qrCodes.id, qrCode.id))

@@ -50,3 +50,8 @@ export { familyGroups, familyMembers } from './family-groups.schema';
 export { broadcastConsentLog } from './broadcast-consent-log.schema';
 export { qrBatches } from './qr-batches.schema';
 export type { BroadcastConsentAction } from './broadcast-consent-log.schema';
+export { areaRatings } from './area-ratings.schema';
+export { crimeIncidents } from './crime-incidents.schema';
+export { h3SafetyScores } from './h3-safety-scores.schema';
+export { pipelineLogs } from './pipeline-logs.schema';
+export { spots } from './spots.schema';

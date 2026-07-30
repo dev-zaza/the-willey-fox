@@ -1,17 +1,35 @@
 import '../global.css';
+import * as Sentry from '@sentry/react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { useURL } from 'expo-linking';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, useColorScheme, View } from 'react-native';
+import { useFonts } from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 import { ServiceUnavailable } from '@/components/ServiceUnavailable';
 import { isServiceUnavailable } from '@/lib/api-error';
 import { queryClient } from '@/lib/query-client';
 import { storage } from '@/lib/storage';
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, apiClient, setForceLogoutCallback } from '@/services/api';
 import { authService } from '@/services/auth.service';
+import { familiesService } from '@/services/families.service';
 import { useAuthStore } from '@/stores';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: __DEV__ ? 'development' : 'production',
+  enableLogs: true,
+  sendDefaultPii: false,
+  tracesSampleRate: __DEV__ ? 0 : 0.1,
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: __DEV__ ? 0 : 1,
+  integrations: [Sentry.mobileReplayIntegration()],
+});
+
+const ONBOARDING_DONE_KEY = 'onboarding_done';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -150,7 +168,22 @@ function RootNavigator() {
     }
 
     if (isAuthenticated && inAuthGroup) {
-      router.replace('/(app)/map');
+      // Check if onboarding has been completed — if not and user has no family, show onboarding
+      storage.getItemAsync(ONBOARDING_DONE_KEY).then(async (done) => {
+        if (!done) {
+          try {
+            const families = await familiesService.list();
+            if (families.length === 0) {
+              router.replace('/(app)/onboard-welcome' as any);
+              return;
+            }
+          } catch {
+            // Network error — skip onboarding check, go to map
+          }
+          await storage.setItemAsync(ONBOARDING_DONE_KEY, '1');
+        }
+        router.replace('/(app)/map');
+      }).catch(() => router.replace('/(app)/map'));
       return;
     }
 
@@ -158,7 +191,15 @@ function RootNavigator() {
     if (isAuthenticated && pendingQrCode.current) {
       const code = pendingQrCode.current;
       pendingQrCode.current = null;
-      router.push({ pathname: '/(app)/qr', params: { pendingCode: code } });
+      router.push({ pathname: '/(app)/claim/[code]' as any, params: { code } });
+      return;
+    }
+
+    // Unauthenticated deep link to QR code — still route to claim (it handles the unauth state)
+    if (!isAuthenticated && pendingQrCode.current) {
+      const code = pendingQrCode.current;
+      pendingQrCode.current = null;
+      router.push({ pathname: '/(auth)/login', params: { pendingCode: code } } as any);
       return;
     }
 
@@ -204,6 +245,12 @@ function RootNavigator() {
 }
 
 function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <QueryClientProvider client={queryClient}>
       <RootNavigator />
@@ -211,4 +258,4 @@ function RootLayout() {
   );
 }
 
-export default RootLayout;
+export default Sentry.wrap(RootLayout);

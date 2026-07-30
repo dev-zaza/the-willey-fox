@@ -15,6 +15,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PinsModule } from './modules/pins/pins.module';
 import { SafetyEngineModule } from './modules/safety-engine/safety-engine.module';
+import { SpotsModule } from './modules/spots/spots.module';
 import { DirectionsModule } from './modules/directions/directions.module';
 import { RouteRatingsModule } from './modules/route-ratings/route-ratings.module';
 import { MessagesModule } from './modules/messages/messages.module';
@@ -56,6 +57,7 @@ import { getRedisConnectionOptions } from './config/redis-connection';
     PaymentsModule,
     PinsModule,
     SafetyEngineModule,
+    SpotsModule,
     DirectionsModule,
     RouteRatingsModule,
     MessagesModule,

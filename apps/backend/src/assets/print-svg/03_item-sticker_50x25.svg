@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="50mm" height="25mm" viewBox="0 0 50 25">
+<defs><clipPath id="c3"><rect x="0" y="0" width="50" height="25" rx="2.4" ry="2.4"></rect></clipPath></defs>
+<rect x="0" y="0" width="50" height="25" rx="2.4" ry="2.4" fill="#F2F4E5" stroke="#D6DEC2" stroke-width="0.3"></rect>
+ <g clip-path="url(#c3)">
+   <image href="fox-cutout.png" xlink:href="fox-cutout.png" x="2.5" y="4.5" width="13" height="16" preserveAspectRatio="xMidYMid meet"></image>
+   <rect x="17" y="0" width="12.5" height="25" fill="#FF7B14"></rect>
+   <polyline points="19.75,11 21.25,12.5 19.75,14" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"></polyline><polyline points="22.35,11 23.85,12.5 22.35,14" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"></polyline><polyline points="24.95,11 26.45,12.5 24.95,14" fill="none" stroke="#fff" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"></polyline>
+ </g>
+ <rect x="30.5" y="4.5" width="16" height="16" fill="#ffffff"></rect><rect x="30.5" y="4.5" width="16" height="16" fill="none" stroke="#CBD3B5" stroke-width="0.2" stroke-dasharray="1 1"></rect><text x="38.5" y="13.2" font-family="&#39;Spline Sans Mono&#39;,monospace" font-size="2.08" fill="#C9C7BE" text-anchor="middle" letter-spacing="0.3">QR</text>
+ <path d="M29.7,6.5 L29.7,3.7 L32.5,3.7" fill="none" stroke="#E2620A" stroke-width="0.5"></path><path d="M44.5,3.7 L47.3,3.7 L47.3,6.5" fill="none" stroke="#E2620A" stroke-width="0.5"></path><path d="M29.7,18.5 L29.7,21.3 L32.5,21.3" fill="none" stroke="#E2620A" stroke-width="0.5"></path><path d="M44.5,21.3 L47.3,21.3 L47.3,18.5" fill="none" stroke="#E2620A" stroke-width="0.5"></path>
+</svg>

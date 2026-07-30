@@ -20,4 +20,18 @@ export const usersService = {
   updateLocation: async (lat: number, lng: number): Promise<void> => {
     await apiClient.post('/users/me/location', { lat, lng });
   },
+
+  updateProfile: async (payload: { firstName?: string; lastName?: string; phone?: string }): Promise<void> => {
+    await apiClient.put('/users/me', payload);
+  },
+
+  sendPhoneOtp: async (): Promise<{ message: string }> => {
+    const { data } = await apiClient.post<{ message: string }>('/users/me/phone/send-otp');
+    return data;
+  },
+
+  verifyPhoneOtp: async (code: string): Promise<{ message: string }> => {
+    const { data } = await apiClient.post<{ message: string }>('/users/me/phone/verify', { code });
+    return data;
+  },
 };

@@ -1,12 +1,17 @@
 import * as QRCode from 'qrcode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const sharpFn: (input: string | Buffer) => any = require('sharp');
 
 export type QrMode = 'emergency' | 'lost-found';
 
-const FOX_LOGO_PATH = path.join(__dirname, '../../assets/fox-logo.png');
+// nest-cli's asset copy only runs on `nest build`, not `nest start --watch`,
+// so dist/assets can be absent in dev — fall back to the src/ copy.
+const DIST_FOX_LOGO_PATH = path.join(__dirname, '../../assets/fox-logo.png');
+const SRC_FOX_LOGO_PATH = path.join(__dirname, '../../../src/assets/fox-logo.png');
+const FOX_LOGO_PATH = fs.existsSync(DIST_FOX_LOGO_PATH) ? DIST_FOX_LOGO_PATH : SRC_FOX_LOGO_PATH;
 
 /**
  * Generates a branded QR code with the fox logo centered inside.

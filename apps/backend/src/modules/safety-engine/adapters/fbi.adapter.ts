@@ -1,112 +1,154 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ICrimeDataAdapter, SafetyZoneInput, NormalizedCrimeData } from './adapter.interface';
+import { DRIZZLE } from '../../../database/database.module';
+import type { DrizzleDB } from '../../../database/database.module';
+import { ICrimeDataAdapter, SafetyZoneInput } from './adapter.interface';
+import { indexLatLng } from '../lib/h3';
+import { categoriseFBI } from '../lib/normalise';
+import { upsertIncidents, IncidentRow } from '../lib/upsert';
+import { logPipelineRun } from '../lib/pipeline-log';
 
-// Major US cities with approximate bounding boxes for city-level zones
-const US_CITIES = [
-  { region: 'US-IL-CHI', name: 'Chicago', ori: 'IL0100100', minLat: 41.64, minLng: -87.94, maxLat: 42.02, maxLng: -87.52 },
-  { region: 'US-NY-NYC', name: 'New York City', ori: 'NY0303000', minLat: 40.50, minLng: -74.26, maxLat: 40.92, maxLng: -73.70 },
-  { region: 'US-CA-LA', name: 'Los Angeles', ori: 'CA0194200', minLat: 33.70, minLng: -118.67, maxLat: 34.34, maxLng: -118.15 },
-  { region: 'US-TX-HOU', name: 'Houston', ori: 'TX2200000', minLat: 29.52, minLng: -95.77, maxLat: 30.11, maxLng: -95.01 },
-  { region: 'US-AZ-PHX', name: 'Phoenix', ori: 'AZ0040100', minLat: 33.29, minLng: -112.32, maxLat: 33.92, maxLng: -111.93 },
-];
+const SOURCE_API = 'fbi';
+const SOURCE_COUNTRY = 'US';
+const BASE_URL = 'https://api.usa.gov/crime/fbi/cde';
+const BATCH_SIZE = 500;
 
-// FBI NIBRS offense type → internal category mapping
-const FBI_OFFENSE_MAP: Record<string, string> = {
-  'murder_and_nonnegligent_manslaughter': 'homicide',
-  'negligent_manslaughter': 'homicide',
-  'rape': 'sexual_violence',
-  'sodomy': 'sexual_violence',
-  'robbery': 'robbery',
-  'aggravated_assault': 'assault',
-  'simple_assault': 'assault',
-  'burglary': 'burglary',
-  'larceny_theft': 'theft',
-  'motor_vehicle_theft': 'theft',
-  'arson': 'arson',
-  'drug_narcotics': 'drug_offences',
-  'drug_equipment': 'drug_offences',
-};
+const DEFAULT_STATES = ['NY', 'CA', 'TX', 'IL', 'AZ', 'FL', 'PA', 'OH'];
+const AGENCIES_PER_STATE = 25;
+
+function currentYearWindow(): number[] {
+  const y = new Date().getUTCFullYear();
+  return [y - 2, y - 1];
+}
 
 @Injectable()
 export class FbiAdapter implements ICrimeDataAdapter {
-  readonly sourceName = 'fbi';
+  readonly sourceName = SOURCE_API;
   private readonly logger = new Logger(FbiAdapter.name);
-  constructor(private readonly configService: ConfigService) {}
+
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
+    private readonly configService: ConfigService,
+  ) {}
 
   async ingest(): Promise<SafetyZoneInput[]> {
     const apiKey = this.configService.get<string>('FBI_API_KEY');
-
     if (!apiKey) {
-      this.logger.warn('FBI_API_KEY not set — skipping FBI ingestion. Add FBI_API_KEY to .env to enable.');
+      this.logger.warn('FBI_API_KEY not set — skipping FBI ingestion');
       return [];
     }
 
-    const results: SafetyZoneInput[] = [];
-    const year = new Date().getFullYear() - 2; // FBI data is ~2 years behind
+    const targetStates = (process.env.US_STATES ?? DEFAULT_STATES.join(',')).split(',').map((s) => s.trim()).filter(Boolean);
+    const targetYears = currentYearWindow();
 
-    for (const city of US_CITIES) {
+    let fetched = 0;
+    let inserted = 0;
+    const errors: string[] = [];
+    const rows: IncidentRow[] = [];
+
+    for (const state of targetStates) {
+      let agencies: Agency[];
       try {
-        const url = `https://api.usa.gov/crime/fbi/cde/summarized/agency/${city.ori}/offenses/${year}/${year}?API_KEY=${apiKey}`;
-        const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
-
-        if (!response.ok) {
-          this.logger.warn(`FBI API returned ${response.status} for ${city.name}`);
-          continue;
-        }
-
-        const data = await response.json() as FbiResponse;
-        const crimeData = this.normalizeOffenses(data);
-
-        if (crimeData.length === 0) continue;
-
-        results.push({
-          source: this.sourceName,
-          sourceRegion: city.region,
-          sourceGranularity: 'city',
-          bboxMinLat: city.minLat,
-          bboxMinLng: city.minLng,
-          bboxMaxLat: city.maxLat,
-          bboxMaxLng: city.maxLng,
-          crimeData,
-          periodStart: new Date(`${year}-01-01`),
-          periodEnd: new Date(`${year}-12-31`),
-        });
-
-        this.logger.debug(`Ingested FBI data for ${city.name} (${year})`);
+        agencies = await this.listAgencies(state, apiKey);
       } catch (err) {
-        this.logger.error(`Failed to fetch FBI data for ${city.name}: ${(err as Error).message}`);
+        const msg = `agencies ${state}: ${(err as Error).message}`;
+        this.logger.error(msg);
+        errors.push(msg);
+        continue;
       }
+
+      for (const agency of agencies) {
+        for (const year of targetYears) {
+          try {
+            const payload = await this.agencyOffenses(agency.ori, year, apiKey);
+            const totals = extractOffenseTotals(payload);
+            fetched += totals.length;
+
+            for (const t of totals) {
+              const lat = Number(agency.latitude);
+              const lng = Number(agency.longitude);
+              if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+              rows.push({
+                source_country: SOURCE_COUNTRY,
+                source_api: SOURCE_API,
+                source_record_id: `${agency.ori}|${t.offense}|${year}`,
+                crime_type: t.offense,
+                severity_category: categoriseFBI(t.offense),
+                incident_count: Math.max(1, Math.round(t.count)),
+                lat,
+                lng,
+                incident_date: `${year}-01-01`,
+                ...indexLatLng(lat, lng),
+              });
+            }
+          } catch (err) {
+            const msg = `${agency.ori} ${year}: ${(err as Error).message}`;
+            this.logger.error(msg);
+            errors.push(msg);
+          }
+        }
+      }
+      this.logger.debug(`${state}: ${agencies.length} agencies processed`);
     }
 
-    return results;
+    try {
+      inserted = await upsertIncidents(this.db, rows, { batchSize: BATCH_SIZE });
+    } catch (err) {
+      errors.push(`upsert: ${(err as Error).message}`);
+    }
+
+    await logPipelineRun(this.db, {
+      source: SOURCE_API,
+      recordsFetched: fetched,
+      recordsInserted: inserted,
+      errors: errors.length ? errors.join('; ') : null,
+    });
+
+    this.logger.log(`FBI ingestion complete: fetched=${fetched} inserted=${inserted}`);
+    return [];
   }
 
-  private normalizeOffenses(data: FbiResponse): NormalizedCrimeData[] {
-    const crimeData: NormalizedCrimeData[] = [];
-    const results = data.results ?? [];
+  private async listAgencies(state: string, apiKey: string): Promise<Agency[]> {
+    const url = `${BASE_URL}/agencies/byStateAbbr/${state}?API_KEY=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!res.ok) throw new Error(`FBI agencies ${state} → HTTP ${res.status}`);
+    const json = await res.json() as Agency[] | { results?: Agency[] };
+    const list = Array.isArray(json) ? json : (json as any).results ?? [];
+    return (list as Agency[])
+      .filter((a) => a.latitude && a.longitude)
+      .sort((a, b) => (b.population ?? 0) - (a.population ?? 0))
+      .slice(0, AGENCIES_PER_STATE);
+  }
 
-    for (const offense of results) {
-      const category = FBI_OFFENSE_MAP[offense.offense?.toLowerCase().replace(/\s+/g, '_') ?? ''];
-      if (!category) continue;
-
-      const existing = crimeData.find(c => c.category === category);
-      const count = offense.actual ?? 0;
-
-      if (existing) {
-        existing.count = (existing.count ?? 0) + count;
-      } else {
-        crimeData.push({ category, count });
-      }
-    }
-
-    return crimeData;
+  private async agencyOffenses(ori: string, year: number, apiKey: string): Promise<unknown> {
+    const url = `${BASE_URL}/summarized/agencies/${ori}/offenses/${year}/${year}?API_KEY=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+    if (!res.ok) throw new Error(`FBI offenses ${ori} ${year} → HTTP ${res.status}`);
+    return res.json();
   }
 }
 
-interface FbiResponse {
-  results?: Array<{
-    offense: string;
-    actual: number;
-  }>;
+interface Agency {
+  ori: string;
+  latitude: string | number;
+  longitude: string | number;
+  population?: number;
+}
+
+function extractOffenseTotals(payload: unknown): Array<{ offense: string; count: number }> {
+  const out: Array<{ offense: string; count: number }> = [];
+  if (payload && typeof (payload as any).offenses === 'object' && !Array.isArray((payload as any).offenses)) {
+    for (const [offense, count] of Object.entries((payload as any).offenses)) {
+      const n = Number(count);
+      if (Number.isFinite(n) && n > 0) out.push({ offense, count: n });
+    }
+    return out;
+  }
+  const rows = Array.isArray(payload) ? payload : (payload as any)?.results ?? [];
+  for (const r of rows) {
+    const offense = r.offense || r.key || r.crime_type;
+    const count = Number(r.actual ?? r.value ?? r.count ?? 0);
+    if (offense && Number.isFinite(count) && count > 0) out.push({ offense, count });
+  }
+  return out;
 }

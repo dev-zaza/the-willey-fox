@@ -1,0 +1,2 @@
+ALTER TABLE "qr_codes" ADD COLUMN "mapped_member_id" uuid;--> statement-breakpoint
+ALTER TABLE "qr_codes" ADD CONSTRAINT "qr_codes_mapped_member_id_family_members_id_fk" FOREIGN KEY ("mapped_member_id") REFERENCES "public"."family_members"("id") ON DELETE set null ON UPDATE no action;

@@ -1,9 +1,9 @@
 import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
-import { eq, and, inArray, lt, isNotNull } from 'drizzle-orm';
+import { eq, and, inArray, lt, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { reports, qrCodes, guardianMappings, reportResponses, users } from '../../database/schema';
-import { UpdateReportStatusDto, CreateResponseDto, FlagReportDto } from './dto';
+import { UpdateReportStatusDto, CreateResponseDto, FlagReportDto, CreateMissingReportDto, CreateSightingDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BroadcastConsentLogService } from '../broadcasts/broadcast-consent-log.service';
 
@@ -164,6 +164,130 @@ export class ReportsService {
       .returning();
 
     return updated;
+  }
+
+  async createMissingReport(userId: string, dto: CreateMissingReportDto) {
+    // Verify caller owns or is guardian of the QR code
+    const [qr] = await this.db
+      .select({ id: qrCodes.id, userId: qrCodes.userId, name: qrCodes.name, uniqueCode: qrCodes.uniqueCode })
+      .from(qrCodes)
+      .where(eq(qrCodes.id, dto.qrCodeId))
+      .limit(1);
+
+    if (!qr) throw new NotFoundException('QR_NOT_FOUND');
+
+    const isOwner = qr.userId === userId;
+    if (!isOwner) {
+      const [guardianLink] = await this.db
+        .select({ id: guardianMappings.id })
+        .from(guardianMappings)
+        .where(
+          and(
+            eq(guardianMappings.qrCodeId, qr.id),
+            eq(guardianMappings.userId, userId),
+            eq(guardianMappings.status, 'active'),
+          ),
+        )
+        .limit(1);
+      if (!guardianLink) throw new ForbiddenException('ACCESS_DENIED');
+    }
+
+    const now = new Date();
+    const [report] = await this.db
+      .insert(reports)
+      .values({
+        qrCodeId: qr.id,
+        finderUserId: userId,
+        finderNotes: dto.description,
+        finderContact: dto.contact,
+        locationAddress: dto.lastSeenLocation,
+        locationLat: dto.lat?.toString(),
+        locationLng: dto.lng?.toString(),
+        isPublicBroadcast: dto.requestBroadcast ? true : false,
+        broadcastApprovedAt: dto.requestBroadcast ? now : null,
+        broadcastExpiresAt: dto.requestBroadcast
+          ? new Date(now.getTime() + BROADCAST_INITIAL_DAYS * 24 * 60 * 60 * 1000)
+          : null,
+      })
+      .returning();
+
+    this.logger.log(`Missing person report ${report.id} created for QR ${qr.uniqueCode}`);
+
+    // Notify guardians
+    this.notificationsService
+      .notifyGuardiansOfReport(report.id, qr.id)
+      .catch((err) => this.logger.error(`Guardian notify failed for report ${report.id}`, err));
+
+    // Push nearby users if broadcast requested and GPS provided
+    if (dto.requestBroadcast && dto.lat != null && dto.lng != null) {
+      this.pushNearbyMissingAlert(report.id, qr.name ?? 'Missing person', dto.lat, dto.lng).catch(
+        (err) => this.logger.warn(`Nearby missing alert push failed: ${(err as Error).message}`),
+      );
+    }
+
+    return { id: report.id, broadcast: dto.requestBroadcast ?? false };
+  }
+
+  private async pushNearbyMissingAlert(reportId: string, tagName: string, lat: number, lng: number) {
+    const RADIUS_M = 3218; // 2 miles
+    const nearbyUsers = await this.db.execute(sql`
+      SELECT user_id FROM user_locations
+      WHERE (6371000 * acos(
+        LEAST(1, cos(radians(${lat})) * cos(radians(CAST(lat AS float))) *
+        cos(radians(CAST(lng AS float)) - radians(${lng})) +
+        sin(radians(${lat})) * sin(radians(CAST(lat AS float))))
+      )) < ${RADIUS_M}
+    `);
+
+    for (const row of Array.from(nearbyUsers)) {
+      const nearbyUserId = (row as any).user_id as string;
+      void this.notificationsService.sendPush(
+        nearbyUserId,
+        {
+          title: 'Missing person alert nearby',
+          body: `Help find ${tagName}. Tap to see details.`,
+          data: { type: 'missing_person_broadcast', reportId },
+        },
+        { priority: 'normal' },
+      );
+    }
+    this.logger.log(`Missing person broadcast ${reportId}: pushed to ${Array.from(nearbyUsers).length} nearby users`);
+  }
+
+  async createSighting(reportId: string, userId: string, dto: CreateSightingDto) {
+    const report = await this.findById(reportId);
+    if (!report) throw new NotFoundException('REPORT_NOT_FOUND');
+
+    const [sighting] = await this.db
+      .insert(reportResponses)
+      .values({
+        reportId,
+        guardianId: userId,
+        message: [
+          dto.notes ?? '',
+          dto.locationAddress ? `Location: ${dto.locationAddress}` : '',
+          dto.lat != null && dto.lng != null ? `GPS: ${dto.lat},${dto.lng}` : '',
+        ].filter(Boolean).join(' | '),
+      })
+      .returning();
+
+    // Update report status to contacted
+    await this.db
+      .update(reports)
+      .set({ status: 'contacted', updatedAt: new Date() })
+      .where(eq(reports.id, reportId));
+
+    // Notify the report owner
+    const [reporter] = await this.db
+      .select({ firstName: users.firstName, lastName: users.lastName })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const sighterName = reporter ? `${reporter.firstName} ${reporter.lastName}` : 'Someone';
+    void this.notificationsService.notifyFinderOfResponse(reportId, dto.notes ?? 'Sighting reported', sighterName);
+
+    return { id: sighting.id, message: 'Sighting recorded. The owner has been notified.' };
   }
 
   async expireOldReports(): Promise<number> {

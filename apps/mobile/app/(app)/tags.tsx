@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
   ScrollView,
+  Share,
   Text,
   TextInput,
   TouchableOpacity,
@@ -19,7 +20,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { Asset } from 'expo-asset';
-import QRCode from 'react-native-qrcode-svg';
+import { QRCode } from '@/components/shims';
 import { isQrLimitReached, extractApiErrorMessage } from '@/lib/api-error';
 import { qrService, type QrCode } from '@/services/qr.service';
 import { guardiansService, type GuardianMapping } from '@/services/guardians.service';
@@ -28,12 +29,11 @@ import { tagCustomizationService, type VisualTheme, type PrintTemplate } from '@
 import { buildPrintHtml } from '@/lib/generate-print-html';
 import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'];
 function tierIndex(t: string) { return TIER_ORDER.indexOf(t === 'pro' ? 'premium' : t); }
-
-const API_BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1');
 
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, '') ?? 'https://safetag.app';
 
@@ -52,6 +52,7 @@ type Step = 'list' | 'register-form' | 'register-success' | 'detail';
 
 export default function TagsScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [tags, setTags] = useState<QrCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<Step>('list');
@@ -147,13 +148,20 @@ export default function TagsScreen() {
     }
   }
 
-  async function handleMarkLost(id: string) {
+  function handleMarkLost(id: string) {
+    const tag = tags.find((t) => t.id === id);
+    router.push({
+      pathname: '/(app)/lost-report' as any,
+      params: { qrCodeId: id, tagName: tag?.name ?? '' },
+    });
+  }
+
+  async function handleShareTag(tag: QrCode) {
+    const url = `${WEB_URL}/q/${tag.uniqueCode}`;
     try {
-      const updated = await qrService.markLost(id);
-      setTags((prev) => prev.map((t) => (t.id === id ? updated : t)));
-      if (selectedTag?.id === id) setSelectedTag(updated);
-    } catch (e: any) {
-      Alert.alert('Error', extractApiErrorMessage(e, 'Failed to update tag'));
+      await Share.share({ message: `Help return ${tag.name}! Scan or visit: ${url}`, url, title: `${tag.name} — TheWileyfox` });
+    } catch {
+      // user cancelled
     }
   }
 
@@ -518,7 +526,7 @@ export default function TagsScreen() {
                   size={160}
                   backgroundColor="white"
                   color="#000"
-                  getRef={(ref) => { (qrSvgRef as any).current = ref; }}
+                  getRef={(ref: any) => { (qrSvgRef as any).current = ref; }}
                 />
               </View>
               <Text style={{ color: accentColor, fontFamily: 'monospace', fontWeight: '600', fontSize: 13 }}>
@@ -671,10 +679,6 @@ export default function TagsScreen() {
                     const qrPreviewSize = Math.round(pt.qrSize * scale);
                     const isWristband = pt.formatType === 'wristband';
                     const showLogo = pt.logoPlacement !== 'none';
-                    const logoRowJustify =
-                      pt.logoPlacement === 'top-right' ? 'flex-end' as const :
-                      pt.logoPlacement === 'center' ? 'center' as const : 'flex-start' as const;
-
                     // Brand lockup: icon + name text side by side
                     const logoImg = (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -890,6 +894,12 @@ export default function TagsScreen() {
                   <Text className="text-red-500 font-semibold text-sm">Mark as Lost</Text>
                 </TouchableOpacity>
               )}
+              <TouchableOpacity
+                className="border border-gray-200 dark:border-surface-border rounded-xl py-3.5 items-center"
+                onPress={() => handleShareTag(selectedTag)}
+              >
+                <Text className="text-gray-600 dark:text-gray-300 font-semibold text-sm">Share Tag Link</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 className="border border-red-200 dark:border-red-500/30 rounded-xl py-3.5 items-center"
                 onPress={() => handleDeleteTag(selectedTag.id)}

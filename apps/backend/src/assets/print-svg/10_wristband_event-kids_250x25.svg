@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="250mm" height="25mm" viewBox="0 0 250 25">
+<defs><clipPath id="c10"><rect x="0" y="0" width="250" height="25" rx="12.5" ry="12.5"></rect></clipPath></defs>
+<rect x="0" y="0" width="250" height="25" rx="12.5" fill="#FF7B14"></rect>
+ <g clip-path="url(#c10)">
+   <rect x="10" y="9.5" width="1.6" height="6" rx="0.8" fill="#E2620A"></rect><rect x="12.6" y="9.5" width="1.6" height="6" rx="0.8" fill="#E2620A"></rect><rect x="15.2" y="9.5" width="1.6" height="6" rx="0.8" fill="#E2620A"></rect>
+   <rect x="98" y="6" width="16" height="13" rx="2.5" fill="#F2F4E5"></rect>
+   <image href="fox-cutout.png" xlink:href="fox-cutout.png" x="99.5" y="7" width="13" height="11" preserveAspectRatio="xMidYMid meet"></image>
+   <polyline points="121.55,10.6 123.45,12.5 121.55,14.4" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></polyline><polyline points="124.55,10.6 126.45,12.5 124.55,14.4" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></polyline><polyline points="127.55,10.6 129.45,12.5 127.55,14.4" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+   <rect x="134.2" y="2.7" width="19.6" height="19.6" rx="2" fill="#F2F4E5"></rect>
+ </g>
+ <rect x="136" y="4.5" width="16" height="16" fill="#ffffff"></rect><rect x="136" y="4.5" width="16" height="16" fill="none" stroke="#CBD3B5" stroke-width="0.2" stroke-dasharray="1 1"></rect><text x="144" y="13.2" font-family="&#39;Spline Sans Mono&#39;,monospace" font-size="2.08" fill="#C9C7BE" text-anchor="middle" letter-spacing="0.3">QR</text>
+</svg>

@@ -2,10 +2,14 @@ import {
   Injectable,
   Logger,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { QrService } from '../qr/qr.service';
+import { DRIZZLE } from '../../database/database.module';
+import type { DrizzleDB } from '../../database/database.module';
+import { qrBatches } from '../../database/schema';
 
 @Injectable()
 export class ShopifyWebhookService {
@@ -14,6 +18,7 @@ export class ShopifyWebhookService {
   constructor(
     private readonly configService: ConfigService,
     private readonly qrService: QrService,
+    @Inject(DRIZZLE) private readonly db: DrizzleDB,
   ) {}
 
   async handleOrderCreated(rawBody: Buffer, hmacHeader: string): Promise<void> {
@@ -52,8 +57,21 @@ export class ShopifyWebhookService {
     }
 
     this.logger.log(`Shopify order ${orderId}: generating ${quantity} unclaimed QR codes`);
-    await this.qrService.bulkGenerateUnclaimed(quantity, orderId?.toString());
-    this.logger.log(`Shopify order ${orderId}: ${quantity} QR codes created`);
+    const orderIdStr = orderId?.toString();
+
+    const [batch] = await this.db
+      .insert(qrBatches)
+      .values({
+        createdByAdminId: null,
+        count: quantity,
+        shopifyOrderId: orderIdStr ?? null,
+        notes: `Auto-generated from Shopify order`,
+        source: 'shopify_webhook',
+      })
+      .returning();
+
+    await this.qrService.bulkGenerateUnclaimed(quantity, orderIdStr, batch.id);
+    this.logger.log(`Shopify order ${orderId}: ${quantity} QR codes created in batch ${batch.id}`);
   }
 
   private verifyHmac(rawBody: Buffer, hmacHeader: string): void {

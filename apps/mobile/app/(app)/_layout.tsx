@@ -1,8 +1,17 @@
 import { Ionicons } from '@/components/Icon';
-import { Tabs } from 'expo-router';
+import { Tabs } from '@/components/shims';
 import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { ModalProvider } from '@/context/ModalContext';
 import { SosButton } from '@/components/SosButton';
+import { usePathname } from 'expo-router';
+
+const ONBOARDING_ROUTES = [
+  '/onboard-welcome',
+  '/onboard-group',
+  '/onboard-members',
+  '/onboard-generating',
+  '/onboard-done',
+];
 
 // ── Regular tab icon ─────────────────────────────────────────────────────────
 function TabIcon({
@@ -55,17 +64,19 @@ function TabBarBackground() {
 export default function AppLayout() {
   const scheme = useColorScheme();
   const dark = scheme === 'dark';
+  const pathname = usePathname();
+  const isOnboarding = ONBOARDING_ROUTES.some((r) => pathname.endsWith(r));
 
   return (
     <ModalProvider>
       <View style={{ flex: 1 }}>
-        <SosButton />
+        {!isOnboarding && <SosButton />}
         <Tabs
           screenOptions={{
             headerShown: false,
             tabBarActiveTintColor: '#f97316',
             tabBarInactiveTintColor: dark ? '#64748b' : '#9ca3af',
-            tabBarStyle: styles.tabBar,
+            tabBarStyle: isOnboarding ? { display: 'none' } : styles.tabBar,
             tabBarLabelStyle: styles.tabLabel,
             tabBarBackground: () => <TabBarBackground />,
           }}
@@ -74,7 +85,7 @@ export default function AppLayout() {
             name="map"
             options={{
               title: 'Map',
-              tabBarIcon: ({ focused, color, size }) => (
+              tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
                 <TabIcon focused={focused} color={color} size={size} activeName="map" inactiveName="map-outline" />
               ),
             }}
@@ -83,7 +94,7 @@ export default function AppLayout() {
             name="qr"
             options={{
               title: 'Scan',
-              tabBarIcon: ({ focused, color, size }) => (
+              tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
                 <TabIcon focused={focused} color={color} size={size} activeName="scan" inactiveName="scan-outline" />
               ),
             }}
@@ -94,7 +105,7 @@ export default function AppLayout() {
             name="addpin"
             options={{
               title: '',
-              tabBarIcon: ({ focused }) => <CentreAddButton focused={focused} />,
+              tabBarIcon: ({ focused }: { focused: boolean }) => <CentreAddButton focused={focused} />,
               tabBarItemStyle: styles.centreTabItem,
             }}
           />
@@ -103,7 +114,7 @@ export default function AppLayout() {
             name="tags"
             options={{
               title: 'My Tags',
-              tabBarIcon: ({ focused, color, size }) => (
+              tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
                 <TabIcon focused={focused} color={color} size={size} activeName="pricetag" inactiveName="pricetag-outline" />
               ),
             }}
@@ -112,7 +123,7 @@ export default function AppLayout() {
             name="alerts"
             options={{
               title: 'Alerts',
-              tabBarIcon: ({ focused, color, size }) => (
+              tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
                 <TabIcon focused={focused} color={color} size={size} activeName="notifications" inactiveName="notifications-outline" />
               ),
             }}
@@ -129,6 +140,27 @@ export default function AppLayout() {
           <Tabs.Screen name="subscription" options={{ href: null }} />
           <Tabs.Screen name="guardian-accept" options={{ href: null }} />
           <Tabs.Screen name="notifications" options={{ href: null }} />
+          <Tabs.Screen name="phone-verify" options={{ href: null }} />
+          <Tabs.Screen name="family" options={{ href: null }} />
+          <Tabs.Screen name="sos-contact" options={{ href: null }} />
+          {/* Phase 4 screens */}
+          <Tabs.Screen name="lost-report" options={{ href: null }} />
+          <Tabs.Screen name="broadcast-confirm" options={{ href: null }} />
+          <Tabs.Screen name="alert-detail" options={{ href: null }} />
+          <Tabs.Screen name="tag-detail" options={{ href: null }} />
+          {/* Phase 5.2 area screens */}
+          <Tabs.Screen name="area" options={{ href: null }} />
+          <Tabs.Screen name="area-detail" options={{ href: null }} />
+          {/* Phase 5 onboarding screens */}
+          <Tabs.Screen name="onboard-welcome" options={{ href: null }} />
+          <Tabs.Screen name="onboard-group" options={{ href: null }} />
+          <Tabs.Screen name="onboard-members" options={{ href: null }} />
+          <Tabs.Screen name="onboard-generating" options={{ href: null }} />
+          <Tabs.Screen name="onboard-done" options={{ href: null }} />
+          {/* Phase 6 screens */}
+          <Tabs.Screen name="claim" options={{ href: null }} />
+          {/* Save-a-Spot */}
+          <Tabs.Screen name="spots" options={{ href: null }} />
         </Tabs>
       </View>
     </ModalProvider>

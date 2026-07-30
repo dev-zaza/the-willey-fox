@@ -1,24 +1,73 @@
-import api from './api';
+import { apiClient } from './api';
+
+export interface FamilyMembership {
+  familyId: string;
+  role: string;
+  familyName: string;
+  ownerId: string;
+  createdAt: string;
+}
+
+export interface FamilyMember {
+  id: string;
+  userId: string;
+  role: string;
+  joinedAt: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+}
+
+export interface FamilyQr {
+  id: string;
+  name: string;
+  category: string;
+  uniqueCode: string;
+  isLost: boolean;
+}
+
+export interface FamilyDetail {
+  id: string;
+  name: string;
+  ownerId: string;
+  members: FamilyMember[];
+  qrCodes: FamilyQr[];
+}
 
 export const familiesService = {
-  list: () => api.get('/families').then((r) => r.data),
+  list: async (): Promise<FamilyMembership[]> => {
+    const { data } = await apiClient.get<FamilyMembership[]>('/families');
+    return data ?? [];
+  },
 
-  get: (id: string) => api.get(`/families/${id}`).then((r) => r.data),
+  get: async (id: string): Promise<FamilyDetail> => {
+    const { data } = await apiClient.get<FamilyDetail>(`/families/${id}`);
+    return data;
+  },
 
-  create: (name: string) => api.post('/families', { name }).then((r) => r.data),
+  create: async (name: string): Promise<{ id: string; name: string }> => {
+    const { data } = await apiClient.post<{ id: string; name: string }>('/families', { name });
+    return data;
+  },
 
-  addMember: (familyId: string, payload: { userId?: string; email?: string }) =>
-    api.post(`/families/${familyId}/members`, payload).then((r) => r.data),
+  addMember: async (familyId: string, payload: { userId?: string; email?: string }): Promise<void> => {
+    await apiClient.post(`/families/${familyId}/members`, payload);
+  },
 
-  removeMember: (familyId: string, userId: string) =>
-    api.delete(`/families/${familyId}/members/${userId}`).then((r) => r.data),
+  removeMember: async (familyId: string, targetUserId: string): Promise<void> => {
+    await apiClient.delete(`/families/${familyId}/members/${targetUserId}`);
+  },
 
-  addQrCode: (familyId: string, qrCodeId: string) =>
-    api.post(`/families/${familyId}/qr-codes`, { qrCodeId }).then((r) => r.data),
+  addQrCode: async (familyId: string, qrCodeId: string): Promise<void> => {
+    await apiClient.post(`/families/${familyId}/qr-codes`, { qrCodeId });
+  },
 
-  removeQrCode: (familyId: string, qrCodeId: string) =>
-    api.delete(`/families/${familyId}/qr-codes/${qrCodeId}`).then((r) => r.data),
+  removeQrCode: async (familyId: string, qrCodeId: string): Promise<void> => {
+    await apiClient.delete(`/families/${familyId}/qr-codes/${qrCodeId}`);
+  },
 
-  delete: (familyId: string) =>
-    api.delete(`/families/${familyId}`).then((r) => r.data),
+  delete: async (familyId: string): Promise<void> => {
+    await apiClient.delete(`/families/${familyId}`);
+  },
 };

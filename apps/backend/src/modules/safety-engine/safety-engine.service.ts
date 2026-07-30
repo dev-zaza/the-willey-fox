@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { and, between, eq, gt, or, isNull, sql } from 'drizzle-orm';
@@ -7,18 +7,33 @@ import type { DrizzleDB } from '../../database/database.module';
 import { safetyZones, dataIngestionLogs } from '../../database/schema';
 import { ICrimeDataAdapter, SafetyZoneInput } from './adapters/adapter.interface';
 import { ZoneScorer } from './scoring/zone-scorer';
+import { H3Scorer } from './scoring/h3-scorer';
 
 export const INGESTION_QUEUE = 'safety-ingestion';
 
 @Injectable()
-export class SafetyEngineService {
+export class SafetyEngineService implements OnModuleInit {
   private readonly logger = new Logger(SafetyEngineService.name);
 
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     @InjectQueue(INGESTION_QUEUE) private readonly ingestionQueue: Queue,
     private readonly zoneScorer: ZoneScorer,
+    private readonly h3Scorer: H3Scorer,
   ) {}
+
+  async onModuleInit() {
+    // Rescore if DB still contains legacy band values (green/amber/red/purple).
+    const [row] = (await this.db.execute(
+      sql`SELECT COUNT(*)::int AS cnt FROM h3_safety_scores WHERE band NOT LIKE 'band%' AND band != 'low_count' LIMIT 1`,
+    )) as Array<{ cnt: number }>;
+    if (row?.cnt > 0) {
+      this.logger.log(`Found ${row.cnt} legacy-banded H3 rows — triggering rescore.`);
+      this.h3Scorer.scoreAll().catch((err) =>
+        this.logger.error(`Startup rescore failed: ${(err as Error).message}`),
+      );
+    }
+  }
 
   /**
    * Trigger an ingestion job for a specific source.
@@ -64,6 +79,11 @@ export class SafetyEngineService {
 
       this.logger.log(
         `${adapter.sourceName}: ingested ${zones.length} zones (${zonesCreated} new, ${zonesUpdated} updated)`,
+      );
+
+      // Rebuild H3 scores after each successful ingest so /tiles reflects fresh data.
+      this.h3Scorer.scoreAll().catch((err) =>
+        this.logger.error(`H3 scoring failed after ingest: ${(err as Error).message}`),
       );
     } catch (err) {
       errorMessage = (err as Error).message;

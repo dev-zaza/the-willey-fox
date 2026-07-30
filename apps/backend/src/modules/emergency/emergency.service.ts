@@ -11,7 +11,7 @@ import {
 import { eq, and, or, count, gte, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
-import { emergencyContacts, sosAlerts, users } from '../../database/schema';
+import { emergencyContacts, familyGroups, familyMembers, pins, sosAlerts, users } from '../../database/schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
 import { AddContactDto } from './dto/add-contact.dto';
@@ -391,7 +391,47 @@ export class EmergencyService {
       ),
     );
 
-    // 2km nearby broadcast via Haversine
+    // Notify family group members (users who share a family group with the SOS sender)
+    let familyNotifiedCount = 0;
+    try {
+      const userFamilies = await this.db
+        .select({ familyId: familyMembers.familyId })
+        .from(familyMembers)
+        .where(eq(familyMembers.userId, userId));
+
+      if (userFamilies.length > 0) {
+        const familyIds = userFamilies.map((f) => f.familyId);
+        const otherMembers = await this.db
+          .select({ userId: familyMembers.userId })
+          .from(familyMembers)
+          .innerJoin(familyGroups, eq(familyGroups.id, familyMembers.familyId))
+          .where(
+            and(
+              sql`${familyMembers.familyId} = ANY(${familyIds})`,
+              sql`${familyMembers.userId} != ${userId}`,
+              sql`${familyMembers.userId} != ALL(${contactUserIds})`,
+            ),
+          );
+
+        for (const member of otherMembers) {
+          void this.notificationsService.sendPush(
+            member.userId,
+            {
+              title: `SOS from ${userName}`,
+              body: alertMessage,
+              data: { type: 'sos_alert', sosAlertId: alert.id, alertUserId: userId },
+            },
+            { priority: 'critical' },
+          );
+          familyNotifiedCount++;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Family SOS broadcast failed: ${(err as Error).message}`);
+    }
+
+    // Nearby users broadcast via Haversine (2 km radius)
+    let nearbyNotifiedCount = 0;
     if (dto.lat && dto.lng) {
       try {
         const nearbyUsers = await this.db.execute(sql`
@@ -415,14 +455,37 @@ export class EmergencyService {
             },
             { priority: 'normal' },
           );
+          nearbyNotifiedCount++;
         }
       } catch (err) {
         this.logger.warn(`Nearby SOS broadcast failed: ${(err as Error).message}`);
       }
     }
 
-    this.logger.log(`SOS alert ${alert.id} triggered by ${userId}, notified ${contactUserIds.length} contacts`);
-    return { id: alert.id, notifiedCount: contactUserIds.length };
+    // Auto-create a safety_alert pin at SOS location (expires 1 hour)
+    if (dto.lat && dto.lng) {
+      try {
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+        await this.db.insert(pins).values({
+          userId,
+          type: 'safety_alert',
+          status: 'active',
+          title: `SOS — ${userName}`,
+          description: dto.message ?? `Emergency SOS triggered at ${locationText}`,
+          lat: String(dto.lat),
+          lng: String(dto.lng),
+          expiresAt,
+        });
+      } catch (err) {
+        this.logger.warn(`SOS auto-pin creation failed: ${(err as Error).message}`);
+      }
+    }
+
+    const totalNotified = contactUserIds.length + familyNotifiedCount + nearbyNotifiedCount;
+    this.logger.log(
+      `SOS alert ${alert.id} triggered by ${userId}: ${contactUserIds.length} contacts, ${familyNotifiedCount} family, ${nearbyNotifiedCount} nearby`,
+    );
+    return { id: alert.id, notifiedCount: totalNotified, contactCount: contactUserIds.length, familyCount: familyNotifiedCount, nearbyCount: nearbyNotifiedCount };
   }
 
   async acknowledgeSos(alertId: string, userId: string) {
@@ -562,10 +625,8 @@ export class EmergencyService {
 
     // SMS if preference set
     if (prefs.sms && contact.phone) {
-      await this.notificationsService.sendAuthEmail(
+      await this.notificationsService.sendSmsRaw(
         contact.phone,
-        contactId,
-        title,
         `SOS from ${userName}: ${alertMessage}. Open TheWileyfox now.`,
       );
     }

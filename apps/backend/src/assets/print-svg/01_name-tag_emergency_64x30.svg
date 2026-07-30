@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64mm" height="30mm" viewBox="0 0 64 30">
+<defs><clipPath id="c1"><rect x="0" y="0" width="64" height="30" rx="2.4" ry="2.4"></rect></clipPath></defs>
+<rect x="0" y="0" width="64" height="30" rx="2.4" ry="2.4" fill="#F2F4E5" stroke="#D6DEC2" stroke-width="0.3"></rect>
+ <g clip-path="url(#c1)">
+   <image href="fox-cutout.png" xlink:href="fox-cutout.png" x="3" y="7.5" width="15" height="15" preserveAspectRatio="xMidYMid meet"></image>
+   <rect x="18" y="0" width="22" height="30" fill="#E8392B"></rect>
+   <rect x="28.15" y="9" width="1.7" height="8" rx="0.255" fill="#fff"></rect><rect x="25" y="12.15" width="8" height="1.7" rx="0.255" fill="#fff"></rect>
+   <text x="29" y="22" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2.4" fill="#fff" font-weight="600" text-anchor="middle" letter-spacing="0.6">SOS</text>
+ </g>
+ <rect x="43" y="5" width="18" height="18" fill="#ffffff"></rect><rect x="43" y="5" width="18" height="18" fill="none" stroke="#CBD3B5" stroke-width="0.2" stroke-dasharray="1 1"></rect><text x="52" y="14.7" font-family="&#39;Spline Sans Mono&#39;,monospace" font-size="2.34" fill="#C9C7BE" text-anchor="middle" letter-spacing="0.3">QR</text>
+ <path d="M42.2,7.2 L42.2,4.2 L45.2,4.2" fill="none" stroke="#232323" stroke-width="0.5"></path><path d="M58.8,4.2 L61.8,4.2 L61.8,7.2" fill="none" stroke="#232323" stroke-width="0.5"></path><path d="M42.2,20.8 L42.2,23.8 L45.2,23.8" fill="none" stroke="#232323" stroke-width="0.5"></path><path d="M58.8,23.8 L61.8,23.8 L61.8,20.8" fill="none" stroke="#232323" stroke-width="0.5"></path>
+</svg>

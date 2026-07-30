@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from '@/components/shims';
+import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Image,
@@ -149,7 +150,7 @@ export default function LoginScreen() {
         <Controller
           control={control}
           name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
+          render={({ field: { onChange, onBlur, value } }: { field: { onChange: any; onBlur: any; value: any } }) => (
             <View className="gap-1.5">
               <Text className="text-sm font-medium text-gray-700 dark:text-slate-300">Email address</Text>
               <TextInput
@@ -175,7 +176,7 @@ export default function LoginScreen() {
         <Controller
           control={control}
           name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
+          render={({ field: { onChange, onBlur, value } }: { field: { onChange: any; onBlur: any; value: any } }) => (
             <View className="gap-1.5">
               <Text className="text-sm font-medium text-gray-700 dark:text-slate-300">Password</Text>
               <TextInput

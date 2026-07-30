@@ -8,6 +8,8 @@ import {
   FlagReportDto,
   EnableBroadcastDto,
   DisableBroadcastDto,
+  CreateMissingReportDto,
+  CreateSightingDto,
 } from './dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -25,6 +27,14 @@ function buildBroadcastCtx(req: Request) {
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
+
+  @Post()
+  createMissingReport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateMissingReportDto,
+  ) {
+    return this.reportsService.createMissingReport(user.id, dto);
+  }
 
   @Get()
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -46,6 +56,15 @@ export class ReportsController {
     @Body() dto: UpdateReportStatusDto,
   ) {
     return this.reportsService.updateStatus(id, user.id, dto);
+  }
+
+  @Post(':id/sighting')
+  createSighting(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateSightingDto,
+  ) {
+    return this.reportsService.createSighting(id, user.id, dto);
   }
 
   @Post(':id/respond')

@@ -2,7 +2,7 @@ import { pgTable, uuid, varchar, boolean, timestamp, jsonb, index } from 'drizzl
 import { qrCategoryEnum } from './enums';
 import { users } from './users.schema';
 import { visualThemes } from './visual-themes.schema';
-import { familyGroups } from './family-groups.schema';
+import { familyGroups, familyMembers } from './family-groups.schema';
 import { qrBatches } from './qr-batches.schema';
 
 export const qrCodes = pgTable(
@@ -36,6 +36,7 @@ export const qrCodes = pgTable(
     batchId: uuid('batch_id').references(() => qrBatches.id, { onDelete: 'set null' }),
     themeId: uuid('theme_id').references(() => visualThemes.id, { onDelete: 'set null' }),
     familyId: uuid('family_id').references(() => familyGroups.id, { onDelete: 'set null' }),
+    mappedMemberId: uuid('mapped_member_id').references(() => familyMembers.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },

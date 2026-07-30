@@ -1,7 +1,8 @@
 import { Ionicons } from '@/components/Icon';
-import { CameraView, useCameraPermissions, scanFromURLAsync } from 'expo-camera';
+import { CameraView } from '@/components/shims';
+import { useCameraPermissions, scanFromURLAsync } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -48,6 +49,7 @@ function extractCode(url: string): string | null {
 export default function QrScreen() {
   const { pendingCode } = useLocalSearchParams<{ pendingCode?: string }>();
   const { setModalOpen } = useModal();
+  const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -75,11 +77,7 @@ export default function QrScreen() {
       const info = res.data;
 
       if (info.status === 'unclaimed') {
-        Alert.alert(
-          'Unregistered Tag',
-          `This tag (${code}) hasn't been registered yet. Open it in a browser to register it on the Wileyfox platform.`,
-          [{ text: 'OK', onPress: () => setScanning(false) }],
-        );
+        router.push({ pathname: '/(app)/claim/[code]' as any, params: { code } });
       } else {
         setTagResult(info);
         setModalOpen(true);

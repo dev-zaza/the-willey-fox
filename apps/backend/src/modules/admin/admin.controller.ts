@@ -128,13 +128,17 @@ export class AdminController {
   /**
    * GET /api/v1/admin/qr/batches
    * List all QR batches with admin info.
+   * Optional ?source=manual|shopify_webhook to filter by origin.
    */
   @Get('qr/batches')
   listBatches(
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
     @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+    @Query('source') source?: string,
   ) {
-    return this.adminService.listBatches(limit, offset);
+    const validSources = ['manual', 'shopify_webhook'];
+    const sourceFilter = source && validSources.includes(source) ? source : undefined;
+    return this.adminService.listBatches(limit, offset, sourceFilter);
   }
 
   /**
@@ -185,14 +189,13 @@ export class AdminController {
   }
 
   /**
-   * GET /api/v1/admin/qr/batches/:id/download-print?format=name-tag&fox=true
-   * Download a print-ready PDF for a specific physical format with optional fox QR overlay.
+   * GET /api/v1/admin/qr/batches/:id/download-print?format=name-tag-emergency
+   * Download a print-ready PDF for a specific physical format.
    */
   @Get('qr/batches/:id/download-print')
   async downloadBatchPrint(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('format') format: string,
-    @Query('fox') fox: string,
     @Res() res: Response,
   ): Promise<void> {
     const validFormats = Object.keys(PRINT_FORMATS);
@@ -202,12 +205,10 @@ export class AdminController {
       );
     }
     const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3000');
-    const useFox = fox !== 'false';
     const pdf = await this.printExportService.exportBatchPrintPdf(
       id,
       baseUrl,
       format as PrintFormatKey,
-      useFox,
     );
     const safeName = `safetag-${format}-batch-${id.slice(0, 8)}.pdf`;
     res.set({
@@ -227,11 +228,22 @@ export class AdminController {
     return Object.entries(PRINT_FORMATS).map(([key, fmt]) => ({
       key,
       label: fmt.label,
-      trimMm: fmt.trimMm,
-      mode: fmt.mode,
-      minQrMm: fmt.minQrMm,
-      hasReverse: 'hasReverse' in fmt ? fmt.hasReverse : false,
+      hasReverse: 'reverse' in fmt,
     }));
+  }
+
+  /**
+   * DELETE /api/v1/admin/qr/batches/:id/unclaimed
+   * Deletes all unclaimed QR codes from a batch.
+   * Claimed codes are left untouched.
+   * If no claimed codes remain after deletion, the batch record itself is also removed.
+   */
+  @Delete('qr/batches/:id/unclaimed')
+  deleteUnclaimedFromBatch(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.adminService.deleteUnclaimedFromBatch(user.id, id);
   }
 
   @Get('settings/pricing')

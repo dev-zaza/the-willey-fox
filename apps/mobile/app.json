@@ -41,6 +41,14 @@
         {
           "RNMapboxMapsImpl": "mapbox"
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "thewileyfox",
+          "project": "mobile"
+        }
       ]
     ],
     "ios": {

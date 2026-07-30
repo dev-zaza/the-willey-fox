@@ -844,6 +844,7 @@ export interface AdminQrBatch {
   count: number;
   shopifyOrderId: string | null;
   notes: string | null;
+  source: 'manual' | 'shopify_webhook';
   createdByAdminId: string | null;
   createdAt: string;
   adminFirstName: string | null;
@@ -866,9 +867,6 @@ export interface AdminQrBatchDetail {
 export interface PrintFormatSpec {
   key: string;
   label: string;
-  trimMm: { w: number; h: number };
-  mode: 'emergency' | 'lost-found';
-  minQrMm: number;
   hasReverse: boolean;
 }
 
@@ -961,14 +959,16 @@ export const admin = {
     request<{ batch: AdminQrBatch; codes: AdminQrBatchCode[] }>('/admin/qr/bulk-generate', {
       method: 'POST', body: JSON.stringify(payload),
     }),
-  listBatches: (limit = 50, offset = 0) =>
-    request<AdminQrBatch[]>(`/admin/qr/batches?limit=${limit}&offset=${offset}`),
+  listBatches: (limit = 50, offset = 0, source?: 'manual' | 'shopify_webhook') =>
+    request<AdminQrBatch[]>(`/admin/qr/batches?limit=${limit}&offset=${offset}${source ? `&source=${source}` : ''}`),
   getBatch: (id: string) => request<AdminQrBatchDetail>(`/admin/qr/batches/${id}`),
   downloadBatchPdf: (id: string) => requestBlob(`/admin/qr/batches/${id}/download-pdf`),
   downloadBatchZip: (id: string) => requestBlob(`/admin/qr/batches/${id}/download-zip`),
-  downloadBatchPrint: (id: string, format: string, fox = true) =>
-    requestBlob(`/admin/qr/batches/${id}/download-print?format=${encodeURIComponent(format)}&fox=${fox}`),
+  downloadBatchPrint: (id: string, format: string) =>
+    requestBlob(`/admin/qr/batches/${id}/download-print?format=${encodeURIComponent(format)}`),
   listPrintFormats: () => request<PrintFormatSpec[]>('/admin/qr/print-formats'),
+  deleteUnclaimedFromBatch: (id: string) =>
+    request<{ deleted: number; batchDeleted: boolean }>(`/admin/qr/batches/${id}/unclaimed`, { method: 'DELETE' }),
   listReports: (limit = 50, offset = 0, status?: string) =>
     request<AdminReportRow[]>(
       `/admin/reports?limit=${limit}&offset=${offset}${status ? `&status=${encodeURIComponent(status)}` : ''}`,
@@ -1135,6 +1135,50 @@ export const safetyOverlay = {
       {},
       false,
     ),
+};
+
+export interface H3TileFeature {
+  type: 'Feature';
+  geometry: { type: 'Polygon'; coordinates: [number, number][][] };
+  properties: { h3: string; score: number | null; band: string; color: string; incidentCount: number };
+}
+
+export interface H3TileCollection {
+  type: 'FeatureCollection';
+  features: H3TileFeature[];
+}
+
+export interface AreaSummary {
+  lat: number;
+  lng: number;
+  radiusMetres: number;
+  cityName: string;
+  score: number | null;
+  rawPoliceScore: number | null;
+  band: string | null;
+  incidentCount: number;
+  weightedPerKm2: number;
+  crimeBreakdown: Array<{ type: string; count: number }>;
+  dataMonth: string;
+  scoreMethodology: string;
+}
+
+export const safetyEngine = {
+  getTiles: (bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number }, resolution = 9) =>
+    request<H3TileCollection>(
+      `/safety-engine/tiles?bbox=${bbox.minLng},${bbox.minLat},${bbox.maxLng},${bbox.maxLat}&resolution=${resolution}`,
+      {},
+      false,
+    ),
+  getAreaSummary: (params: { lat: number; lng: number; radius?: number; city?: string }) => {
+    const q = new URLSearchParams({
+      lat: String(params.lat),
+      lng: String(params.lng),
+      ...(params.radius ? { radius: String(params.radius) } : {}),
+      ...(params.city ? { city: params.city } : {}),
+    });
+    return request<AreaSummary>(`/safety-engine/area-summary?${q}`, {}, false);
+  },
 };
 
 export const families = {

@@ -55,9 +55,10 @@ export function useAuth() {
         setMfaToken(data.mfaToken as string);
         return null;
       }
-      // Normal login
-      setTokens(data.accessToken);
-      setUser(data.user);
+      // Normal login — narrowed to LoginResponse after MFA guard
+      const loginData = data as import('@/services/auth.service').LoginResponse;
+      setTokens(loginData.accessToken);
+      setUser(loginData.user);
       return null;
     } catch (err) {
       return extractAuthError(err);

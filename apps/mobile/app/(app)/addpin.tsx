@@ -17,6 +17,7 @@ import { pinsService } from '@/services/pins.service';
 import { extractApiErrorMessage } from '@/lib/api-error';
 
 const PIN_TYPES = [
+  { id: 'missing_person', label: 'Missing Person', icon: 'person' },
   { id: 'traffic', label: 'Traffic', icon: 'car' },
   { id: 'construction', label: 'Construction', icon: 'construct' },
   { id: 'event', label: 'Event', icon: 'calendar' },

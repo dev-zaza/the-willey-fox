@@ -5,6 +5,7 @@ import {
   IsString,
   IsObject,
   IsEmail,
+  IsUUID,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -94,4 +95,12 @@ export class ClaimQrDto {
   @IsOptional()
   @IsObject()
   customFields?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsUUID()
+  familyId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  mappedMemberId?: string;
 }

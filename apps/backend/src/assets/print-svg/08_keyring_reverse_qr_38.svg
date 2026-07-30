@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="38mm" height="44mm" viewBox="0 0 38 44">
+<defs></defs>
+
+ <circle cx="19" cy="4" r="3.6" fill="none" stroke="#C4C2B8" stroke-width="1"></circle>
+ <circle cx="19" cy="25" r="19" fill="#FF7B14"></circle>
+ <text x="19" y="15.5" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2.4" fill="#fff" font-weight="400" text-anchor="middle" letter-spacing="0.4">SCAN IF FOUND</text>
+ <rect x="9.9" y="15.9" width="18.2" height="18.2" rx="1.6" fill="#fff"></rect>
+ <rect x="11.5" y="17.5" width="15" height="15" fill="#ffffff"></rect><rect x="11.5" y="17.5" width="15" height="15" fill="none" stroke="#CBD3B5" stroke-width="0.2" stroke-dasharray="1 1"></rect><text x="19" y="25.7" font-family="&#39;Spline Sans Mono&#39;,monospace" font-size="1.9500000000000002" fill="#C9C7BE" text-anchor="middle" letter-spacing="0.3">QR</text>
+ <text x="19" y="36" font-family="Inter, sans-serif" font-size="2.4" fill="#fff" font-weight="700" text-anchor="middle" letter-spacing="0">thewileyfox.com</text>
+</svg>

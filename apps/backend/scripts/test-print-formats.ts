@@ -35,15 +35,15 @@ function getAccent(mode: QrMode): string {
 // ── Format table ─────────────────────────────────────────────────────────────
 
 const FORMATS = {
-  'name-tag':           { label: 'Name Tag',              trimMm: { w: 64,  h: 30  }, bleedMm: 3, safeMm: 3, minQrMm: 18, mode: 'emergency'  as QrMode },
-  'name-tag-square':    { label: 'Name Tag (Square)',      trimMm: { w: 45,  h: 45  }, bleedMm: 3, safeMm: 3, minQrMm: 18, mode: 'lost-found' as QrMode },
-  'item-sticker':       { label: 'Item Sticker',           trimMm: { w: 50,  h: 25  }, bleedMm: 3, safeMm: 2, minQrMm: 15, mode: 'lost-found' as QrMode },
-  'item-mini':          { label: 'Item Mini',              trimMm: { w: 30,  h: 30  }, bleedMm: 3, safeMm: 2, minQrMm: 15, mode: 'lost-found' as QrMode },
-  'luggage-tag':        { label: 'Luggage Tag',            trimMm: { w: 54,  h: 100 }, bleedMm: 3, safeMm: 4, minQrMm: 20, mode: 'lost-found' as QrMode, hasReverse: true },
-  'luggage-sticker':    { label: 'Luggage Sticker',        trimMm: { w: 90,  h: 35  }, bleedMm: 3, safeMm: 3, minQrMm: 16, mode: 'lost-found' as QrMode },
-  'keyring-fob':        { label: 'Keyring Fob',            trimMm: { w: 38,  h: 58  }, bleedMm: 0, safeMm: 3, minQrMm: 15, mode: 'lost-found' as QrMode },
-  'wristband-hospital': { label: 'Wristband (Hospital)',   trimMm: { w: 250, h: 25  }, bleedMm: 3, safeMm: 4, minQrMm: 14, mode: 'emergency'  as QrMode },
-  'wristband-event':    { label: 'Wristband (Event/Kids)', trimMm: { w: 250, h: 25  }, bleedMm: 3, safeMm: 4, minQrMm: 14, mode: 'lost-found' as QrMode },
+  'name-tag-emergency':  { label: 'Name Tag (Emergency)',          trimMm: { w: 64,  h: 30  }, bleedMm: 0, safeMm: 3, minQrMm: 18, mode: 'emergency'  as QrMode },
+  'name-tag-square':     { label: 'Name Tag (Square)',             trimMm: { w: 45,  h: 45  }, bleedMm: 0, safeMm: 3, minQrMm: 18, mode: 'lost-found' as QrMode },
+  'item-sticker':        { label: 'Item Sticker',                  trimMm: { w: 50,  h: 25  }, bleedMm: 0, safeMm: 2, minQrMm: 15, mode: 'lost-found' as QrMode },
+  'item-mini':           { label: 'Item Mini',                     trimMm: { w: 30,  h: 30  }, bleedMm: 0, safeMm: 2, minQrMm: 15, mode: 'lost-found' as QrMode },
+  'luggage-tag':         { label: 'Luggage Tag',                   trimMm: { w: 54,  h: 90  }, bleedMm: 0, safeMm: 4, minQrMm: 20, mode: 'lost-found' as QrMode, hasReverse: true },
+  'keyring':             { label: 'Keyring',                       trimMm: { w: 38,  h: 44  }, bleedMm: 0, safeMm: 3, minQrMm: 15, mode: 'lost-found' as QrMode, hasReverse: true },
+  'wristband-medical':   { label: 'Wristband (Medical)',           trimMm: { w: 250, h: 25  }, bleedMm: 0, safeMm: 4, minQrMm: 14, mode: 'emergency'  as QrMode },
+  'wristband-event':     { label: 'Wristband (Event / Kids)',      trimMm: { w: 250, h: 25  }, bleedMm: 0, safeMm: 4, minQrMm: 14, mode: 'lost-found' as QrMode },
+  'luggage-bar':         { label: 'Luggage Bar',                   trimMm: { w: 90,  h: 35  }, bleedMm: 3, safeMm: 3, minQrMm: 16, mode: 'lost-found' as QrMode },
 } as const;
 
 type FormatKey = keyof typeof FORMATS;
@@ -73,7 +73,7 @@ function drawStandardFront(
     .fillColor(accent)
     .text('THEWILEYFOX', bleedPt + safePt, bleedPt + barH + 2, {
       width: trimWPt - safePt * 2,
-      align: formatKey === 'name-tag' ? 'left' : 'center',
+      align: formatKey === 'name-tag-emergency' ? 'left' : 'center',
     });
 
   const qrPt = mmToPt(fmt.minQrMm);
@@ -261,43 +261,92 @@ function drawLuggageTagFront(
     });
 }
 
-function drawLuggageTagReverse(doc: any, bleedPt: number, trimWPt: number, trimHPt: number): void {
+function drawLuggageTagReverse(
+  doc: any, bleedPt: number, trimWPt: number, trimHPt: number, qrBuf: Buffer
+): void {
   const safePt = mmToPt(4);
-  doc.rect(0, 0, trimWPt + bleedPt * 2, trimHPt + bleedPt * 2).fill('#ffffff');
-  doc.rect(bleedPt, bleedPt, trimWPt, mmToPt(3)).fill(ORANGE);
+  
+  // Background
+  doc.rect(0, 0, trimWPt + bleedPt * 2, trimHPt + bleedPt * 2).fill('#F2F4E5');
 
-  const grommDiam = mmToPt(5);
-  doc.circle(bleedPt + trimWPt / 2, bleedPt + grommDiam / 2 + mmToPt(1), grommDiam / 2).fill(ORANGE);
+  // Grommet at top center
+  const grommDiam = mmToPt(5.2);
+  const gx = bleedPt + trimWPt / 2;
+  const gy = bleedPt + grommDiam / 2 + mmToPt(1.2);
+  doc.circle(gx, gy, grommDiam / 2).fill('#E5EBD3').stroke('#D6DEC2');
 
-  const labelFontSize = mmToPt(2.3);
-  const lineH = mmToPt(7);
-  const startY = bleedPt + mmToPt(8);
+  const labelFontSize = mmToPt(2.2);
+  const lineH = mmToPt(7.5);
+  const startY = bleedPt + mmToPt(16.5);
   const fieldX = bleedPt + safePt;
   const fieldW = trimWPt - safePt * 2;
-  const fields = ['NAME', 'PHONE', 'EMAIL', 'ADDRESS', 'CITY / COUNTRY'];
 
+  // Title
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(mmToPt(2.4))
+    .fillColor(ORANGE)
+    .text('IF FOUND, PLEASE CONTACT', fieldX, startY - mmToPt(7), {
+      width: fieldW,
+      align: 'left',
+      characterSpacing: 0.5,
+    });
+
+  // Fields
+  const fields = ['NAME', 'PHONE', 'EMAIL', 'ADDRESS'];
   fields.forEach((label, i) => {
     const y = startY + i * lineH;
     doc
       .font('Helvetica-Bold')
       .fontSize(labelFontSize)
-      .fillColor('#999999')
+      .fillColor('#9AA889')
       .text(label, fieldX, y, { width: fieldW, align: 'left', characterSpacing: 0.5 });
     doc
-      .moveTo(fieldX, y + mmToPt(4.2))
-      .lineTo(fieldX + fieldW, y + mmToPt(4.2))
-      .strokeColor('#cccccc')
+      .moveTo(fieldX, y + mmToPt(3.8))
+      .lineTo(fieldX + fieldW, y + mmToPt(3.8))
+      .strokeColor('#CBD3B5')
       .lineWidth(0.5)
       .stroke();
   });
 
+  // Extra line for address
+  const extraLineY = startY + fields.length * lineH;
   doc
-    .font('Helvetica')
-    .fontSize(mmToPt(2.5))
-    .fillColor('#aaaaaa')
-    .text('Or scan the QR on the front — no app needed.', fieldX, bleedPt + trimHPt - safePt - mmToPt(5), {
-      width: fieldW,
-      align: 'center',
+    .moveTo(fieldX, extraLineY)
+    .lineTo(fieldX + fieldW, extraLineY)
+    .strokeColor('#CBD3B5')
+    .lineWidth(0.5)
+    .stroke();
+
+  // Bottom box for QR
+  const boxW = trimWPt - mmToPt(1.5) * 2;
+  const boxH = mmToPt(16);
+  const boxX = bleedPt + mmToPt(1.5);
+  const boxY = bleedPt + trimHPt - boxH - mmToPt(8);
+  doc.roundedRect(boxX, boxY, boxW, boxH, 4).fill('#E5EBD3');
+
+  // QR inside bottom box
+  const qrSize = mmToPt(11.6);
+  const qrX = boxX + mmToPt(2);
+  const qrY = boxY + (boxH - qrSize) / 2;
+  doc.image(qrBuf, qrX, qrY, { width: qrSize, height: qrSize });
+
+  // Text next to QR
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(mmToPt(2))
+    .fillColor(CHARCOAL)
+    .text('Or scan — reach me', qrX + qrSize + mmToPt(2.5), qrY + mmToPt(2.5), {
+      width: boxW - qrSize - mmToPt(6),
+      align: 'left',
+    });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(mmToPt(2))
+    .fillColor(CHARCOAL)
+    .text('instantly, no signal needed.', qrX + qrSize + mmToPt(2.5), qrY + mmToPt(5.3), {
+      width: boxW - qrSize - mmToPt(6),
+      align: 'left',
     });
 }
 
@@ -363,7 +412,7 @@ async function buildFormatPdf(
 
   if (hasReverse) {
     doc.addPage({ size: [pageWPt, pageHPt], margin: 0 });
-    drawLuggageTagReverse(doc, bleedPt, trimWPt, trimHPt);
+    drawLuggageTagReverse(doc, bleedPt, trimWPt, trimHPt, qrBuf);
     drawCutContour(doc, bleedPt, trimWPt, trimHPt);
   }
 

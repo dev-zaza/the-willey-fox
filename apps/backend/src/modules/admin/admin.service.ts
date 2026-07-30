@@ -266,10 +266,10 @@ export class AdminService {
       .offset(offset);
   }
 
-  async bulkGenerateUnclaimed(adminId: string, count: number, shopifyOrderId?: string, notes?: string) {
+  async bulkGenerateUnclaimed(adminId: string, count: number, shopifyOrderId?: string, notes?: string, source: string = 'manual') {
     const [batch] = await this.db
       .insert(qrBatches)
-      .values({ createdByAdminId: adminId, count, shopifyOrderId: shopifyOrderId ?? null, notes: notes ?? null })
+      .values({ createdByAdminId: adminId, count, shopifyOrderId: shopifyOrderId ?? null, notes: notes ?? null, source })
       .returning();
 
     const codes = await this.qrService.bulkGenerateUnclaimed(count, shopifyOrderId, batch.id);
@@ -277,13 +277,14 @@ export class AdminService {
     return { batch, codes };
   }
 
-  async listBatches(limit = 50, offset = 0) {
-    const rows = await this.db
+  async listBatches(limit = 50, offset = 0, source?: string) {
+    const query = this.db
       .select({
         id: qrBatches.id,
         count: qrBatches.count,
         shopifyOrderId: qrBatches.shopifyOrderId,
         notes: qrBatches.notes,
+        source: qrBatches.source,
         createdByAdminId: qrBatches.createdByAdminId,
         createdAt: qrBatches.createdAt,
         adminFirstName: users.firstName,
@@ -292,10 +293,10 @@ export class AdminService {
       })
       .from(qrBatches)
       .leftJoin(users, eq(qrBatches.createdByAdminId, users.id))
-      .orderBy(desc(qrBatches.createdAt))
-      .limit(limit)
-      .offset(offset);
-    return rows;
+      .$dynamic();
+
+    const filtered = source ? query.where(eq(qrBatches.source, source)) : query;
+    return filtered.orderBy(desc(qrBatches.createdAt)).limit(limit).offset(offset);
   }
 
   async getBatchCodes(batchId: string) {
@@ -313,6 +314,47 @@ export class AdminService {
       .orderBy(qrCodes.uniqueCode);
 
     return { batch, codes };
+  }
+
+  /**
+   * Deletes only the unclaimed QR codes from a batch.
+   * Claimed codes (status = 'active', userId != null) are left untouched.
+   * If all codes were unclaimed and are now deleted, the batch record itself
+   * is also removed since it would be empty.
+   */
+  async deleteUnclaimedFromBatch(adminId: string, batchId: string): Promise<{ deleted: number; batchDeleted: boolean }> {
+    const [batch] = await this.db
+      .select({ id: qrBatches.id, count: qrBatches.count })
+      .from(qrBatches)
+      .where(eq(qrBatches.id, batchId))
+      .limit(1);
+    if (!batch) throw new NotFoundException('BATCH_NOT_FOUND');
+
+    // Delete only codes that are still unclaimed (userId is null AND status = 'unclaimed')
+    const deleted = await this.db
+      .delete(qrCodes)
+      .where(and(eq(qrCodes.batchId, batchId), eq(qrCodes.status, 'unclaimed')))
+      .returning({ id: qrCodes.id });
+
+    // Check if any claimed codes remain
+    const [remaining] = await this.db
+      .select({ count: count() })
+      .from(qrCodes)
+      .where(eq(qrCodes.batchId, batchId));
+
+    let batchDeleted = false;
+    if (remaining.count === 0) {
+      // No codes remain — delete the empty batch record too
+      await this.db.delete(qrBatches).where(eq(qrBatches.id, batchId));
+      batchDeleted = true;
+    }
+
+    this.auditLogService.log(adminId, 'DELETE_UNCLAIMED_FROM_BATCH', 'qr_batch', batchId, {
+      deleted: deleted.length,
+      batchDeleted,
+    });
+
+    return { deleted: deleted.length, batchDeleted };
   }
 
   async exportBatchPdf(batchId: string, publicBaseUrl: string): Promise<Buffer> {

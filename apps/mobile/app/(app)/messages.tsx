@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -11,12 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { messagesService, type Conversation, type Message } from '@/services/messages.service';
 import { useAuthStore } from '@/stores/auth.store';
 
 type Screen = 'list' | 'chat';
 
 export default function MessagesScreen() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +79,8 @@ export default function MessagesScreen() {
       >
         {/* Header */}
         <View className="bg-white dark:bg-surface-card border-b border-gray-200 dark:border-surface-border px-6 pt-14 pb-4 flex-row items-center gap-3">
-          <TouchableOpacity onPress={() => setScreen('list')}>
-            <Text className="text-brand-500 font-semibold text-sm">← Back</Text>
+          <TouchableOpacity onPress={() => setScreen('list')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="chevron-back" size={24} color="#f97316" />
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-base font-bold text-gray-900 dark:text-white" numberOfLines={1}>
@@ -151,7 +152,9 @@ export default function MessagesScreen() {
   return (
     <View className="flex-1 bg-gray-50 dark:bg-surface">
       <View className="bg-white dark:bg-surface-card border-b border-gray-200 dark:border-surface-border px-6 pt-14 pb-4 flex-row items-center gap-3">
-        <Image source={require('../../assets/logo.png')} style={{ width: 28, height: 28, borderRadius: 7 }} resizeMode="contain" />
+        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="chevron-back" size={24} color="#f97316" />
+        </TouchableOpacity>
         <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">Messages</Text>
       </View>
 

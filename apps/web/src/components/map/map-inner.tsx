@@ -8,7 +8,7 @@ import { EventPin } from './event-pin';
 import { RouteLayer } from './route-layer';
 import { resolveNumericId } from './country-lookup';
 import type { LatLng } from '@/types';
-import type { PinData, SafetyZoneOverlay } from '@/lib/api';
+import type { PinData, SafetyZoneOverlay, H3TileCollection } from '@/lib/api';
 
 const DEFAULT_CENTER: [number, number] = [51.505, -0.09];
 const DEFAULT_ZOOM = 13;
@@ -169,14 +169,16 @@ interface MapInnerProps {
   pins?: PinData[];
   route?: LatLng[];
   safetyZones?: SafetyZoneOverlay[];
+  h3Tiles?: H3TileCollection | null;
   center?: LatLng;
   zoom?: number;
   onPinClick?: (pin: PinData) => void;
   onMapClick?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
+  onH3Click?: (props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => void;
 }
 
-export function MapInner({ pins = [], route, safetyZones = [], center, zoom, onPinClick, onMapClick, onBoundsChange }: MapInnerProps) {
+export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, onPinClick, onMapClick, onBoundsChange, onH3Click }: MapInnerProps) {
   return (
     <MapContainer
       center={center ? [center.lat, center.lng] : DEFAULT_CENTER}
@@ -195,6 +197,37 @@ export function MapInner({ pins = [], route, safetyZones = [], center, zoom, onP
       {route && route.length >= 2 && <RouteLayer route={route} />}
 
       <ZoneLayer safetyZones={safetyZones} />
+
+      {h3Tiles && h3Tiles.features.length > 0 && (
+        <GeoJSON
+          key={h3Tiles.features.length}
+          data={h3Tiles as unknown as GeoJsonObject}
+          style={(feature) => ({
+            color: '#ffffff',
+            weight: 0.8,
+            fillColor: (feature as any)?.properties?.color ?? '#888888',
+            fillOpacity: 0.48,
+          })}
+          onEachFeature={(feature, layer) => {
+            const p = feature.properties as any;
+            if (p?.h3) {
+              layer.bindTooltip(
+                `${p.band ?? 'unknown'} · score: ${p.score != null ? Math.round(p.score) : '–'} · ${p.incidentCount ?? 0} incidents`,
+                { sticky: true },
+              );
+              layer.on('click', () => {
+                onH3Click?.({
+                  h3: p.h3,
+                  score: p.score != null ? Number(p.score) : null,
+                  band: p.band ?? '',
+                  color: p.color ?? '#888888',
+                  incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
+                });
+              });
+            }
+          }}
+        />
+      )}
     </MapContainer>
   );
 }

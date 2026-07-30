@@ -79,20 +79,26 @@ export class PinAggregationJob {
   }
 
   private async getGridCells(): Promise<GridCell[]> {
-    // Use SQL to bucket pins into grid cells and count by safety impact
-    const negativePinTypes = NEGATIVE_PIN_TYPES as readonly string[];
-    const positivePinTypes = POSITIVE_PIN_TYPES as readonly string[];
+    const negLiteral = sql.raw(
+      `ARRAY[${NEGATIVE_PIN_TYPES.map((t) => `'${t}'`).join(',')}]::pin_type[]`,
+    );
+    const posLiteral = sql.raw(
+      `ARRAY[${POSITIVE_PIN_TYPES.map((t) => `'${t}'`).join(',')}]::pin_type[]`,
+    );
+    const allLiteral = sql.raw(
+      `ARRAY[${[...NEGATIVE_PIN_TYPES, ...POSITIVE_PIN_TYPES].map((t) => `'${t}'`).join(',')}]::pin_type[]`,
+    );
 
     const result = await this.db.execute(sql`
       SELECT
         FLOOR(CAST(lat AS numeric) / ${CELL_SIZE}) * ${CELL_SIZE} AS cell_lat,
         FLOOR(CAST(lng AS numeric) / ${CELL_SIZE}) * ${CELL_SIZE} AS cell_lng,
-        COUNT(*) FILTER (WHERE type = ANY(${negativePinTypes}::pin_type[])) AS negative_count,
-        COUNT(*) FILTER (WHERE type = ANY(${positivePinTypes}::pin_type[])) AS positive_count
+        COUNT(*) FILTER (WHERE type = ANY(${negLiteral})) AS negative_count,
+        COUNT(*) FILTER (WHERE type = ANY(${posLiteral})) AS positive_count
       FROM pins
       WHERE status = 'active'
         AND (expires_at IS NULL OR expires_at > NOW())
-        AND type = ANY(${[...negativePinTypes, ...positivePinTypes]}::pin_type[])
+        AND type = ANY(${allLiteral})
       GROUP BY cell_lat, cell_lng
     `);
 

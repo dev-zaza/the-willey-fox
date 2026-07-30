@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller } from '@/components/shims';
+import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
   Image,
@@ -16,6 +17,9 @@ import {
 import { z } from 'zod';
 import { ServiceUnavailable } from '@/components/ServiceUnavailable';
 import { useAuth } from '@/hooks/useAuth';
+import { storage } from '@/lib/storage';
+
+const ONBOARDING_DONE_KEY = 'onboarding_done';
 
 const signupSchema = z
   .object({
@@ -54,6 +58,7 @@ export default function SignupScreen() {
     const result = await signup(data.firstName, data.lastName, data.email, data.password);
     if (typeof result === 'string') {
       if (result.toLowerCase().includes('verify')) {
+        await storage.deleteItemAsync(ONBOARDING_DONE_KEY);
         setSuccessMessage('Account created! Please check your email to verify your account before signing in.');
       } else {
         setServerError(result);
@@ -136,7 +141,7 @@ export default function SignupScreen() {
               key={name}
               control={control}
               name={name}
-              render={({ field: { onChange, onBlur, value } }) => (
+              render={({ field: { onChange, onBlur, value } }: { field: { onChange: any; onBlur: any; value: any } }) => (
                 <View className="gap-1.5">
                   <Text className="text-sm font-medium text-gray-700 dark:text-slate-300">{label}</Text>
                   <TextInput

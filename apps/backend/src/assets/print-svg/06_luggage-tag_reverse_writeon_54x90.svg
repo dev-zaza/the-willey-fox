@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="54mm" height="90mm" viewBox="0 0 54 90">
+<defs><clipPath id="c6"><rect x="0" y="0" width="54" height="90" rx="6" ry="6"></rect></clipPath></defs>
+<rect x="0" y="0" width="54" height="90" rx="6" ry="6" fill="#FBFCF5" stroke="#D6DEC2" stroke-width="0.3"></rect>
+ <rect x="21" y="5" width="12" height="5.2" rx="2.6" fill="#E5EBD3" stroke="#CBD3B5" stroke-width="0.5"></rect>
+ <text x="8" y="17" font-family="Fraunces, serif" font-size="5" fill="#232323" font-weight="600" text-anchor="start" letter-spacing="0">If found,</text>
+ <text x="8" y="23" font-family="Fraunces, serif" font-size="5" fill="#232323" font-weight="600" text-anchor="start" letter-spacing="0">please contact</text>
+ <text x="8" y="33" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2.1" fill="#9AA889" font-weight="400" text-anchor="start" letter-spacing="0.4">NAME</text><line x1="8" y1="39" x2="46" y2="39" stroke="#CBD3B5" stroke-width="0.5"></line>
+ <text x="8" y="48" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2.1" fill="#9AA889" font-weight="400" text-anchor="start" letter-spacing="0.4">PHONE</text><line x1="8" y1="54" x2="46" y2="54" stroke="#CBD3B5" stroke-width="0.5"></line>
+ <text x="8" y="63" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2.1" fill="#9AA889" font-weight="400" text-anchor="start" letter-spacing="0.4">EMAIL</text><line x1="8" y1="69" x2="46" y2="69" stroke="#CBD3B5" stroke-width="0.5"></line>
+ <text x="27" y="80" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2" fill="#9AA889" font-weight="400" text-anchor="middle" letter-spacing="0.3">UNCOATED · WRITE WITH ANY PEN</text>
+ <text x="27" y="84" font-family="&#39;Spline Sans Mono&#39;, monospace" font-size="2" fill="#9AA889" font-weight="400" text-anchor="middle" letter-spacing="0.3">OR JUST SCAN THE FRONT</text>
+</svg>

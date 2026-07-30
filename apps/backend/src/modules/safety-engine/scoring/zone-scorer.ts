@@ -55,10 +55,11 @@ export class ZoneScorer {
   /**
    * Determine colour band for a safety score.
    */
-  toColour(score: number): 'green' | 'amber' | 'red' {
+  toColour(score: number): 'green' | 'amber' | 'red' | 'purple' {
     if (score >= 70) return 'green';
     if (score >= 40) return 'amber';
-    return 'red';
+    if (score >= 20) return 'red';
+    return 'purple';
   }
 
   /**

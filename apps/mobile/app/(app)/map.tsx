@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@/components/Icon';
 import { pinsService } from '@/services/pins.service';
-import { directionsService, type SafetyZone, type RouteResult } from '@/services/directions.service';
+import { directionsService, type H3Tile, type RouteResult } from '@/services/directions.service';
+import { SafetyHexSheet, type SelectedHex } from '@/components/SafetyHexSheet';
 import { emergencyService, type ActiveSosNear } from '@/services/emergency.service';
 import { usersService } from '@/services/users.service';
 import { useAuthStore } from '@/stores/auth.store';
@@ -125,6 +126,7 @@ const PointAnnotation = mapboxModule?.PointAnnotation as any;
 const ShapeSource = mapboxModule?.ShapeSource as any;
 const MapboxCircleLayer = mapboxModule?.CircleLayer as any;
 const MapboxLineLayer = mapboxModule?.LineLayer as any;
+const MapboxFillLayer = mapboxModule?.FillLayer as any;
 
 const HAS_MAPBOX_TOKEN = Boolean(MAPBOX_TOKEN);
 const HAS_GOOGLE_NATIVE = Boolean(MapView && Marker && Circle && Polyline);
@@ -252,9 +254,11 @@ export default function MapScreen() {
   const [votedPins, setVotedPins] = useState<Record<string, 'up' | 'down'>>({});
   const currentRegionRef = useRef<Region | null>(null);
 
-  const [safetyZones, setSafetyZones] = useState<SafetyZone[]>([]);
+  const [h3Tiles, setH3Tiles] = useState<H3Tile[]>([]);
+  const [selectedHex, setSelectedHex] = useState<SelectedHex | null>(null);
   const [safetyOverlayOn, setSafetyOverlayOn] = useState(false);
   const [safetyOverlayLoading, setSafetyOverlayLoading] = useState(false);
+  const [safetyMode, setSafetyMode] = useState<'uk' | 'global'>('uk');
   const [sosBeacons, setSosBeacons] = useState<ActiveSosNear[]>([]);
 
   // Search state
@@ -263,6 +267,7 @@ export default function MapScreen() {
   const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; fullName: string; lat: number; lng: number }>>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lastSearchResult, setLastSearchResult] = useState<{ name: string; fullName: string; lat: number; lng: number } | null>(null);
 
   // Add pin form state
   const [newPinType, setNewPinType] = useState<PinType>('traffic');
@@ -281,32 +286,30 @@ export default function MapScreen() {
   const [pendingRoutePin, setPendingRoutePin] = useState<Pin | null>(null);
   const [pendingPoiDest, setPendingPoiDest] = useState<{ lat: number; lng: number } | null>(null);
 
-  const safetyZonesGeoJson = useMemo(() => {
-    return {
-      type: 'FeatureCollection',
-      features: safetyZones
-        .map((zone) => {
-          const lat = zone.centerLat ? parseFloat(zone.centerLat) : null;
-          const lng = zone.centerLng ? parseFloat(zone.centerLng) : null;
-          if (!lat || !lng) return null;
-          return {
-            type: 'Feature',
-            properties: {
-              id: zone.id,
-              color:
-                Number(zone.safetyScore) >= 70
-                  ? '#16a34a'
-                  : Number(zone.safetyScore) >= 40
-                    ? '#f59e0b'
-                    : '#ef4444',
-              radius: zone.radiusMetres ?? 2000,
-            },
-            geometry: { type: 'Point', coordinates: [lng, lat] },
-          };
-        })
-        .filter(Boolean),
-    } as any;
-  }, [safetyZones]);
+  const h3TilesGeoJson = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: h3Tiles.map((tile) => {
+      // Compute polygon centroid for navigation
+      const ring = tile.coordinates[0] ?? [];
+      const sumLng = ring.reduce((s, c) => s + c[0], 0);
+      const sumLat = ring.reduce((s, c) => s + c[1], 0);
+      const centLng = ring.length > 0 ? sumLng / ring.length : 0;
+      const centLat = ring.length > 0 ? sumLat / ring.length : 0;
+      return {
+        type: 'Feature',
+        properties: {
+          h3: tile.h3,
+          color: tile.color,
+          score: tile.score,
+          band: tile.band,
+          incidentCount: tile.incidentCount,
+          centLat,
+          centLng,
+        },
+        geometry: { type: 'Polygon', coordinates: tile.coordinates },
+      };
+    }),
+  }), [h3Tiles]);
 
   const sosGeoJson = useMemo(() => {
     return {
@@ -646,35 +649,80 @@ export default function MapScreen() {
     }, 400);
   }
 
-  function handleSearchResultPress(result: { id: string; name: string; fullName: string; lat: number; lng: number }) {
-    setSearchQuery('');
+  async function handleSearchResultPress(result: { id: string; name: string; fullName: string; lat: number; lng: number }) {
+    setSearchQuery(result.name);
     setSearchResults([]);
     setSearchFocused(false);
-    // Fly map to the result
-    animateToRegionLike(
-      { latitude: result.lat, longitude: result.lng, latitudeDelta: 0.01, longitudeDelta: 0.01 },
-      600,
-      16,
-    );
-    // Open POI sheet so user can get directions
-    setSelectedPoi({ lat: result.lat, lng: result.lng, name: result.name });
-  }
+    setLastSearchResult({ name: result.name, fullName: result.fullName, lat: result.lat, lng: result.lng });
 
-  async function toggleSafetyOverlay() {
-    if (safetyOverlayOn) { setSafetyOverlayOn(false); setSafetyZones([]); return; }
-    const region = currentRegionRef.current ?? FALLBACK_REGION;
-    const d = region.latitudeDelta / 2;
-    const bbox = { minLat: region.latitude - d, minLng: region.longitude - region.longitudeDelta / 2, maxLat: region.latitude + d, maxLng: region.longitude + region.longitudeDelta / 2 };
+    // Fly map camera to result
+    const searchRegion: Region = {
+      latitude: result.lat,
+      longitude: result.lng,
+      latitudeDelta: 0.09,
+      longitudeDelta: 0.09,
+    };
+    currentRegionRef.current = searchRegion;
+    animateToRegionLike(searchRegion, 600, 13);
+
+    // Auto-load safety hex tiles for the searched location
+    const degOffset = 0.045;
+    const bbox = {
+      minLat: result.lat - degOffset,
+      minLng: result.lng - degOffset,
+      maxLat: result.lat + degOffset,
+      maxLng: result.lng + degOffset,
+    };
+    // Only load tiles if overlay is already enabled — don't auto-enable on search
+    if (!safetyOverlayOn) return;
     setSafetyOverlayLoading(true);
     try {
-      const zones = await directionsService.getSafetyOverlay(bbox);
-      setSafetyZones(zones);
+      const tiles = await directionsService.getH3Tiles(bbox, 9, safetyMode === 'uk' ? 'GB' : undefined);
+      if (tiles.length > 0) setH3Tiles(tiles);
+    } catch {
+      // silently ignore — user can tap shield to retry
+    } finally {
+      setSafetyOverlayLoading(false);
+    }
+
+  }
+
+  async function loadOverlayTiles(countryIso?: string) {
+    const center = lastSearchResult
+      ? { latitude: lastSearchResult.lat, longitude: lastSearchResult.lng }
+      : userLocation
+        ? { latitude: userLocation.lat, longitude: userLocation.lng }
+        : currentRegionRef.current
+          ? { latitude: currentRegionRef.current.latitude, longitude: currentRegionRef.current.longitude }
+          : { latitude: FALLBACK_REGION.latitude, longitude: FALLBACK_REGION.longitude };
+
+    const degOffset = 0.045;
+    const bbox = {
+      minLat: center.latitude - degOffset,
+      minLng: center.longitude - degOffset,
+      maxLat: center.latitude + degOffset,
+      maxLng: center.longitude + degOffset,
+    };
+    const latDelta = currentRegionRef.current?.latitudeDelta ?? 0.09;
+    const resolution = latDelta > 0.5 ? 7 : 9;
+    setSafetyOverlayLoading(true);
+    try {
+      const tiles = await directionsService.getH3Tiles(bbox, resolution, countryIso);
+      setH3Tiles(tiles);
       setSafetyOverlayOn(true);
+      if (tiles.length === 0) {
+        Alert.alert('No safety data', 'No crime data available for your current area yet.');
+      }
     } catch {
       Alert.alert('Safety data unavailable', 'Could not load safety zones for this area.');
     } finally {
       setSafetyOverlayLoading(false);
     }
+  }
+
+  async function toggleSafetyOverlay() {
+    if (safetyOverlayOn) { setSafetyOverlayOn(false); setH3Tiles([]); return; }
+    await loadOverlayTiles(safetyMode === 'uk' ? 'GB' : undefined);
   }
 
   // ── Directions handlers ───────────────────────────────────────────────────
@@ -779,12 +827,11 @@ export default function MapScreen() {
             openAddPinAtCoords(coords);
           }}
           onPress={(e: any) => {
-            // Some Android Mapbox builds do not consistently emit long-press.
-            // Fallback: single tap on empty map area opens add-pin modal.
+            // Single tap: dismiss selected pin/POI/hex only, never open add-pin modal.
             if (isMapboxFeatureTap(e)) return;
-            const coords = getMapboxPressCoords(e);
-            if (!coords) return;
-            openAddPinAtCoords(coords);
+            setSelectedPin(null);
+            setSelectedPoi(null);
+            setSelectedHex(null);
           }}
           onCameraChanged={(state: any) => {
             const center = state.properties.center;
@@ -794,6 +841,13 @@ export default function MapScreen() {
             currentRegionRef.current = region;
             if (pinsDebounceRef.current) clearTimeout(pinsDebounceRef.current);
             pinsDebounceRef.current = setTimeout(() => loadPinsForRegion(region), 400);
+          }}
+          onDidFinishLoadingMap={() => {
+            // Seed region from the camera's default position so toggleSafetyOverlay
+            // has a valid bbox before the user pans the map.
+            if (!currentRegionRef.current) {
+              currentRegionRef.current = FALLBACK_REGION;
+            }
           }}
         >
           <MapboxCamera
@@ -847,16 +901,38 @@ export default function MapScreen() {
             </PointAnnotation>
           ))}
 
-          {safetyZonesGeoJson.features.length > 0 && (
-            <ShapeSource id="safety-zones" shape={safetyZonesGeoJson}>
-              <MapboxCircleLayer
-                id="safety-zones-layer"
+          {h3TilesGeoJson.features.length > 0 && MapboxFillLayer && (
+            <ShapeSource
+              id="h3-tiles"
+              shape={h3TilesGeoJson as any}
+              onPress={(e: any) => {
+                const feature = e?.features?.[0] ?? e?.nativeEvent?.payload?.features?.[0];
+                if (!feature?.properties) return;
+                const p = feature.properties;
+                setSelectedHex({
+                  h3: p.h3 ?? '',
+                  score: p.score != null ? Number(p.score) : null,
+                  band: p.band ?? '',
+                  color: p.color ?? '#888888',
+                  incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
+                  centLat: p.centLat != null ? Number(p.centLat) : 0,
+                  centLng: p.centLng != null ? Number(p.centLng) : 0,
+                });
+              }}
+            >
+              <MapboxFillLayer
+                id="h3-tiles-fill"
                 style={{
-                  circleColor: ['get', 'color'],
-                  circleRadius: ['interpolate', ['linear'], ['zoom'], 8, 20, 12, 45, 15, 80],
-                  circleOpacity: 0.2,
-                  circleStrokeColor: ['get', 'color'],
-                  circleStrokeWidth: 1,
+                  fillColor: ['get', 'color'],
+                  fillOpacity: 0.45,
+                }}
+              />
+              <MapboxLineLayer
+                id="h3-tiles-stroke"
+                style={{
+                  lineColor: '#ffffff',
+                  lineWidth: 1.4,
+                  lineOpacity: 0.6,
                 }}
               />
             </ShapeSource>
@@ -1008,6 +1084,47 @@ export default function MapScreen() {
             ? <ActivityIndicator size="small" color="#16a34a" />
             : <Ionicons name="shield" size={20} color="#16a34a" />
           }
+        </TouchableOpacity>
+        {safetyOverlayOn && (
+          <>
+            <TouchableOpacity
+              style={styles.mapActionBtn}
+              onPress={() => {
+                const next = safetyMode === 'uk' ? 'global' : 'uk';
+                setSafetyMode(next);
+                setH3Tiles([]);
+                loadOverlayTiles(next === 'uk' ? 'GB' : undefined);
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: '700', color: safetyMode === 'uk' ? '#3b82f6' : '#f97316', textAlign: 'center' }}>
+                {safetyMode === 'uk' ? 'UK' : 'GL'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.mapActionBtn}
+              onPress={() => {
+                const center = currentRegionRef.current ?? FALLBACK_REGION;
+                const src = lastSearchResult ?? null;
+                router.push({
+                  pathname: '/(app)/area' as any,
+                  params: {
+                    initialLat: src ? String(src.lat) : String(center.latitude),
+                    initialLng: src ? String(src.lng) : String(center.longitude),
+                    initialName: src?.name ?? '',
+                    initialFullName: src?.fullName ?? '',
+                  },
+                });
+              }}
+            >
+              <Ionicons name="analytics" size={20} color="#f97316" />
+            </TouchableOpacity>
+          </>
+        )}
+        <TouchableOpacity
+          style={styles.mapActionBtn}
+          onPress={() => router.push('/(app)/spots' as any)}
+        >
+          <Ionicons name="bookmark" size={20} color="#8b5cf6" />
         </TouchableOpacity>
       </View>
 
@@ -1247,6 +1364,23 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
       </Modal>
+
+      <SafetyHexSheet
+        hex={selectedHex}
+        onClose={() => setSelectedHex(null)}
+        onViewAreaReport={(hex) => {
+          setSelectedHex(null);
+          router.push({
+            pathname: '/(app)/area' as any,
+            params: {
+              initialLat: String(hex.centLat),
+              initialLng: String(hex.centLng),
+              initialName: lastSearchResult?.name ?? '',
+              initialFullName: lastSearchResult?.fullName ?? '',
+            },
+          });
+        }}
+      />
     </View>
   );
 }

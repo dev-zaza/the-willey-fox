@@ -1,0 +1,19 @@
+{
+  "city": "Luxor",
+  "region": "Egypt",
+  "tier": 4,
+  "slug": "luxor",
+  "annualVisitorsM": 1,
+  "lastUpdated": "2026-06-24",
+  "qualityThreshold": {
+    "minViews": 5000,
+    "publishedAfter": "2022-01-01T00:00:00Z"
+  },
+  "videoCount": 0,
+  "videos": [],
+  "aggregated": {
+    "topPlaces": [],
+    "safetyNotes": [],
+    "recommendations": []
+  }
+}

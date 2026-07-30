@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="38mm" height="44mm" viewBox="0 0 38 44">
+<defs><clipPath id="c7"><circle cx="19" cy="25" r="19"></circle></clipPath></defs>
+
+ <circle cx="19" cy="4" r="3.6" fill="none" stroke="#C4C2B8" stroke-width="1"></circle>
+ <circle cx="19" cy="25" r="19" fill="#FF7B14"></circle>
+ <circle cx="19" cy="7.6" r="1.9" fill="#F2F4E5" stroke="#D6DEC2" stroke-width="0.5"></circle>
+ <g clip-path="url(#c7)"><image href="fox-cutout.png" xlink:href="fox-cutout.png" x="5.5" y="11.5" width="27" height="27" preserveAspectRatio="xMidYMid meet"></image></g>
+</svg>
