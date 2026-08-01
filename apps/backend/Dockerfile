@@ -3,11 +3,12 @@
 # IMPORTANT: Dokploy build context = repo root (safetag/), Dockerfile path = apps/backend/Dockerfile.
 
 # -------- Build stage --------
-FROM node:22-alpine AS builder
+# node:22-slim is Debian-based (glibc) — required for Puppeteer/Chromium which won't run on Alpine (musl).
+FROM node:22-slim AS builder
 WORKDIR /app
 
-# Native addons (bcrypt) need a toolchain on Alpine.
-RUN apk add --no-cache python3 make g++
+# Native addons (bcrypt) need a toolchain.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -28,11 +29,22 @@ RUN pnpm --filter @safetag/shared build
 RUN pnpm --filter @safetag/backend build
 
 # -------- Runner stage --------
-FROM node:22-alpine AS runner
+# Must stay Debian-based — Puppeteer's bundled Chromium is glibc-linked and won't run on Alpine (musl → ENOEXEC).
+FROM node:22-slim AS runner
 WORKDIR /app
 
-# Runtime deps: tini for clean PID 1, build-essentials for bcrypt rebuild on first boot if needed.
-RUN apk add --no-cache python3 make g++ tini netcat-openbsd
+# tini: clean PID 1. Chromium + fonts: Puppeteer PDF export. build tools: bcrypt native addon.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    netcat-openbsd \
+    python3 make g++ \
+    chromium \
+    fonts-liberation \
+    libatk-bridge2.0-0 libatk1.0-0 libcups2 libdbus-1-3 \
+    libdrm2 libgbm1 libnspr4 libnss3 libxcomposite1 \
+    libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 \
+    xdg-utils \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -58,7 +70,10 @@ COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV NODE_ENV=production
+# Tell Puppeteer to use system Chromium installed above instead of downloading its own binary.
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Backend listens on $PORT (defaults to 3000 in main.ts). Dokploy sets PORT via env.
 EXPOSE 3000
 
-ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]

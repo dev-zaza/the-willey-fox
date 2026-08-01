@@ -153,7 +153,16 @@ export class PrintExportService implements OnModuleDestroy {
 
   private getBrowser(): Promise<Browser> {
     if (!this.browserPromise) {
-      this.browserPromise = puppeteer.launch({ headless: true });
+      this.browserPromise = puppeteer.launch({
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+        ],
+      });
     }
     return this.browserPromise;
   }
