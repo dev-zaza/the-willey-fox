@@ -23,33 +23,6 @@ buildscript {
 
 apply plugin: "com.facebook.react.rootproject"
 
-// Workaround: @sentry/react-native registers under both ':sentry-react-native' (hyphen)
-// and ':sentry_react-native' (underscore) depending on Gradle version, causing an implicit
-// task dependency error on Gradle 8+. Wire mustRunAfter in both directions to be safe.
-gradle.projectsEvaluated {
-    def sentryA = findProject(':sentry-react-native')
-    def sentryB = findProject(':sentry_react-native')
-    [sentryA, sentryB].findAll { it != null }.each { proj ->
-        ['Debug', 'Release'].each { variant ->
-            def packageTask = proj.tasks.findByName("package${variant}Resources")
-            def genTask = proj.tasks.findByName("generate${variant}ResValues")
-            if (packageTask != null && genTask != null) {
-                packageTask.mustRunAfter(genTask)
-            }
-        }
-    }
-    if (sentryA != null && sentryB != null) {
-        ['Debug', 'Release'].each { variant ->
-            def pkgA = sentryA.tasks.findByName("package${variant}Resources")
-            def genB = sentryB.tasks.findByName("generate${variant}ResValues")
-            if (pkgA != null && genB != null) { pkgA.mustRunAfter(genB) }
-            def pkgB = sentryB.tasks.findByName("package${variant}Resources")
-            def genA = sentryA.tasks.findByName("generate${variant}ResValues")
-            if (pkgB != null && genA != null) { pkgB.mustRunAfter(genA) }
-        }
-    }
-}
-
 allprojects {
     repositories {
         maven {
