@@ -27,8 +27,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.thewileyfox.com/api/v1",
         "EXPO_PUBLIC_WEB_URL": "https://thewileyfox.com",
-        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "",
-        "EXPO_PUBLIC_SENTRY_DSN": ""
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0f0aaf2c7c07f43d3195d07a81626d0d@o4511754670964736.ingest.de.sentry.io/4511754832379984"
       },
       "android": {
         "buildType": "app-bundle"
