@@ -7,8 +7,8 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
-# Native addons (bcrypt) need a toolchain.
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Native addons (bcrypt) need a toolchain. unzip needed by some npm postinstall scripts.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ unzip && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
@@ -17,8 +17,8 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/shared/package.json ./packages/shared/
 
-# Allow minor lockfile drift (a stale lockfile blocked CI builds before).
-# Use --no-frozen-lockfile so monorepo manifest updates don't require regenerating the lockfile.
+# Skip Puppeteer's Chrome download — we use system Chromium at runtime.
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm install --no-frozen-lockfile
 
 # Source
@@ -54,6 +54,8 @@ COPY packages/shared/package.json ./packages/shared/
 
 # Install ALL deps (including drizzle-kit + ts-node devDeps required for `drizzle-kit migrate` at start).
 # Trade-off: image larger than --prod, but reliable. NestJS app doesn't import any devDeps at runtime.
+# PUPPETEER_SKIP_DOWNLOAD: skip Chrome download — system Chromium used at runtime via PUPPETEER_EXECUTABLE_PATH.
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm install --no-frozen-lockfile
 
 # Built artifacts
