@@ -46,10 +46,10 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex gap-7 text-sm" style={{ color: '#7a6957' }}>
-            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+            <Link href="/privacy-policy" className="transition-colors hover:text-[#ea2e00]">
               Privacy
             </Link>
-            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+            <Link href="/terms" className="transition-colors hover:text-[#ea2e00]">
               Terms
             </Link>
             <Link href="/pricing" className="transition-colors hover:text-[#ea2e00]">
