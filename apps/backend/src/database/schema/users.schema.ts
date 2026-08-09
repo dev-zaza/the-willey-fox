@@ -34,6 +34,8 @@ export const users = pgTable('users', {
   lastNotificationReadAt: timestamp('last_notification_read_at'),
   phoneVerifiedAt: timestamp('phone_verified_at'),
   safetyMode: boolean('safety_mode').default(false).notNull(),
+  deletionRequestedAt: timestamp('deletion_requested_at'),
+  deletionScheduledAt: timestamp('deletion_scheduled_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

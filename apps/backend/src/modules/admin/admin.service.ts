@@ -1,8 +1,8 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { desc, eq, ilike, or, count, sql, and, gt } from 'drizzle-orm';
+import { desc, eq, ilike, or, count, sql, and, gt, isNotNull } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
-import { users, qrCodes, reports, pins, dataIngestionLogs, safetyZones, adminAuditLogs, userReports, qrBatches } from '../../database/schema';
+import { users, qrCodes, reports, pins, dataIngestionLogs, safetyZones, adminAuditLogs, userReports, qrBatches, appSettings } from '../../database/schema';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const PDFDocument = require('pdfkit');
 import * as archiver from 'archiver';
@@ -520,5 +520,84 @@ export class AdminService {
 
     this.auditLogService.log(adminId, 'DISMISS_USER_REPORT', 'user_report', reportId);
     return { message: 'Report dismissed.' };
+  }
+
+  // ── Account Deletion Requests ────────────────────────────────────────────────
+
+  async listDeletionRequests(limit = 50, offset = 0) {
+    return this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        subscriptionTier: users.subscriptionTier,
+        deletionRequestedAt: users.deletionRequestedAt,
+        deletionScheduledAt: users.deletionScheduledAt,
+      })
+      .from(users)
+      .where(isNotNull(users.deletionRequestedAt))
+      .orderBy(desc(users.deletionRequestedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async approveDeletion(adminId: string, userId: string) {
+    const [user] = await this.db
+      .select({ id: users.id, email: users.email, deletionRequestedAt: users.deletionRequestedAt })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) throw new NotFoundException('USER_NOT_FOUND');
+    if (!user.deletionRequestedAt) throw new NotFoundException('NO_DELETION_REQUEST');
+
+    await this.db.delete(users).where(eq(users.id, userId));
+
+    this.auditLogService.log(adminId, 'APPROVE_ACCOUNT_DELETION', 'user', userId);
+    return { message: 'Account permanently deleted.' };
+  }
+
+  async cancelDeletion(adminId: string, userId: string) {
+    const [user] = await this.db
+      .select({ id: users.id, deletionRequestedAt: users.deletionRequestedAt })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) throw new NotFoundException('USER_NOT_FOUND');
+    if (!user.deletionRequestedAt) throw new NotFoundException('NO_DELETION_REQUEST');
+
+    await this.db
+      .update(users)
+      .set({ deletionRequestedAt: null, deletionScheduledAt: null, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+
+    this.auditLogService.log(adminId, 'CANCEL_ACCOUNT_DELETION', 'user', userId);
+    return { message: 'Deletion request cancelled.' };
+  }
+
+  async getDeletionSettings(): Promise<{ autoDeleteEnabled: boolean }> {
+    const [row] = await this.db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.key, 'account_deletion'))
+      .limit(1);
+
+    const stored = (row?.value ?? {}) as { autoDeleteEnabled?: boolean };
+    return { autoDeleteEnabled: stored.autoDeleteEnabled ?? false };
+  }
+
+  async updateDeletionSettings(adminId: string, autoDeleteEnabled: boolean) {
+    await this.db
+      .insert(appSettings)
+      .values({ key: 'account_deletion', value: { autoDeleteEnabled }, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: appSettings.key,
+        set: { value: { autoDeleteEnabled }, updatedAt: new Date() },
+      });
+
+    this.auditLogService.log(adminId, 'UPDATE_DELETION_SETTINGS', 'settings', 'account_deletion', { autoDeleteEnabled });
+    return { autoDeleteEnabled };
   }
 }

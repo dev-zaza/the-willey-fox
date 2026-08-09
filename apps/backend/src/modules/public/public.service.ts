@@ -4,6 +4,7 @@ import {
   NotFoundException,
   GoneException,
   ForbiddenException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { DRIZZLE } from '../../database/database.module';
@@ -305,6 +306,51 @@ export class PublicService {
       broadcastApprovedAt: r.approvedAt,
       broadcastExpiresAt: r.expiresAt,
     };
+  }
+
+  async requestAccountDeletion(email: string): Promise<{ message: string }> {
+    const [user] = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        subscriptionTier: users.subscriptionTier,
+        deletionRequestedAt: users.deletionRequestedAt,
+      })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (user) {
+      if (user.subscriptionTier !== 'free') {
+        throw new BadRequestException('ACTIVE_SUBSCRIPTION');
+      }
+
+      if (!user.deletionRequestedAt) {
+        const now = new Date();
+        const scheduledAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+        await this.db
+          .update(users)
+          .set({ deletionRequestedAt: now, deletionScheduledAt: scheduledAt, updatedAt: now })
+          .where(eq(users.id, user.id));
+
+        const subject = 'Your account deletion request – SafeTag';
+        const body = `
+          <p>Hi ${user.firstName},</p>
+          <p>We have received your request to delete your SafeTag account associated with <strong>${user.email}</strong>.</p>
+          <p>Your account and all associated data will be <strong>permanently deleted within 90 days</strong> (by ${scheduledAt.toDateString()}).</p>
+          <p>If you did not make this request, please contact us immediately at <a href="mailto:support@thewileyfox.com">support@thewileyfox.com</a>.</p>
+          <p>— The SafeTag Team</p>
+        `;
+
+        this.notificationsService
+          .sendAuthEmail(user.email, user.id, subject, body)
+          .catch((err) => this.logger.error(`Failed to send account deletion email to ${user.email}`, err));
+      }
+    }
+
+    return { message: 'If an account with that email exists, a deletion confirmation has been sent.' };
   }
 
   async messageBroadcastGuardian(reportId: string, finderUserId: string) {

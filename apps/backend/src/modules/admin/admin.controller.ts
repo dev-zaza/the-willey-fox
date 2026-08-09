@@ -419,6 +419,45 @@ export class AdminController {
     return this.tagCustomizationService.deleteVisualTheme(user.id, id);
   }
 
+  // ── Account Deletion Requests ────────────────────────────────────────────────
+
+  @Get('account-deletions')
+  listDeletionRequests(
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+  ) {
+    return this.adminService.listDeletionRequests(limit, offset);
+  }
+
+  @Post('account-deletions/:id/approve')
+  approveDeletion(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.adminService.approveDeletion(user.id, id);
+  }
+
+  @Post('account-deletions/:id/cancel')
+  cancelDeletion(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.adminService.cancelDeletion(user.id, id);
+  }
+
+  @Get('settings/account-deletion')
+  getDeletionSettings() {
+    return this.adminService.getDeletionSettings();
+  }
+
+  @Put('settings/account-deletion')
+  updateDeletionSettings(
+    @CurrentUser() user: { id: string },
+    @Body() body: { autoDeleteEnabled: boolean },
+  ) {
+    return this.adminService.updateDeletionSettings(user.id, !!body.autoDeleteEnabled);
+  }
+
   @Get('broadcasts')
   listBroadcasts(
     @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit: number,

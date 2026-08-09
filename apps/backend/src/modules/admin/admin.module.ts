@@ -5,6 +5,7 @@ import { AdminService } from './admin.service';
 import { AuditLogService } from './audit-log.service';
 import { TagCustomizationService } from './tag-customization.service';
 import { PrintExportService } from './print-export.service';
+import { AccountDeletionJob } from './jobs/account-deletion.job';
 import { QrModule } from '../qr/qr.module';
 import { SettingsModule } from '../settings/settings.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -14,6 +15,6 @@ import { SafetyEngineModule } from '../safety-engine/safety-engine.module';
 @Module({
   imports: [ConfigModule, QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule],
   controllers: [AdminController],
-  providers: [AdminService, AuditLogService, TagCustomizationService, PrintExportService],
+  providers: [AdminService, AuditLogService, TagCustomizationService, PrintExportService, AccountDeletionJob],
 })
 export class AdminModule {}

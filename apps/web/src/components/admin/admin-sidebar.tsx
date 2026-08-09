@@ -23,6 +23,7 @@ import {
   Palette,
   Megaphone,
   Package,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -71,6 +72,7 @@ const NAV_ITEMS = [
     items: [
       { id: 'audit-logs', label: 'Audit Logs', icon: ClipboardList, href: '/admin/audit-logs' },
       { id: 'user-reports', label: 'User Reports', icon: AlertTriangle, href: '/admin/user-reports' },
+      { id: 'account-deletions', label: 'Account Deletions', icon: Trash2, href: '/admin/account-deletions' },
     ],
   },
 ];

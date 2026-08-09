@@ -828,6 +828,16 @@ export interface AdminUserRow {
   createdAt: string;
 }
 
+export interface DeletionRequest {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  subscriptionTier: string;
+  deletionRequestedAt: string;
+  deletionScheduledAt: string;
+}
+
 export interface AdminQrRow {
   id: string;
   uniqueCode: string;
@@ -1020,6 +1030,20 @@ export const admin = {
     request<VisualTheme>(`/admin/visual-themes/${id}`, { method: 'PUT', body: JSON.stringify(dto) }),
   deleteVisualTheme: (id: string) =>
     request<{ message: string }>(`/admin/visual-themes/${id}`, { method: 'DELETE' }),
+  // Account Deletion
+  listDeletionRequests: (limit = 50, offset = 0) =>
+    request<DeletionRequest[]>(`/admin/account-deletions?limit=${limit}&offset=${offset}`),
+  approveDeletion: (id: string) =>
+    request<{ message: string }>(`/admin/account-deletions/${id}/approve`, { method: 'POST' }),
+  cancelDeletion: (id: string) =>
+    request<{ message: string }>(`/admin/account-deletions/${id}/cancel`, { method: 'POST' }),
+  getDeletionSettings: () =>
+    request<{ autoDeleteEnabled: boolean }>('/admin/settings/account-deletion'),
+  updateDeletionSettings: (autoDeleteEnabled: boolean) =>
+    request<{ autoDeleteEnabled: boolean }>('/admin/settings/account-deletion', {
+      method: 'PUT',
+      body: JSON.stringify({ autoDeleteEnabled }),
+    }),
 };
 
 // ── Settings (public) ─────────────────────────────────────────────────────────

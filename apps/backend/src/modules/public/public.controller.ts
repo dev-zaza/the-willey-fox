@@ -11,6 +11,8 @@ import {
   BadRequestException,
   ParseUUIDPipe,
   Header,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { BroadcastEnabledGuard } from '../broadcasts/broadcast-enabled.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,6 +25,12 @@ import { ClaimQrDto } from '../qr/dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import type { Express } from 'express';
 import { ApiTags } from '@nestjs/swagger';
+import { IsEmail } from 'class-validator';
+
+class RequestAccountDeletionDto {
+  @IsEmail()
+  email: string;
+}
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PHOTO_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -74,6 +82,14 @@ export class PublicController {
   ) {
     const { code, ...dto } = body;
     return this.publicService.activateQrCode(code, user.id, user.tier, dto as ClaimQrDto);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 3600000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('account-deletion')
+  requestAccountDeletion(@Body() dto: RequestAccountDeletionDto) {
+    return this.publicService.requestAccountDeletion(dto.email);
   }
 
   @Public()

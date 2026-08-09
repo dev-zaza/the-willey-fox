@@ -52,6 +52,9 @@ export default function HomePage() {
             <Link href="/terms" className="transition-colors hover:text-[#ea2e00]">
               Terms
             </Link>
+            <Link href="/delete-account" className="transition-colors hover:text-[#ea2e00]">
+              Delete Account
+            </Link>
             <Link href="/pricing" className="transition-colors hover:text-[#ea2e00]">
               Pricing
             </Link>
