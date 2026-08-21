@@ -115,3 +115,10 @@ export const conversationStatusEnum = pgEnum('conversation_status', [
   'blocked',
   'archived',
 ]);
+
+export const supportTicketStatusEnum = pgEnum('support_ticket_status', [
+  'open',
+  'in_progress',
+  'resolved',
+  'closed',
+]);

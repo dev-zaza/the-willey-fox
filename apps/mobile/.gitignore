@@ -42,6 +42,8 @@ coverage/
 *.key
 *.mobileprovision
 *.pem
+keystore.properties
+android/keystore.properties
 
 # EAS — local credentials (use EAS servers or env in CI)
 credentials.json

@@ -49,6 +49,15 @@
           "organization": "thewileyfox",
           "project": "mobile"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35
+          }
+        }
       ]
     ],
     "ios": {
@@ -65,6 +74,7 @@
       },
       "googleServicesFile": "./google-services.json",
       "package": "com.thewileyfox.app",
+      "versionCode": 2,
       "intentFilters": [
         {
           "action": "VIEW",

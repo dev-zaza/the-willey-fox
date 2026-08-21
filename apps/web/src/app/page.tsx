@@ -58,7 +58,7 @@ export default function HomePage() {
             <Link href="/pricing" className="transition-colors hover:text-[#ea2e00]">
               Pricing
             </Link>
-            <Link href="#" className="transition-colors hover:text-[#ea2e00]">
+            <Link href="/support" className="transition-colors hover:text-[#ea2e00]">
               Support
             </Link>
           </div>

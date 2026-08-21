@@ -80,6 +80,48 @@ export class NotificationsService {
   }
 
   /**
+   * Generic transactional email not tied to an authenticated recipient row
+   * (e.g. support-ticket notifications, staff inbox alerts).
+   */
+  async sendRawEmail(
+    recipientEmail: string,
+    subject: string,
+    body: string,
+    recipientId?: string | null,
+  ): Promise<void> {
+    const [log] = await this.db
+      .insert(notificationLogs)
+      .values({
+        type: 'email',
+        recipientId: recipientId ?? null,
+        recipientContact: recipientEmail,
+        subject,
+        body,
+        metadata: { purpose: 'support' },
+        status: 'pending',
+      })
+      .returning();
+
+    const jobData: NotificationJobData = {
+      logId: log.id,
+      type: 'email',
+      payload: {
+        recipient: recipientEmail,
+        subject,
+        body,
+        metadata: { purpose: 'support' },
+      },
+    };
+
+    await this.notificationsQueue.add('send-email', jobData, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+    });
+
+    this.logger.log(`Support email queued for ${recipientEmail} (logId: ${log.id})`);
+  }
+
+  /**
    * Generic push notification to a user (requires FCM token stored on user record).
    */
   async sendPush(

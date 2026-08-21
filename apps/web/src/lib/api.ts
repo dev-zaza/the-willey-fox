@@ -365,6 +365,38 @@ export const reports = {
     request<{ photoUrl: string }>(`/public/reports/${reportId}/photo`, { method: 'POST', body: formData }, false, false),
 };
 
+// ── Support ───────────────────────────────────────────────────────────────────
+
+export interface SupportTicketPayload {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string | null;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  adminReply: string | null;
+  repliedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const support = {
+  /** Uses the authed endpoint when a session exists, otherwise the public one. */
+  submitTicket: (payload: SupportTicketPayload) =>
+    getAccessToken()
+      ? request<SupportTicket>('/support/tickets', { method: 'POST', body: JSON.stringify(payload) })
+      : request<SupportTicket>('/public/support/tickets', { method: 'POST', body: JSON.stringify(payload) }, false),
+  myTickets: () => request<SupportTicket[]>('/support/tickets'),
+};
+
 // ── Broadcasts ────────────────────────────────────────────────────────────────
 
 export interface BroadcastListItem {
@@ -1003,6 +1035,12 @@ export const admin = {
     request<AdminUserReport[]>(`/admin/user-reports?limit=${limit}&offset=${offset}`),
   dismissUserReport: (id: string) =>
     request<{ message: string }>(`/admin/user-reports/${id}`, { method: 'DELETE' }),
+  listSupportTickets: (limit = 50, offset = 0, status?: string) =>
+    request<{ rows: SupportTicket[]; total: number }>(
+      `/admin/support-tickets?limit=${limit}&offset=${offset}${status ? `&status=${encodeURIComponent(status)}` : ''}`,
+    ),
+  updateSupportTicket: (id: string, patch: { status?: string; adminReply?: string }) =>
+    request<SupportTicket>(`/admin/support-tickets/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   getQrCategories: () => request<QrCategoryConfig[]>('/admin/settings/qr-categories'),
   updateQrCategory: (value: string, patch: { label?: string; enabled?: boolean }) =>
     request<QrCategoryConfig[]>(`/admin/settings/qr-categories/${value}`, {

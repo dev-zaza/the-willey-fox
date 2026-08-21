@@ -17,6 +17,8 @@ import { QrService } from '../qr/qr.service';
 import { MessagesService } from '../messages/messages.service';
 import { CloudinaryService } from '../users/cloudinary.service';
 import { ClaimQrDto } from '../qr/dto';
+import { SupportService } from '../support/support.service';
+import { CreateSupportTicketDto } from '../support/dto';
 
 interface VisibilityConfig {
   showName?: boolean;
@@ -35,7 +37,12 @@ export class PublicService {
     private readonly qrService: QrService,
     private readonly messagesService: MessagesService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly supportService: SupportService,
   ) {}
+
+  submitSupportTicket(dto: CreateSupportTicketDto) {
+    return this.supportService.createTicket(dto);
+  }
 
   async getPublicQrInfo(code: string) {
     // LEFT JOIN visual_themes to include theme data in one query

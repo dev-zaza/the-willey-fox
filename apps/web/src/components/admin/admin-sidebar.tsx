@@ -24,6 +24,7 @@ import {
   Megaphone,
   Package,
   Trash2,
+  LifeBuoy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -54,6 +55,7 @@ const NAV_ITEMS = [
       { id: 'reports', label: 'Reports', icon: Flag, href: '/admin/reports' },
       { id: 'pins', label: 'Pins', icon: MapPin, href: '/admin/pins' },
       { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone, href: '/admin/broadcasts' },
+      { id: 'support', label: 'Support Tickets', icon: LifeBuoy, href: '/admin/support' },
     ],
   },
   {

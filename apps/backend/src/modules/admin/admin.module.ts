@@ -11,9 +11,10 @@ import { SettingsModule } from '../settings/settings.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BroadcastsModule } from '../broadcasts/broadcasts.module';
 import { SafetyEngineModule } from '../safety-engine/safety-engine.module';
+import { SupportModule } from '../support/support.module';
 
 @Module({
-  imports: [ConfigModule, QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule],
+  imports: [ConfigModule, QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule, SupportModule],
   controllers: [AdminController],
   providers: [AdminService, AuditLogService, TagCustomizationService, PrintExportService, AccountDeletionJob],
 })

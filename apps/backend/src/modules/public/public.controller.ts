@@ -22,6 +22,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PublicService } from './public.service';
 import { CreateReportDto } from '../reports/dto';
 import { ClaimQrDto } from '../qr/dto';
+import { CreateSupportTicketDto } from '../support/dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import type { Express } from 'express';
 import { ApiTags } from '@nestjs/swagger';
@@ -90,6 +91,13 @@ export class PublicController {
   @Post('account-deletion')
   requestAccountDeletion(@Body() dto: RequestAccountDeletionDto) {
     return this.publicService.requestAccountDeletion(dto.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('support/tickets')
+  submitSupportTicket(@Body() dto: CreateSupportTicketDto) {
+    return this.publicService.submitSupportTicket(dto);
   }
 
   @Public()

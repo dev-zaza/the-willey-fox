@@ -6,9 +6,10 @@ import { QrModule } from '../qr/qr.module';
 import { MessagesModule } from '../messages/messages.module';
 import { UsersModule } from '../users/users.module';
 import { BroadcastsModule } from '../broadcasts/broadcasts.module';
+import { SupportModule } from '../support/support.module';
 
 @Module({
-  imports: [NotificationsModule, QrModule, MessagesModule, UsersModule, BroadcastsModule],
+  imports: [NotificationsModule, QrModule, MessagesModule, UsersModule, BroadcastsModule, SupportModule],
   controllers: [PublicController],
   providers: [PublicService],
 })

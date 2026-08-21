@@ -13,6 +13,7 @@ export {
   placeTypeEnum,
   emergencyContactStatusEnum,
   conversationStatusEnum,
+  supportTicketStatusEnum,
 } from './enums';
 export { users } from './users.schema';
 export { refreshTokens } from './refresh-tokens.schema';
@@ -55,3 +56,4 @@ export { crimeIncidents } from './crime-incidents.schema';
 export { h3SafetyScores } from './h3-safety-scores.schema';
 export { pipelineLogs } from './pipeline-logs.schema';
 export { spots } from './spots.schema';
+export { supportTickets } from './support-tickets.schema';

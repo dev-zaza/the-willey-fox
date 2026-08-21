@@ -33,6 +33,8 @@ import { UpdateVisualThemeDto } from './dto/update-visual-theme.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SafetyEngineService } from '../safety-engine/safety-engine.service';
 import { PrintExportService, PRINT_FORMATS, type PrintFormatKey } from './print-export.service';
+import { SupportService } from '../support/support.service';
+import { UpdateSupportTicketDto } from '../support/dto';
 
 @ApiBearerAuth('JWT')
 @ApiTags('admin')
@@ -45,7 +47,26 @@ export class AdminController {
     private readonly safetyEngineService: SafetyEngineService,
     private readonly configService: ConfigService,
     private readonly printExportService: PrintExportService,
+    private readonly supportService: SupportService,
   ) {}
+
+  @Get('support-tickets')
+  listSupportTickets(
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+    @Query('status') status?: string,
+  ) {
+    return this.supportService.listAll(limit, offset, status);
+  }
+
+  @Patch('support-tickets/:id')
+  updateSupportTicket(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSupportTicketDto,
+  ) {
+    return this.supportService.updateStatus(id, user.id, dto);
+  }
 
   @Get('users')
   listUsers(
