@@ -59,6 +59,11 @@ android/.gradle/
 android/local.properties
 *.apk
 *.aab
+*.ipa
+*.tar.gz
+build-*.aab
+build-*.ipa
+build-*.tar.gz
 
 # Fastlane (if used)
 fastlane/report.xml
