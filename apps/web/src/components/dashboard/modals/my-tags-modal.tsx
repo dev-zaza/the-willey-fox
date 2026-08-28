@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tag, Plus, AlertCircle } from 'lucide-react';
 import { qrCodes } from '@/lib/api';
 import type { TrackedItem } from '@/types';
@@ -12,6 +13,7 @@ interface MyTagsModalProps {
 }
 
 export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
+  const router = useRouter();
   const [tags, setTags] = useState<TrackedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,6 +43,12 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
 
   return (
     <div className="p-5">
+      <button
+        onClick={() => router.push('/dashboard/scan')}
+        className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-3"
+      >
+        <span aria-hidden>📷</span> Scan a QR tag
+      </button>
       <button
         onClick={onRegister}
         className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-4"

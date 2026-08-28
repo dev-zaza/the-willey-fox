@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Shield, UserPlus, Trash2, Check, AlertTriangle } from 'lucide-react';
 import { emergency, users as usersApi, type EmergencyContactRecord } from '@/lib/api';
@@ -153,6 +154,10 @@ export default function EmergencyPage() {
             <UserPlus className="w-4 h-4" /> Add Contact
           </button>
         </div>
+
+        <Link href="/dashboard/emergency/sos-contact" className="inline-flex text-sm text-brand-400 hover:text-brand-300">
+          Set SOS primary contact →
+        </Link>
 
         {/* SOS Panel */}
         <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-6 text-center space-y-4">

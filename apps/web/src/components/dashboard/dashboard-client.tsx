@@ -134,7 +134,7 @@ export function DashboardClient() {
     setModal('pin-detail');
   }
 
-  function handleMapClick(latlng: LatLng) {
+  function handleMapLongPress(latlng: LatLng) {
     setClickedLocation(latlng);
     if (modal === 'none') setModal('create-pin');
   }
@@ -161,7 +161,7 @@ export function DashboardClient() {
           center={mapCenter}
           zoom={mapZoom}
           onPinClick={handlePinClick}
-          onMapClick={handleMapClick}
+          onMapLongPress={handleMapLongPress}
           onBoundsChange={handleBoundsChange}
           onH3Click={handleH3Click}
         />

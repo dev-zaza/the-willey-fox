@@ -1,14 +1,20 @@
-import { Controller, Get, Patch, Query, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Delete, Body, Query, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { NotificationsService } from './notifications.service';
+import { WebPushService } from './web-push.service';
+import { SubscribeWebPushDto } from './dto/subscribe-web-push.dto';
+import { UnsubscribeWebPushDto } from './dto/unsubscribe-web-push.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('notifications')
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly webPushService: WebPushService,
+  ) {}
 
   /**
    * One-click unsubscribe from email notifications.
@@ -62,6 +68,39 @@ export class NotificationsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async markRead(@CurrentUser('id') userId: string): Promise<void> {
     await this.notificationsService.markNotificationsRead(userId);
+  }
+
+  /**
+   * VAPID public key for browser PushManager.subscribe().
+   */
+  @Get('web-push/vapid-public-key')
+  getVapidPublicKey() {
+    const publicKey = this.webPushService.getPublicKey();
+    return { publicKey, enabled: Boolean(publicKey) };
+  }
+
+  /**
+   * Register a Web Push subscription for the authenticated user.
+   */
+  @Post('web-push/subscribe')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async subscribeWebPush(
+    @CurrentUser('id') userId: string,
+    @Body() dto: SubscribeWebPushDto,
+  ): Promise<void> {
+    await this.webPushService.subscribe(userId, dto);
+  }
+
+  /**
+   * Remove a Web Push subscription for the authenticated user.
+   */
+  @Delete('web-push/unsubscribe')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unsubscribeWebPush(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UnsubscribeWebPushDto,
+  ): Promise<void> {
+    await this.webPushService.unsubscribe(userId, dto.endpoint);
   }
 
   private buildHtmlPage(title: string, message: string, accentColor: string): string {

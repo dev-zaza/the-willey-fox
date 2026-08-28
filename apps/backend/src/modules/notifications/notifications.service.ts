@@ -24,6 +24,7 @@ import {
 } from './templates/guardian-notification';
 import { buildReportResponseEmail, buildReportResponseSms } from './templates/response-notification';
 import type { NotificationJobData } from './processors/notification.processor';
+import { WebPushService } from './web-push.service';
 
 interface NotificationPreferences {
   email?: boolean;
@@ -39,6 +40,7 @@ export class NotificationsService {
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     @InjectQueue('notifications') private readonly notificationsQueue: Queue,
     private readonly configService: ConfigService,
+    private readonly webPushService: WebPushService,
   ) {}
 
   async sendAuthEmail(
@@ -136,38 +138,44 @@ export class NotificationsService {
       .limit(1);
 
     if (!user?.fcmToken) {
-      this.logger.warn(`sendPush: no FCM token for user ${recipientId} — skipping`);
-      return;
+      this.logger.warn(`sendPush: no FCM token for user ${recipientId} — skipping mobile push`);
+    } else {
+      const [log] = await this.db
+        .insert(notificationLogs)
+        .values({
+          type: 'push',
+          recipientId,
+          recipientContact: user.fcmToken,
+          subject: payload.title,
+          body: payload.body,
+          metadata: payload.data ?? {},
+          status: 'pending',
+        })
+        .returning();
+
+      const jobData: NotificationJobData = {
+        logId: log.id,
+        type: 'push',
+        payload: {
+          recipient: user.fcmToken,
+          subject: payload.title,
+          body: payload.body,
+          metadata: payload.data ?? {},
+          priority: options?.priority,
+        },
+      };
+
+      await this.notificationsQueue.add('send-push', jobData, {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+      });
     }
 
-    const [log] = await this.db
-      .insert(notificationLogs)
-      .values({
-        type: 'push',
-        recipientId,
-        recipientContact: user.fcmToken,
-        subject: payload.title,
-        body: payload.body,
-        metadata: payload.data ?? {},
-        status: 'pending',
-      })
-      .returning();
-
-    const jobData: NotificationJobData = {
-      logId: log.id,
-      type: 'push',
-      payload: {
-        recipient: user.fcmToken,
-        subject: payload.title,
-        body: payload.body,
-        metadata: payload.data ?? {},
-        priority: options?.priority,
-      },
-    };
-
-    await this.notificationsQueue.add('send-push', jobData, {
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 2000 },
+    await this.webPushService.queueForUser(recipientId, {
+      title: payload.title,
+      body: payload.body,
+      data: payload.data,
+      priority: options?.priority,
     });
   }
 
@@ -273,8 +281,17 @@ export class NotificationsService {
       if (smsEnabled && recipient.phone) {
         await this.queueNotification('sms', recipient.id, recipient.phone, reportId, reportData);
       }
-      if (prefs.push && recipient.fcmToken) {
-        await this.queueNotification('push', recipient.id, recipient.fcmToken, reportId, reportData);
+      if (prefs.push) {
+        if (recipient.fcmToken) {
+          await this.queueNotification('push', recipient.id, recipient.fcmToken, reportId, reportData);
+        } else {
+          const push = buildPushNotification(reportData);
+          await this.webPushService.queueForUser(recipient.id, {
+            title: push.subject,
+            body: push.body,
+            data: { reportId },
+          });
+        }
       }
     }
 
@@ -321,9 +338,9 @@ export class NotificationsService {
       const { body } = buildGuardianRequestSms(templateData);
       await this.queueGuardianNotification('sms', owner.id, owner.phone, qrCodeId, undefined, body);
     }
-    if (prefs.push && owner.fcmToken) {
+    if (prefs.push) {
       const { subject, body } = buildGuardianRequestPush(templateData);
-      await this.queueGuardianNotification('push', owner.id, owner.fcmToken, qrCodeId, subject, body);
+      await this.queueGuardianPushNotification(owner.id, owner.fcmToken, qrCodeId, subject, body);
     }
 
     this.logger.log(`Guardian request notification queued for owner ${ownerId}`);
@@ -368,9 +385,9 @@ export class NotificationsService {
       const { body } = buildGuardianApprovedSms(templateData);
       await this.queueGuardianNotification('sms', guardian.id, guardian.phone, qrCodeId, undefined, body);
     }
-    if (prefs.push && guardian.fcmToken) {
+    if (prefs.push) {
       const { subject, body } = buildGuardianApprovedPush(templateData);
-      await this.queueGuardianNotification('push', guardian.id, guardian.fcmToken, qrCodeId, subject, body);
+      await this.queueGuardianPushNotification(guardian.id, guardian.fcmToken, qrCodeId, subject, body);
     }
 
     this.logger.log(`Guardian approval notification queued for guardian ${guardianId}`);
@@ -411,9 +428,9 @@ export class NotificationsService {
       const { body } = buildGuardianRemovedSms(templateData);
       await this.queueGuardianNotification('sms', guardian.id, guardian.phone, qrCodeId, undefined, body);
     }
-    if (prefs.push && guardian.fcmToken) {
+    if (prefs.push) {
       const { subject, body } = buildGuardianRemovedPush(templateData);
-      await this.queueGuardianNotification('push', guardian.id, guardian.fcmToken, qrCodeId, subject, body);
+      await this.queueGuardianPushNotification(guardian.id, guardian.fcmToken, qrCodeId, subject, body);
     }
 
     this.logger.log(`Guardian removal notification queued for guardian ${guardianId}`);
@@ -445,9 +462,9 @@ export class NotificationsService {
       const { subject, body } = buildGuardianRejectedEmail(templateData);
       await this.queueGuardianNotification('email', guardian.id, guardian.email, qrCodeId, subject, body);
     }
-    if (prefs.push && guardian.fcmToken) {
+    if (prefs.push) {
       const { subject, body } = buildGuardianRejectedPush(templateData);
-      await this.queueGuardianNotification('push', guardian.id, guardian.fcmToken, qrCodeId, subject, body);
+      await this.queueGuardianPushNotification(guardian.id, guardian.fcmToken, qrCodeId, subject, body);
     }
 
     this.logger.log(`Guardian rejection notification queued for guardian ${guardianId}`);
@@ -657,6 +674,25 @@ export class NotificationsService {
 
   // ─── Private helpers ──────────────────────────────────────────────────────────
 
+  private async queueGuardianPushNotification(
+    recipientId: string,
+    fcmToken: string | null | undefined,
+    qrCodeId: string,
+    subject: string,
+    body: string,
+  ): Promise<void> {
+    if (fcmToken) {
+      await this.queueGuardianNotification('push', recipientId, fcmToken, qrCodeId, subject, body);
+      return;
+    }
+
+    await this.webPushService.queueForUser(recipientId, {
+      title: subject,
+      body,
+      data: { qrCodeId },
+    });
+  }
+
   private async queueGuardianNotification(
     type: 'email' | 'sms' | 'push',
     recipientId: string,
@@ -688,6 +724,14 @@ export class NotificationsService {
       attempts: 3,
       backoff: { type: 'exponential', delay: 2000 },
     });
+
+    if (type === 'push') {
+      await this.webPushService.queueForUser(recipientId, {
+        title: subject ?? 'TheWileyfox',
+        body,
+        data: { qrCodeId },
+      });
+    }
   }
 
   private async queueResponseNotification(
@@ -780,5 +824,13 @@ export class NotificationsService {
       attempts: 3,
       backoff: { type: 'exponential', delay: 2000 },
     });
+
+    if (type === 'push') {
+      await this.webPushService.queueForUser(recipientId, {
+        title: subject ?? 'TheWileyfox',
+        body,
+        data: { reportId },
+      });
+    }
   }
 }

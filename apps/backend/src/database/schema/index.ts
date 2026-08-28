@@ -57,3 +57,4 @@ export { h3SafetyScores } from './h3-safety-scores.schema';
 export { pipelineLogs } from './pipeline-logs.schema';
 export { spots } from './spots.schema';
 export { supportTickets } from './support-tickets.schema';
+export { webPushSubscriptions } from './web-push-subscriptions.schema';

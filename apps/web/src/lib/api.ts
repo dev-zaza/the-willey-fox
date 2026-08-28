@@ -216,6 +216,16 @@ export const users = {
       method: 'POST',
       body: JSON.stringify({ reason, contextType, contextId }),
     }),
+  sendPhoneOtp: (phone: string) =>
+    request<{ message: string }>('/users/me/phone/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    }),
+  verifyPhoneOtp: (phone: string, code: string) =>
+    request<{ message: string }>('/users/me/phone/verify', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code }),
+    }),
 };
 
 export const twoFactor = {
@@ -349,6 +359,7 @@ export interface CreateReportPayload {
 
 export const reports = {
   list: () => request<Report[]>('/reports'),
+  get: (reportId: string) => request<Report>(`/reports/${reportId}`),
   listForQr: (qrCodeId: string) =>
     request<Report[]>('/reports').then((all) => all.filter((r) => r.qrCodeId === qrCodeId)),
   respond: (reportId: string, message: string) =>
@@ -608,6 +619,7 @@ export interface EmergencyContactRecord {
   acceptedAt?: string;
   createdAt: string;
   isRequester: boolean;
+  isPrimary?: boolean;
   contact: {
     id: string;
     firstName: string;
@@ -643,6 +655,8 @@ export const emergency = {
     request<EmergencyContactRecord>(`/emergency/contacts/${contactId}/decline`, { method: 'PATCH' }),
   removeContact: (contactId: string) =>
     request<void>(`/emergency/contacts/${contactId}`, { method: 'DELETE' }),
+  setPrimaryContact: (contactId: string) =>
+    request<EmergencyContactRecord>(`/emergency/contacts/${contactId}/set-primary`, { method: 'PATCH' }),
   triggerSos: (payload: { lat?: number; lng?: number; locationAddress?: string; message?: string }) =>
     request<{ id: string; notifiedCount: number }>('/emergency/sos', {
       method: 'POST',
@@ -844,6 +858,22 @@ export interface NotificationLog {
 export const notifications = {
   list: () => request<{ notifications: NotificationLog[]; unreadCount: number }>('/notifications'),
   markRead: () => request<void>('/notifications/read', { method: 'PATCH' }),
+  getWebPushPublicKey: () =>
+    request<{ publicKey: string | null; enabled: boolean }>('/notifications/web-push/vapid-public-key'),
+  subscribeWebPush: (dto: {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+    userAgent?: string;
+  }) =>
+    request<void>('/notifications/web-push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    }),
+  unsubscribeWebPush: (dto: { endpoint: string }) =>
+    request<void>('/notifications/web-push/unsubscribe', {
+      method: 'DELETE',
+      body: JSON.stringify(dto),
+    }),
 };
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -1256,6 +1286,24 @@ export const families = {
   removeQrCode: (familyId: string, qrCodeId: string) =>
     request<any>(`/families/${familyId}/qr-codes/${qrCodeId}`, { method: 'DELETE' }),
   delete: (familyId: string) => request<any>(`/families/${familyId}`, { method: 'DELETE' }),
+};
+
+export interface Spot {
+  id: string;
+  name: string;
+  lat: string;
+  lng: string;
+  notes?: string | null;
+  userId?: string | null;
+  createdAt: string;
+}
+
+export const spots = {
+  listNearby: (lat: number, lng: number, radius = 5000) =>
+    request<Spot[]>(`/spots?lat=${lat}&lng=${lng}&radius=${radius}`),
+  create: (payload: { name: string; lat: number; lng: number; notes?: string }) =>
+    request<Spot>('/spots', { method: 'POST', body: JSON.stringify(payload) }),
+  delete: (id: string) => request<void>(`/spots/${id}`, { method: 'DELETE' }),
 };
 
 export { ApiError };

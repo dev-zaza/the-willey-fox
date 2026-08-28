@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { Save, Shield, Camera } from 'lucide-react';
 import { users as usersApi, auth } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
+import { useWebPush } from '@/hooks/use-web-push';
 
 export default function SettingsPage() {
   const { user, setUser } = useAuth();
+  const { supported: webPushSupported, subscribed: webPushSubscribed, subscribe, unsubscribe } = useWebPush();
 
   const [firstName, setFirstName] = useState(user?.firstName ?? '');
   const [lastName, setLastName] = useState(user?.lastName ?? '');
@@ -39,6 +41,24 @@ export default function SettingsPage() {
       if (profile.avatarUrl) setAvatarPreview(profile.avatarUrl);
     }).catch(() => {});
   }, []);
+
+  async function togglePushNotifications(next: boolean) {
+    setPushNotif(next);
+    if (!webPushSupported) return;
+
+    try {
+      if (next) {
+        const ok = await subscribe();
+        if (!ok) setPushNotif(false);
+      } else if (webPushSubscribed) {
+        await unsubscribe();
+      }
+    } catch (err: unknown) {
+      setPushNotif(false);
+      const message = err instanceof Error ? err.message : 'Failed to update push notifications';
+      alert(message);
+    }
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -168,7 +188,7 @@ export default function SettingsPage() {
             <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Notifications</h2>
             {[
               { label: 'Email notifications', value: emailNotif, set: setEmailNotif },
-              { label: 'Push notifications', value: pushNotif, set: setPushNotif },
+              { label: 'Push notifications', value: pushNotif, set: togglePushNotifications },
               { label: 'SMS notifications', value: smsNotif, set: setSmsNotif },
             ].map(({ label, value, set }) => (
               <div key={label} className="flex items-center justify-between">
@@ -183,6 +203,13 @@ export default function SettingsPage() {
               </div>
             ))}
           </div>
+
+          <Link
+            href="/dashboard/settings/phone-verify"
+            className="inline-flex text-sm text-brand-400 hover:text-brand-300"
+          >
+            Verify phone number →
+          </Link>
 
           <button
             type="submit"

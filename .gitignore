@@ -56,3 +56,7 @@ secrets/
 
 apps/backend/scripts/output/*
 apps/mobile/eas.json
+
+# Serwist (generated service worker)
+apps/web/public/sw*
+apps/web/public/swe-worker*

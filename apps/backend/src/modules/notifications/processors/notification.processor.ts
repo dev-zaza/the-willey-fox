@@ -9,10 +9,14 @@ import { SMS_PROVIDER } from '../providers/sms/sms-provider.token';
 import { PUSH_PROVIDER } from '../providers/push/push-provider.token';
 import { EMAIL_PROVIDER } from '../providers/email/email-provider.token';
 import type { INotificationProvider, NotificationPayload } from '../providers/notification-provider.interface';
+import { WebPushService } from '../web-push.service';
+import { WEB_PUSH_PROVIDER } from '../providers/push/web-push-provider.token';
+
+export type NotificationJobType = 'email' | 'sms' | 'push' | 'web-push';
 
 export interface NotificationJobData {
   logId: string;
-  type: 'email' | 'sms' | 'push';
+  type: NotificationJobType;
   payload: NotificationPayload;
 }
 
@@ -25,6 +29,8 @@ export class NotificationProcessor extends WorkerHost {
     @Inject(EMAIL_PROVIDER) private readonly emailProvider: INotificationProvider,
     @Inject(SMS_PROVIDER) private readonly smsProvider: INotificationProvider,
     @Inject(PUSH_PROVIDER) private readonly pushProvider: INotificationProvider,
+    @Inject(WEB_PUSH_PROVIDER) private readonly webPushProvider: INotificationProvider,
+    private readonly webPushService: WebPushService,
   ) {
     super();
   }
@@ -38,7 +44,9 @@ export class NotificationProcessor extends WorkerHost {
         ? this.emailProvider
         : type === 'sms'
           ? this.smsProvider
-          : this.pushProvider;
+          : type === 'web-push'
+            ? this.webPushProvider
+            : this.pushProvider;
 
     const result = await provider.send(payload);
 
@@ -54,6 +62,16 @@ export class NotificationProcessor extends WorkerHost {
 
       this.logger.log(`${type} notification sent (logId: ${logId}, messageId: ${result.messageId})`);
     } else {
+      if (type === 'web-push' && result.error?.startsWith('410:')) {
+        try {
+          const subscription = JSON.parse(payload.recipient) as { endpoint: string };
+          await this.webPushService.removeByEndpoint(subscription.endpoint);
+          this.logger.warn(`Removed expired web push subscription ${subscription.endpoint.slice(0, 48)}…`);
+        } catch {
+          // ignore parse errors
+        }
+      }
+
       await this.db
         .update(notificationLogs)
         .set({

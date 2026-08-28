@@ -22,7 +22,8 @@ interface MapViewProps {
   center?: LatLng;
   zoom?: number;
   onPinClick?: (pin: PinData) => void;
-  onMapClick?: (latlng: LatLng) => void;
+  /** Long-press / right-click to create a pin (matches mobile). */
+  onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number }) => void;
   onH3Click?: (props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => void;
 }

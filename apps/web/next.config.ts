@@ -1,9 +1,21 @@
+import { spawnSync } from 'node:child_process';
 import path from 'path';
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
+import withSerwistInit from '@serwist/next';
 
 // Pin monorepo root so Next doesn’t pick another pnpm-lock.yaml (e.g. in $HOME) and break routes in dev.
 const workspaceRoot = path.join(__dirname, '../..');
+
+const revision =
+  spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).stdout?.trim() ?? crypto.randomUUID();
+
+const withSerwist = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+  additionalPrecacheEntries: [{ url: '/~offline', revision }],
+});
 
 const nextConfig: NextConfig = {
   // Standalone build → minimal node_modules copy used by the Docker image (apps/web/Dockerfile).
@@ -24,7 +36,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withSerwist(nextConfig), {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

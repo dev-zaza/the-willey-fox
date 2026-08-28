@@ -12,10 +12,14 @@ import type { PinData, SafetyZoneOverlay, H3TileCollection } from '@/lib/api';
 
 const DEFAULT_CENTER: [number, number] = [51.505, -0.09];
 const DEFAULT_ZOOM = 13;
-const TILE_URL =
-  'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+/** Same Mapbox style family as mobile; Leaflet raster tiles (256px). */
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
+const TILE_URL = MAPBOX_TOKEN
+  ? `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`
+  : '';
 const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>';
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>';
 
 function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
   const map = useMap();
@@ -41,16 +45,35 @@ function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
 
 type BoundsPayload = { minLat: number; minLng: number; maxLat: number; maxLng: number };
 
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_MOVE_PX = 12;
+
+/** Match mobile: add-pin only on long-press (or desktop right-click). Short tap does not open create-pin. */
 function MapEventHandler({
-  onMapClick,
+  onMapLongPress,
   onBoundsChange,
 }: {
-  onMapClick?: (latlng: LatLng) => void;
+  onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
 }) {
+  const map = useMap();
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startPoint = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickUntil = useRef(0);
+  const onLongPressRef = useRef(onMapLongPress);
+  onLongPressRef.current = onMapLongPress;
+
   useMapEvents({
-    click(e) {
-      onMapClick?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+    contextmenu(e) {
+      // Desktop right-click → same as long-press pin
+      e.originalEvent.preventDefault();
+      onLongPressRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+    click() {
+      // Swallow ghost click after long-press
+      if (Date.now() < suppressClickUntil.current) {
+        return;
+      }
     },
     moveend(e) {
       const b = e.target.getBounds();
@@ -71,6 +94,83 @@ function MapEventHandler({
       });
     },
   });
+
+  useEffect(() => {
+    const container = map.getContainer();
+
+    const clearTimer = () => {
+      if (longPressTimer.current != null) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      startPoint.current = null;
+    };
+
+    const fireLongPress = (clientX: number, clientY: number) => {
+      const rect = container.getBoundingClientRect();
+      const point = map.containerPointToLatLng({
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+      });
+      suppressClickUntil.current = Date.now() + 400;
+      onLongPressRef.current?.({ lat: point.lat, lng: point.lng });
+    };
+
+    const startLongPress = (clientX: number, clientY: number) => {
+      clearTimer();
+      startPoint.current = { x: clientX, y: clientY };
+      longPressTimer.current = setTimeout(() => {
+        const origin = startPoint.current;
+        longPressTimer.current = null;
+        startPoint.current = null;
+        if (!origin) return;
+        fireLongPress(origin.x, origin.y);
+      }, LONG_PRESS_MS);
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      // Ignore non-primary mouse button (right-click uses contextmenu instead)
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      startLongPress(e.clientX, e.clientY);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!startPoint.current || longPressTimer.current == null) return;
+      const dx = e.clientX - startPoint.current.x;
+      const dy = e.clientY - startPoint.current.y;
+      if (dx * dx + dy * dy > LONG_PRESS_MOVE_PX * LONG_PRESS_MOVE_PX) {
+        clearTimer();
+      }
+    };
+
+    const onPointerUp = () => clearTimer();
+
+    // Block the synthetic click that follows a completed long-press (esp. on hex layers)
+    const onClickCapture = (e: MouseEvent) => {
+      if (Date.now() < suppressClickUntil.current) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
+    container.addEventListener('pointerleave', onPointerUp);
+    container.addEventListener('click', onClickCapture, true);
+
+    return () => {
+      clearTimer();
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      container.removeEventListener('pointerleave', onPointerUp);
+      container.removeEventListener('click', onClickCapture, true);
+    };
+  }, [map]);
+
   return null;
 }
 
@@ -173,61 +273,90 @@ interface MapInnerProps {
   center?: LatLng;
   zoom?: number;
   onPinClick?: (pin: PinData) => void;
-  onMapClick?: (latlng: LatLng) => void;
+  /** Fired on long-press / right-click — used to open create-pin (matches mobile). */
+  onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
   onH3Click?: (props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => void;
 }
 
-export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, onPinClick, onMapClick, onBoundsChange, onH3Click }: MapInnerProps) {
+export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, onPinClick, onMapLongPress, onBoundsChange, onH3Click }: MapInnerProps) {
   return (
-    <MapContainer
-      center={center ? [center.lat, center.lng] : DEFAULT_CENTER}
-      zoom={zoom ?? DEFAULT_ZOOM}
-      style={{ width: '100%', height: '100%' }}
-      zoomControl={false}
-    >
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-      <MapController center={center} zoom={zoom} />
-      <MapEventHandler onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <MapContainer
+        center={center ? [center.lat, center.lng] : DEFAULT_CENTER}
+        zoom={zoom ?? DEFAULT_ZOOM}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+      >
+        {TILE_URL ? (
+          <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={22} />
+        ) : null}
+        <MapController center={center} zoom={zoom} />
+        <MapEventHandler onMapLongPress={onMapLongPress} onBoundsChange={onBoundsChange} />
 
-      {pins.map((pin) => (
-        <EventPin key={pin.id} pin={pin} onClick={onPinClick} />
-      ))}
+        {pins.map((pin) => (
+          <EventPin key={pin.id} pin={pin} onClick={onPinClick} />
+        ))}
 
-      {route && route.length >= 2 && <RouteLayer route={route} />}
+        {route && route.length >= 2 && <RouteLayer route={route} />}
 
-      <ZoneLayer safetyZones={safetyZones} />
+        <ZoneLayer safetyZones={safetyZones} />
 
-      {h3Tiles && h3Tiles.features.length > 0 && (
-        <GeoJSON
-          key={h3Tiles.features.length}
-          data={h3Tiles as unknown as GeoJsonObject}
-          style={(feature) => ({
-            color: '#ffffff',
-            weight: 0.8,
-            fillColor: (feature as any)?.properties?.color ?? '#888888',
-            fillOpacity: 0.48,
-          })}
-          onEachFeature={(feature, layer) => {
-            const p = feature.properties as any;
-            if (p?.h3) {
-              layer.bindTooltip(
-                `${p.band ?? 'unknown'} · score: ${p.score != null ? Math.round(p.score) : '–'} · ${p.incidentCount ?? 0} incidents`,
-                { sticky: true },
-              );
-              layer.on('click', () => {
-                onH3Click?.({
-                  h3: p.h3,
-                  score: p.score != null ? Number(p.score) : null,
-                  band: p.band ?? '',
-                  color: p.color ?? '#888888',
-                  incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
+        {h3Tiles && h3Tiles.features.length > 0 && (
+          <GeoJSON
+            key={h3Tiles.features.length}
+            data={h3Tiles as unknown as GeoJsonObject}
+            style={(feature) => ({
+              color: '#ffffff',
+              weight: 0.8,
+              fillColor: (feature as any)?.properties?.color ?? '#888888',
+              fillOpacity: 0.48,
+            })}
+            onEachFeature={(feature, layer) => {
+              const p = feature.properties as any;
+              if (p?.h3) {
+                layer.bindTooltip(
+                  `${p.band ?? 'unknown'} · score: ${p.score != null ? Math.round(p.score) : '–'} · ${p.incidentCount ?? 0} incidents`,
+                  { sticky: true },
+                );
+                layer.on('click', (e) => {
+                  // Keep hex safety info on short tap; do not open create-pin
+                  if (e.originalEvent?.stopPropagation) {
+                    e.originalEvent.stopPropagation();
+                  }
+                  onH3Click?.({
+                    h3: p.h3,
+                    score: p.score != null ? Number(p.score) : null,
+                    band: p.band ?? '',
+                    color: p.color ?? '#888888',
+                    incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
+                  });
                 });
-              });
-            }
+              }
+            }}
+          />
+        )}
+      </MapContainer>
+      {!TILE_URL ? (
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 1000,
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(246,247,249,0.92)',
+            padding: 24,
+            textAlign: 'center',
+            color: '#334155',
+            fontSize: 14,
+            pointerEvents: 'none',
           }}
-        />
-      )}
-    </MapContainer>
+        >
+          Mapbox token missing. Set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in apps/web/.env.local
+        </div>
+      ) : null}
+    </div>
   );
 }
