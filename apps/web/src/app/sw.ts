@@ -59,15 +59,17 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = (event.notification.data?.url as string | undefined) ?? '/dashboard';
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of clientList) {
         if (client.url.includes(targetUrl) && 'focus' in client) {
-          return client.focus();
+          await client.focus();
+          return;
         }
       }
       if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl);
+        await self.clients.openWindow(targetUrl);
       }
-    }),
+    })(),
   );
 });

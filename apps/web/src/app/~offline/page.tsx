@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+'use client';
 
 export default function OfflinePage() {
   return (

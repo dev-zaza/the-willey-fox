@@ -108,10 +108,10 @@ function MapEventHandler({
 
     const fireLongPress = (clientX: number, clientY: number) => {
       const rect = container.getBoundingClientRect();
-      const point = map.containerPointToLatLng({
-        x: clientX - rect.left,
-        y: clientY - rect.top,
-      });
+      const point = map.containerPointToLatLng([
+        clientX - rect.left,
+        clientY - rect.top,
+      ]);
       suppressClickUntil.current = Date.now() + 400;
       onLongPressRef.current?.({ lat: point.lat, lng: point.lng });
     };
