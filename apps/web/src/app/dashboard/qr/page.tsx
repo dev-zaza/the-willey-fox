@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Tag, AlertTriangle, CheckCircle, Trash2, ChevronRight, Layers } from 'lucide-react';
+import { Plus, Tag, AlertTriangle, CheckCircle, Trash2, ChevronRight, Layers, ShoppingBag } from 'lucide-react';
 import { qrCodes, type QrCode } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
+import { getShopifyShopUrl } from '@/lib/shopify-shop';
 
 const QR_CATEGORIES = ['pet', 'bag', 'key', 'person', 'vehicle', 'other', 'medical', 'place'] as const;
 
@@ -23,6 +24,7 @@ export default function QrPage() {
   const [bulkError, setBulkError] = useState('');
 
   const isPremium = user?.subscriptionTier === 'premium' || user?.subscriptionTier === 'enterprise';
+  const shopUrl = getShopifyShopUrl();
 
   useEffect(() => {
     qrCodes
@@ -81,6 +83,17 @@ export default function QrPage() {
             <p className="text-[#7a6957] text-sm mt-1">{tags.length} registered tag{tags.length !== 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2">
+            {shopUrl && (
+              <a
+                href={shopUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-surface-card border border-surface-border hover:border-brand-500/40 text-[#5a4a3d] text-sm font-semibold px-3 py-2 rounded-xl transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Shop
+              </a>
+            )}
             {isPremium && (
               <button
                 onClick={() => setShowBulkForm((v) => !v)}

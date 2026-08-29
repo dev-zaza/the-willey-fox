@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   ScrollView,
@@ -36,6 +37,15 @@ const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'];
 function tierIndex(t: string) { return TIER_ORDER.indexOf(t === 'pro' ? 'premium' : t); }
 
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, '') ?? 'https://safetag.app';
+
+function getShopifyShopUrl(): string | null {
+  const explicit = process.env.EXPO_PUBLIC_SHOPIFY_SHOP_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, '');
+  const domain = process.env.EXPO_PUBLIC_SHOPIFY_STORE_DOMAIN?.trim();
+  if (!domain) return null;
+  const host = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  return `https://${host}`;
+}
 
 type TagCategory = 'pet' | 'bag' | 'key' | 'person' | 'vehicle' | 'other';
 
@@ -106,6 +116,7 @@ export default function TagsScreen() {
   const colorScheme = useColorScheme();
   const dark = colorScheme === 'dark';
   const qrSvgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
+  const shopUrl = getShopifyShopUrl();
 
   async function loadTags() {
     try {
@@ -965,6 +976,14 @@ export default function TagsScreen() {
       <View className="bg-white dark:bg-surface-card border-b border-gray-200 dark:border-surface-border px-6 pt-14 pb-4 flex-row items-center gap-3">
         <Image source={require('../../assets/logo.png')} style={{ width: 28, height: 28, borderRadius: 7 }} resizeMode="contain" />
         <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1">My Tags</Text>
+        {shopUrl && (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(shopUrl)}
+            className="bg-brand-500 rounded-lg px-3 py-1.5"
+          >
+            <Text className="text-white font-semibold text-xs">Shop</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           onPress={() => setStep('register-form')}
           className="bg-brand-500/10 border border-brand-500/30 rounded-lg px-3 py-1.5"
@@ -988,6 +1007,14 @@ export default function TagsScreen() {
           >
             <Text className="text-white font-semibold text-sm">Register Your First Tag</Text>
           </TouchableOpacity>
+          {shopUrl && (
+            <TouchableOpacity
+              className="border border-brand-500/40 rounded-2xl py-3.5 px-8 items-center w-full"
+              onPress={() => Linking.openURL(shopUrl)}
+            >
+              <Text className="text-brand-500 font-semibold text-sm">Shop physical tags</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList

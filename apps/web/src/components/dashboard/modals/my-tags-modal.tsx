@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, Plus, AlertCircle } from 'lucide-react';
+import { Tag, Plus, AlertCircle, ShoppingBag } from 'lucide-react';
 import { qrCodes } from '@/lib/api';
 import type { TrackedItem } from '@/types';
+import { getShopifyShopUrl } from '@/lib/shopify-shop';
 
 interface MyTagsModalProps {
   onClose?: () => void;
@@ -17,6 +18,7 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
   const [tags, setTags] = useState<TrackedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const shopUrl = getShopifyShopUrl();
 
   useEffect(() => {
     qrCodes
@@ -51,10 +53,20 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
       </button>
       <button
         onClick={onRegister}
-        className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-4"
+        className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-3"
       >
         <Plus className="w-4 h-4" /> Register new tag
       </button>
+      {shopUrl && (
+        <a
+          href={shopUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 rounded-xl py-3 text-white text-sm font-semibold transition-colors mb-4"
+        >
+          <ShoppingBag className="w-4 h-4" /> Shop tags
+        </a>
+      )}
 
       {loading && (
         <div className="space-y-3">
