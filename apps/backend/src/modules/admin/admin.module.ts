@@ -12,9 +12,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { BroadcastsModule } from '../broadcasts/broadcasts.module';
 import { SafetyEngineModule } from '../safety-engine/safety-engine.module';
 import { SupportModule } from '../support/support.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [ConfigModule, QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule, SupportModule],
+  imports: [ConfigModule, QrModule, SettingsModule, NotificationsModule, BroadcastsModule, SafetyEngineModule, SupportModule, PaymentsModule],
   controllers: [AdminController],
   providers: [AdminService, AuditLogService, TagCustomizationService, PrintExportService, AccountDeletionJob],
 })

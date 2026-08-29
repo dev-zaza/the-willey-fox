@@ -35,6 +35,8 @@ import { SafetyEngineService } from '../safety-engine/safety-engine.service';
 import { PrintExportService, PRINT_FORMATS, type PrintFormatKey } from './print-export.service';
 import { SupportService } from '../support/support.service';
 import { UpdateSupportTicketDto } from '../support/dto';
+import { ShopifyFulfilmentService } from '../payments/shopify-fulfilment.service';
+import { CreateShopifyMappingDto, AssignShopifyQrDto } from '../payments/dto';
 
 @ApiBearerAuth('JWT')
 @ApiTags('admin')
@@ -48,6 +50,7 @@ export class AdminController {
     private readonly configService: ConfigService,
     private readonly printExportService: PrintExportService,
     private readonly supportService: SupportService,
+    private readonly shopifyFulfilmentService: ShopifyFulfilmentService,
   ) {}
 
   @Get('support-tickets')
@@ -141,7 +144,14 @@ export class AdminController {
     @CurrentUser() user: { id: string },
     @Body() dto: BulkGenerateQrDto,
   ) {
-    return this.adminService.bulkGenerateUnclaimed(user.id, dto.count, dto.shopifyOrderId, dto.notes);
+    return this.adminService.bulkGenerateUnclaimed(
+      user.id,
+      dto.count,
+      dto.shopifyOrderId,
+      dto.notes,
+      'manual',
+      dto.productType,
+    );
   }
 
   // ── QR Batches ───────────────────────────────────────────────────────────────
@@ -251,6 +261,77 @@ export class AdminController {
       label: fmt.label,
       hasReverse: 'reverse' in fmt,
     }));
+  }
+
+  // ── Shopify fulfilment ─────────────────────────────────────────────────────
+
+  @Get('shopify/product-types')
+  listShopifyProductTypes() {
+    return this.shopifyFulfilmentService.listProductTypes();
+  }
+
+  @Get('shopify/mappings')
+  listShopifyMappings() {
+    return this.shopifyFulfilmentService.listMappings();
+  }
+
+  @Post('shopify/mappings')
+  createShopifyMapping(@Body() dto: CreateShopifyMappingDto) {
+    return this.shopifyFulfilmentService.createMapping(
+      dto.shopifyProductId,
+      dto.productType,
+      dto.label,
+    );
+  }
+
+  @Delete('shopify/mappings/:id')
+  deleteShopifyMapping(@Param('id', ParseUUIDPipe) id: string) {
+    return this.shopifyFulfilmentService.deleteMapping(id);
+  }
+
+  @Get('shopify/orders')
+  listShopifyOrders(
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit = 50,
+    @Query('offset', new DefaultValuePipe(0), ParseIntPipe) offset = 0,
+    @Query('status') status?: string,
+  ) {
+    return this.shopifyFulfilmentService.listOrders(limit, offset, status);
+  }
+
+  @Get('shopify/orders/:id')
+  getShopifyOrder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.shopifyFulfilmentService.getOrderDetail(id);
+  }
+
+  @Post('shopify/orders/:id/auto-assign')
+  autoAssignShopifyOrder(@Param('id', ParseUUIDPipe) id: string) {
+    return this.shopifyFulfilmentService.autoAssign(id);
+  }
+
+  @Get('shopify/inventory')
+  listShopifyInventory(
+    @Query('productType') productType: string,
+    @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit = 100,
+  ) {
+    return this.shopifyFulfilmentService.listAvailableInventory(productType, limit);
+  }
+
+  @Post('shopify/orders/:orderId/items/:itemId/assign')
+  assignShopifyQrCodes(
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body() dto: AssignShopifyQrDto,
+  ) {
+    return this.shopifyFulfilmentService.assignSpecific(orderId, itemId, dto.qrCodeIds);
+  }
+
+  @Post('shopify/orders/:orderId/items/:itemId/unassign')
+  unassignShopifyQrCodes(
+    @Param('orderId', ParseUUIDPipe) orderId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body() dto: AssignShopifyQrDto,
+  ) {
+    return this.shopifyFulfilmentService.unassign(orderId, itemId, dto.qrCodeIds);
   }
 
   /**

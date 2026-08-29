@@ -1,4 +1,5 @@
-import { IsInt, IsOptional, IsString, MaxLength, Min, Max } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsIn, MaxLength, Min, Max } from 'class-validator';
+import { QR_PRODUCT_TYPE_KEYS } from '../qr-product-types';
 
 export class BulkGenerateQrDto {
   @IsInt()
@@ -15,4 +16,8 @@ export class BulkGenerateQrDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  @IsOptional()
+  @IsIn(QR_PRODUCT_TYPE_KEYS)
+  productType?: string;
 }

@@ -953,6 +953,7 @@ export interface AdminQrBatch {
   shopifyOrderId: string | null;
   notes: string | null;
   source: 'manual' | 'shopify_webhook';
+  productType: string | null;
   createdByAdminId: string | null;
   createdAt: string;
   adminFirstName: string | null;
@@ -976,6 +977,64 @@ export interface PrintFormatSpec {
   key: string;
   label: string;
   hasReverse: boolean;
+}
+
+export interface ShopifyProductType {
+  key: string;
+  label: string;
+}
+
+export interface ShopifyProductMapping {
+  id: string;
+  shopifyProductId: string;
+  productType: string;
+  label: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShopifyAllocatedCode {
+  id: string;
+  uniqueCode: string;
+  status: string;
+  shopifyOrderItemId: string | null;
+  batchId: string | null;
+}
+
+export interface ShopifyOrderItem {
+  id: string;
+  orderId: string;
+  shopifyLineItemId: string | null;
+  shopifyProductId: string;
+  shopifyVariantId: string | null;
+  title: string | null;
+  variantTitle: string | null;
+  sku: string | null;
+  quantity: number;
+  productType: string;
+  allocatedCount: number;
+  status: string;
+  createdAt: string;
+  codes?: ShopifyAllocatedCode[];
+}
+
+export interface ShopifyOrder {
+  id: string;
+  shopifyOrderId: string;
+  orderNumber: string | null;
+  customerEmail: string | null;
+  customerName: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  items: ShopifyOrderItem[];
+}
+
+export interface ShopifyInventoryCode {
+  id: string;
+  uniqueCode: string;
+  batchId: string | null;
+  createdAt: string;
 }
 
 export interface AdminReportRow {
@@ -1063,7 +1122,7 @@ export const admin = {
   unbanUser: (id: string) => request<{ message: string }>(`/admin/users/${id}/unban`, { method: 'PUT' }),
   listQrCodes: (limit = 50, offset = 0) =>
     request<AdminQrRow[]>(`/admin/qr-codes?limit=${limit}&offset=${offset}`),
-  bulkGenerateQr: (payload: { count: number; shopifyOrderId?: string; notes?: string }) =>
+  bulkGenerateQr: (payload: { count: number; shopifyOrderId?: string; notes?: string; productType?: string }) =>
     request<{ batch: AdminQrBatch; codes: AdminQrBatchCode[] }>('/admin/qr/bulk-generate', {
       method: 'POST', body: JSON.stringify(payload),
     }),
@@ -1147,6 +1206,36 @@ export const admin = {
     request<{ autoDeleteEnabled: boolean }>('/admin/settings/account-deletion', {
       method: 'PUT',
       body: JSON.stringify({ autoDeleteEnabled }),
+    }),
+  listShopifyProductTypes: () => request<ShopifyProductType[]>('/admin/shopify/product-types'),
+  listShopifyMappings: () => request<ShopifyProductMapping[]>('/admin/shopify/mappings'),
+  createShopifyMapping: (payload: { shopifyProductId: string; productType: string; label?: string }) =>
+    request<ShopifyProductMapping>('/admin/shopify/mappings', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  deleteShopifyMapping: (id: string) =>
+    request<{ deleted: boolean }>(`/admin/shopify/mappings/${id}`, { method: 'DELETE' }),
+  listShopifyOrders: (limit = 50, offset = 0, status?: string) =>
+    request<{ rows: ShopifyOrder[]; total: number }>(
+      `/admin/shopify/orders?limit=${limit}&offset=${offset}${status ? `&status=${encodeURIComponent(status)}` : ''}`,
+    ),
+  getShopifyOrder: (id: string) => request<ShopifyOrder>(`/admin/shopify/orders/${id}`),
+  autoAssignShopifyOrder: (id: string) =>
+    request<ShopifyOrder>(`/admin/shopify/orders/${id}/auto-assign`, { method: 'POST' }),
+  listShopifyInventory: (productType: string, limit = 100) =>
+    request<ShopifyInventoryCode[]>(
+      `/admin/shopify/inventory?productType=${encodeURIComponent(productType)}&limit=${limit}`,
+    ),
+  assignShopifyQrCodes: (orderId: string, itemId: string, qrCodeIds: string[]) =>
+    request<ShopifyOrder>(`/admin/shopify/orders/${orderId}/items/${itemId}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ qrCodeIds }),
+    }),
+  unassignShopifyQrCodes: (orderId: string, itemId: string, qrCodeIds: string[]) =>
+    request<ShopifyOrder>(`/admin/shopify/orders/${orderId}/items/${itemId}/unassign`, {
+      method: 'POST',
+      body: JSON.stringify({ qrCodeIds }),
     }),
 };
 

@@ -38,6 +38,8 @@ export function StatusBadge({ status }: { status: string }) {
     failed: 'bg-red-500/15 text-red-400 border-red-500/20',
     partial: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
     pending: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+    allocated: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+    needs_stock: 'bg-red-500/15 text-red-400 border-red-500/20',
     lost: 'bg-red-500/15 text-red-400 border-red-500/20',
   };
   const cls = map[status.toLowerCase()] ?? 'bg-zinc-500/15 text-[#7a6957] border-zinc-500/20';

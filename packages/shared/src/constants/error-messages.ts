@@ -88,6 +88,15 @@ export const ERROR_MESSAGES: Record<string, string> = {
   SUBSCRIPTION_ITEM_NOT_FOUND: 'Subscription item not found.',
   PREMIUM_REQUIRED: 'This feature requires a premium subscription.',
   SHOPIFY_INVALID_SIGNATURE: 'Order verification failed. Please contact support.',
+  SHOPIFY_UNKNOWN_PRODUCT_TYPE: 'Unknown QR product type.',
+  SHOPIFY_PRODUCT_ID_REQUIRED: 'Shopify product ID is required.',
+  SHOPIFY_MAPPING_NOT_FOUND: 'Shopify product mapping not found.',
+  SHOPIFY_ORDER_NOT_FOUND: 'Shopify order not found.',
+  SHOPIFY_ORDER_ITEM_NOT_FOUND: 'Shopify order line item not found.',
+  SHOPIFY_QR_IDS_REQUIRED: 'Select at least one QR code.',
+  SHOPIFY_ASSIGN_EXCEEDS_QUANTITY: 'Cannot assign more QR codes than the ordered quantity.',
+  SHOPIFY_QR_NOT_AVAILABLE: 'One or more QR codes are not available for this product type.',
+  SHOPIFY_QR_CANNOT_UNASSIGN: 'Those QR codes cannot be unassigned (already claimed or not on this order).',
 
   // Places & reviews
   PLACE_NOT_FOUND: 'Place not found.',

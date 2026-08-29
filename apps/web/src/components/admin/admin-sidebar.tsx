@@ -25,6 +25,7 @@ import {
   Package,
   Trash2,
   LifeBuoy,
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -52,6 +53,7 @@ const NAV_ITEMS = [
       { id: 'users', label: 'Users', icon: Users, href: '/admin/users' },
       { id: 'qr-codes', label: 'QR Codes', icon: QrCode, href: '/admin/qr-codes' },
       { id: 'qr-batches', label: 'QR Batches', icon: Package, href: '/admin/qr-batches' },
+      { id: 'shopify-orders', label: 'Shopify Orders', icon: ShoppingBag, href: '/admin/shopify-orders' },
       { id: 'reports', label: 'Reports', icon: Flag, href: '/admin/reports' },
       { id: 'pins', label: 'Pins', icon: MapPin, href: '/admin/pins' },
       { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone, href: '/admin/broadcasts' },

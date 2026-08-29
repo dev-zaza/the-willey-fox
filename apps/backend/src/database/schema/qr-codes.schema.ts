@@ -4,6 +4,7 @@ import { users } from './users.schema';
 import { visualThemes } from './visual-themes.schema';
 import { familyGroups, familyMembers } from './family-groups.schema';
 import { qrBatches } from './qr-batches.schema';
+import { shopifyOrderItems } from './shopify-order-items.schema';
 
 export const qrCodes = pgTable(
   'qr_codes',
@@ -33,6 +34,9 @@ export const qrCodes = pgTable(
     isActive: boolean('is_active').default(true).notNull(),
     status: varchar('status', { length: 20 }).default('active').notNull(),
     shopifyOrderId: varchar('shopify_order_id', { length: 100 }),
+    shopifyOrderItemId: uuid('shopify_order_item_id').references(() => shopifyOrderItems.id, {
+      onDelete: 'set null',
+    }),
     batchId: uuid('batch_id').references(() => qrBatches.id, { onDelete: 'set null' }),
     themeId: uuid('theme_id').references(() => visualThemes.id, { onDelete: 'set null' }),
     familyId: uuid('family_id').references(() => familyGroups.id, { onDelete: 'set null' }),
@@ -44,5 +48,6 @@ export const qrCodes = pgTable(
     index('idx_qr_codes_user_id').on(table.userId),
     index('idx_qr_codes_unique_code').on(table.uniqueCode),
     index('idx_qr_codes_status').on(table.status),
+    index('idx_qr_codes_shopify_order_item_id').on(table.shopifyOrderItemId),
   ],
 );

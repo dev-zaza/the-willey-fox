@@ -72,8 +72,14 @@ function GenerateForm({ onCreated }: { onCreated: () => void }) {
   const [count, setCount] = useState(10);
   const [shopifyOrderId, setShopifyOrderId] = useState('');
   const [notes, setNotes] = useState('');
+  const [productType, setProductType] = useState('');
+  const [formats, setFormats] = useState<PrintFormatSpec[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    admin.listPrintFormats().then(setFormats).catch(console.error);
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,11 +91,13 @@ function GenerateForm({ onCreated }: { onCreated: () => void }) {
         count,
         shopifyOrderId: shopifyOrderId.trim() || undefined,
         notes: notes.trim() || undefined,
+        productType: productType || undefined,
       });
       setOpen(false);
       setCount(10);
       setShopifyOrderId('');
       setNotes('');
+      setProductType('');
       onCreated();
     } catch (err: any) {
       setError(err?.message ?? 'Failed to generate batch');
@@ -141,6 +149,19 @@ function GenerateForm({ onCreated }: { onCreated: () => void }) {
               className="w-full rounded-lg border admin-border-color admin-surface admin-text-color px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:admin-text-subtle"
             />
           </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium admin-text-subtle mb-1">Product type (required for Shopify stock)</label>
+          <select
+            value={productType}
+            onChange={(e) => setProductType(e.target.value)}
+            className="w-full rounded-lg border admin-border-color admin-surface admin-text-color px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+          >
+            <option value="">Select type</option>
+            {formats.map((f) => (
+              <option key={f.key} value={f.key}>{f.label}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-xs font-medium admin-text-subtle mb-1">Notes (optional)</label>
@@ -398,6 +419,9 @@ function BatchRow({
                 <span className="text-xs admin-text-subtle">by {adminName}</span>
               ) : (
                 <span className="text-xs admin-text-subtle italic">via webhook</span>
+              )}
+              {batch.productType && (
+                <span className="text-xs admin-accent-text">{batch.productType}</span>
               )}
               {batch.notes && (
                 <span className="text-xs admin-text-subtle truncate max-w-[200px]">{batch.notes}</span>

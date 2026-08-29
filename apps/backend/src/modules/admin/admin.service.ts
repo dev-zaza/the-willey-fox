@@ -266,10 +266,24 @@ export class AdminService {
       .offset(offset);
   }
 
-  async bulkGenerateUnclaimed(adminId: string, count: number, shopifyOrderId?: string, notes?: string, source: string = 'manual') {
+  async bulkGenerateUnclaimed(
+    adminId: string,
+    count: number,
+    shopifyOrderId?: string,
+    notes?: string,
+    source: string = 'manual',
+    productType?: string,
+  ) {
     const [batch] = await this.db
       .insert(qrBatches)
-      .values({ createdByAdminId: adminId, count, shopifyOrderId: shopifyOrderId ?? null, notes: notes ?? null, source })
+      .values({
+        createdByAdminId: adminId,
+        count,
+        shopifyOrderId: shopifyOrderId ?? null,
+        notes: notes ?? null,
+        source,
+        productType: productType ?? null,
+      })
       .returning();
 
     const codes = await this.qrService.bulkGenerateUnclaimed(count, shopifyOrderId, batch.id);
@@ -285,6 +299,7 @@ export class AdminService {
         shopifyOrderId: qrBatches.shopifyOrderId,
         notes: qrBatches.notes,
         source: qrBatches.source,
+        productType: qrBatches.productType,
         createdByAdminId: qrBatches.createdByAdminId,
         createdAt: qrBatches.createdAt,
         adminFirstName: users.firstName,

@@ -8,5 +8,6 @@ export const qrBatches = pgTable('qr_batches', {
   shopifyOrderId: varchar('shopify_order_id', { length: 100 }),
   notes: varchar('notes', { length: 500 }),
   source: varchar('source', { length: 20 }).notNull().default('manual'),
+  productType: varchar('product_type', { length: 50 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
