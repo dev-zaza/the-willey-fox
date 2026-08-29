@@ -6,6 +6,10 @@
    CSS Custom Properties — Wileyfox brand (cream default)
 ────────────────────────────────────────────── */
 :root {
+  /* Desktop shell — used only at lg+; mobile layout is unchanged */
+  --desktop-rail: 5.25rem;     /* slim floating icon rail + inset */
+  --desktop-panel: 26rem;      /* 416px map slide-over */
+
   /* Surface — brand cream */
   --bg-primary: #f0e7d6;       /* brand cream */
   --bg-card: #ffffff;

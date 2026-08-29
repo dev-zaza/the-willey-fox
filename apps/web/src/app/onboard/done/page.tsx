@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useEffect } from 'react';
+import { markOnboardingDone } from '@/lib/onboarding';
 
 export default function OnboardDonePage() {
   useEffect(() => {
-    localStorage.setItem('onboarding_done', '1');
+    markOnboardingDone();
   }, []);
 
   return (

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { setTokens } from '@/lib/auth';
 import { auth, ApiError } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
+import { resolvePostAuthPath } from '@/lib/onboarding';
 
 export function OAuthCallbackClient() {
   const router = useRouter();
@@ -42,7 +43,12 @@ export function OAuthCallbackClient() {
         const profile = await auth.me();
         if (cancelled) return;
         setUser(profile);
-        router.replace(profile.isAdmin ? '/admin' : '/dashboard');
+        const path = await resolvePostAuthPath({
+          isAdmin: profile.isAdmin,
+          fallback: '/dashboard',
+        });
+        if (cancelled) return;
+        router.replace(path);
       } catch (e) {
         if (cancelled) return;
         setMessage('');

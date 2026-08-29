@@ -1,10 +1,16 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { markOnboardingDone } from '@/lib/onboarding';
 
 export default function OnboardWelcomePage() {
   const router = useRouter();
+
+  function skip() {
+    markOnboardingDone();
+    router.replace('/dashboard');
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center" style={{ background: '#f0e7d6', color: '#1b1410' }}>
       <h1 className="text-3xl font-bold">Welcome to TheWileyfox</h1>
@@ -19,9 +25,14 @@ export default function OnboardWelcomePage() {
       >
         Get started
       </button>
-      <Link href="/dashboard" className="mt-4 text-sm" style={{ color: '#7a6957' }}>
+      <button
+        type="button"
+        onClick={skip}
+        className="mt-4 text-sm"
+        style={{ color: '#7a6957' }}
+      >
         Skip for now
-      </Link>
+      </button>
     </div>
   );
 }

@@ -82,7 +82,7 @@ export function SearchBar({ onSelect, placeholder = 'Search destination…' }: S
             <button
               key={i}
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-2.5 text-sm text-[#5a4a3d] hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
+            className="w-full cursor-pointer text-left px-4 py-2.5 text-sm text-[#5a4a3d] hover:bg-surface-elevated hover:text-[var(--text-primary)] transition-colors border-b border-surface-border last:border-0 truncate"
             >
               {r.label}
             </button>

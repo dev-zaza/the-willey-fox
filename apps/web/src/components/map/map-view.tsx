@@ -14,6 +14,16 @@ const MapInner = dynamic(() => import('./map-inner').then((m) => ({ default: m.M
   ),
 });
 
+export type H3ClickPayload = {
+  h3: string;
+  score: number | null;
+  band: string;
+  color: string;
+  incidentCount: number;
+  lat?: number;
+  lng?: number;
+};
+
 interface MapViewProps {
   pins?: PinData[];
   route?: LatLng[];
@@ -21,11 +31,12 @@ interface MapViewProps {
   h3Tiles?: H3TileCollection | null;
   center?: LatLng;
   zoom?: number;
+  userLocation?: LatLng | null;
   onPinClick?: (pin: PinData) => void;
   /** Long-press / right-click to create a pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number }) => void;
-  onH3Click?: (props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => void;
+  onH3Click?: (props: H3ClickPayload) => void;
 }
 
 export function MapView(props: MapViewProps) {

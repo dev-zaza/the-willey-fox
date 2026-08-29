@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PROTECTED_PATHS = ['/dashboard', '/admin', '/tags', '/profile', '/settings'];
+const PROTECTED_PATHS = ['/dashboard', '/admin', '/tags', '/profile', '/settings', '/onboard'];
 const AUTH_PATHS = ['/login', '/register'];
 const AUTH_MARKER_COOKIE = 'st_auth';
 
@@ -13,11 +13,13 @@ export function middleware(request: NextRequest) {
 
   if (isProtected && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    // After login, send new users into onboarding when they were headed to onboard
+    loginUrl.searchParams.set('redirect', pathname.startsWith('/onboard') ? '/onboard/welcome' : pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthPage && isAuthenticated) {
+    // Dashboard layout runs OnboardingGate and may bounce to /onboard/welcome
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

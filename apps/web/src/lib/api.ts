@@ -716,6 +716,42 @@ export const directions = {
       {},
       false,
     ),
+  geocode: (q: string, proximity?: { lat: number; lng: number }) => {
+    const params = new URLSearchParams({ q });
+    if (proximity) {
+      params.set('lat', String(proximity.lat));
+      params.set('lng', String(proximity.lng));
+    }
+    return request<{ results: Array<{ id: string; name: string; fullName: string; lat: number; lng: number }> }>(
+      `/directions/geocode?${params}`,
+      {},
+      false,
+    ).then((r) => r.results ?? (r as unknown as Array<{ id: string; name: string; fullName: string; lat: number; lng: number }>));
+  },
+  routeSafetyCheck: (
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    resolution = 9,
+  ) =>
+    request<{
+      flaggedSegments: Array<{ band: string; h3?: string }>;
+    }>('/directions/route-safety-check', {
+      method: 'POST',
+      body: JSON.stringify({
+        resolution,
+        lineString: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [origin.lng, origin.lat],
+              [destination.lng, destination.lat],
+            ],
+          },
+          properties: {},
+        },
+      }),
+    }),
 };
 
 // ── Payments ──────────────────────────────────────────────────────────────────
@@ -1271,6 +1307,24 @@ export const safetyEngine = {
     });
     return request<AreaSummary>(`/safety-engine/area-summary?${q}`, {}, false);
   },
+  /** Auth-protected render of curated travel-guide HTML for PDF/print. */
+  renderTravelGuide: (city: string) =>
+    request<{ available: boolean; html: string | null; city: string }>(
+      '/safety-engine/travel-guide/render',
+      { method: 'POST', body: JSON.stringify({ city }) },
+    ),
+  getTravelGuide: (citySlug: string) =>
+    request<{
+      slug: string;
+      city: string;
+      region: string | null;
+      lastUpdated: string | null;
+      videoCount: number;
+      highlights: Array<{ title: string; channel: string; url: string; thumbnail?: string; viewCount?: number }>;
+      safetyTips: string[];
+      topPlaces: Array<{ place: string; mentionCount: number }>;
+      recommendations: string[];
+    }>(`/safety-engine/travel-guide/${encodeURIComponent(citySlug)}`, {}, false),
 };
 
 export const families = {

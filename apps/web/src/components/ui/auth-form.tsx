@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { clearOnboardingDone, resolvePostAuthPath } from '@/lib/onboarding';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1';
 
@@ -47,8 +48,14 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       if (mode === 'login') {
         const loggedInUser = await login(email, password);
-        router.push(loggedInUser.isAdmin ? '/admin' : redirect);
+        const path = await resolvePostAuthPath({
+          isAdmin: loggedInUser.isAdmin,
+          fallback: redirect,
+        });
+        router.push(path);
       } else {
+        // New account should run onboarding after first successful login (matches mobile)
+        clearOnboardingDone();
         const res = await register({ email, password, firstName: firstName.trim(), lastName: lastName.trim() });
         setSuccessMsg(res.message + ' You can now sign in.');
       }

@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, useMap, useMapEvents, Circle, GeoJSON, Tooltip } from 'react-leaflet';
+import { MapContainer, useMap, useMapEvents, Circle, GeoJSON, Tooltip } from 'react-leaflet';
+import { tileLayer as createTileLayer, type Map as LeafletMap, type TileLayer as LeafletTileLayer } from 'leaflet';
 import type { Feature, FeatureCollection, GeoJsonObject, Geometry } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import { EventPin } from './event-pin';
 import { RouteLayer } from './route-layer';
+import { UserLocationMarker } from './user-location-marker';
 import { resolveNumericId } from './country-lookup';
 import type { LatLng } from '@/types';
 import type { PinData, SafetyZoneOverlay, H3TileCollection } from '@/lib/api';
@@ -21,6 +23,14 @@ const TILE_URL = MAPBOX_TOKEN
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>';
 
+function mapIsLive(map: LeafletMap) {
+  try {
+    return Boolean(map.getContainer()?.parentNode && map.getPane('mapPane') && map.getPane('tilePane'));
+  } catch {
+    return false;
+  }
+}
+
 function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
   const map = useMap();
   const prevCenter = useRef<LatLng | undefined>(undefined);
@@ -32,6 +42,7 @@ function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
         prevCenter.current.lat !== center.lat ||
         prevCenter.current.lng !== center.lng)
     ) {
+      if (!mapIsLive(map)) return;
       map.flyTo([center.lat, center.lng], zoom ?? map.getZoom(), {
         animate: true,
         duration: 1.2,
@@ -39,6 +50,74 @@ function MapController({ center, zoom }: { center?: LatLng; zoom?: number }) {
       prevCenter.current = center;
     }
   }, [center, zoom, map]);
+
+  useEffect(() => {
+    const container = map.getContainer();
+    if (!container) return;
+
+    let raf = 0;
+    const invalidate = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (!mapIsLive(map)) return;
+        const size = map.getSize();
+        if (size.x < 1 || size.y < 1) return;
+        map.invalidateSize({ animate: false });
+      });
+    };
+
+    const ro = new ResizeObserver(invalidate);
+    ro.observe(container);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [map]);
+
+  return null;
+}
+
+function MapTiles({
+  url,
+  attribution,
+  maxZoom,
+}: {
+  url: string;
+  attribution: string;
+  maxZoom: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    let layer: LeafletTileLayer | null = null;
+    let cancelled = false;
+
+    const attach = () => {
+      if (cancelled || layer) return;
+      if (!map.getPane('tilePane')) return;
+      const next = createTileLayer(url, { attribution, maxZoom });
+      try {
+        next.addTo(map);
+        layer = next;
+      } catch {
+        /* map torn down during attach (Strict Mode remount) */
+      }
+    };
+
+    map.whenReady(attach);
+
+    return () => {
+      cancelled = true;
+      if (layer) {
+        try {
+          map.removeLayer(layer);
+        } catch {
+          /* map already destroyed */
+        }
+        layer = null;
+      }
+    };
+  }, [map, url, attribution, maxZoom]);
 
   return null;
 }
@@ -96,6 +175,7 @@ function MapEventHandler({
   });
 
   useEffect(() => {
+    if (!mapIsLive(map)) return;
     const container = map.getContainer();
 
     const clearTimer = () => {
@@ -272,16 +352,50 @@ interface MapInnerProps {
   h3Tiles?: H3TileCollection | null;
   center?: LatLng;
   zoom?: number;
+  userLocation?: LatLng | null;
   onPinClick?: (pin: PinData) => void;
   /** Fired on long-press / right-click — used to open create-pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
-  onH3Click?: (props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => void;
+  onH3Click?: (props: {
+    h3: string;
+    score: number | null;
+    band: string;
+    color: string;
+    incidentCount: number;
+    lat?: number;
+    lng?: number;
+  }) => void;
 }
 
-export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, onPinClick, onMapLongPress, onBoundsChange, onH3Click }: MapInnerProps) {
+export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, userLocation, onPinClick, onMapLongPress, onBoundsChange, onH3Click }: MapInnerProps) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [hasSize, setHasSize] = useState(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const markSized = () => {
+      if (el.clientWidth > 0 && el.clientHeight > 0) {
+        setHasSize(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (markSized()) return;
+
+    const ro = new ResizeObserver(() => {
+      if (markSized()) ro.disconnect();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {hasSize ? (
       <MapContainer
         center={center ? [center.lat, center.lng] : DEFAULT_CENTER}
         zoom={zoom ?? DEFAULT_ZOOM}
@@ -289,7 +403,7 @@ export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, 
         zoomControl={false}
       >
         {TILE_URL ? (
-          <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={22} />
+          <MapTiles url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={22} />
         ) : null}
         <MapController center={center} zoom={zoom} />
         <MapEventHandler onMapLongPress={onMapLongPress} onBoundsChange={onBoundsChange} />
@@ -299,6 +413,8 @@ export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, 
         ))}
 
         {route && route.length >= 2 && <RouteLayer route={route} />}
+
+        {userLocation ? <UserLocationMarker location={userLocation} /> : null}
 
         <ZoneLayer safetyZones={safetyZones} />
 
@@ -324,12 +440,15 @@ export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, 
                   if (e.originalEvent?.stopPropagation) {
                     e.originalEvent.stopPropagation();
                   }
+                  const latlng = (e as { latlng?: { lat: number; lng: number } }).latlng;
                   onH3Click?.({
                     h3: p.h3,
                     score: p.score != null ? Number(p.score) : null,
                     band: p.band ?? '',
                     color: p.color ?? '#888888',
                     incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
+                    lat: latlng?.lat,
+                    lng: latlng?.lng,
                   });
                 });
               }
@@ -337,6 +456,7 @@ export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, 
           />
         )}
       </MapContainer>
+      ) : null}
       {!TILE_URL ? (
         <div
           style={{

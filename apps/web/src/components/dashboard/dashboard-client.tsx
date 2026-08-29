@@ -1,17 +1,26 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { Map, Tag, Bell, MessageSquare, Shield, Star, Navigation, ShieldCheck, X } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Map, Tag, Bell, MessageSquare, Shield, Star, Navigation, ShieldCheck, X, LocateFixed, User, BarChart3 } from 'lucide-react';
 
 import { BottomDock } from '@/components/ui/bottom-dock';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { SearchBar } from '@/components/ui/search-bar';
+import { AreaSafetyPanel } from '@/components/dashboard/area-safety-panel';
 import { useAuth } from '@/context/auth-context';
-import { pins as pinsApi, notifications as notificationsApi, safetyEngine, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary } from '@/lib/api';
+import { useUserLocation } from '@/hooks/use-user-location';
+import { useIsDesktop } from '@/hooks/use-is-desktop';
+import { pins as pinsApi, notifications as notificationsApi, safetyEngine, users as usersApi, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary } from '@/lib/api';
+import { reversePlaceName, shortPlaceName } from '@/lib/place-name';
+import type { H3ClickPayload } from '@/components/map/map-view';
 
 import type { PinData, TrackedItem, ModalState, LatLng } from '@/types';
+
+type AreaPanelSeed = { lat: number; lng: number; name: string };
+type SearchedPlace = { label: string; lat: number; lng: number };
 
 // Lazy-load heavy modal components
 const PinDetailModal = dynamic(() => import('./modals/pin-detail-modal').then(m => ({ default: m.PinDetailModal })));
@@ -20,7 +29,6 @@ const MyTagsModal = dynamic(() => import('./modals/my-tags-modal').then(m => ({ 
 const RegisterTagModal = dynamic(() => import('./modals/register-tag-modal').then(m => ({ default: m.RegisterTagModal })));
 const TagDetailModal = dynamic(() => import('./modals/tag-detail-modal').then(m => ({ default: m.TagDetailModal })));
 const LostAlertsModal = dynamic(() => import('./modals/lost-alerts-modal').then(m => ({ default: m.LostAlertsModal })));
-const ProfileModal = dynamic(() => import('./modals/profile-modal').then(m => ({ default: m.ProfileModal })));
 const EmergencyModal = dynamic(() => import('./modals/emergency-modal').then(m => ({ default: m.EmergencyModal })));
 const MessagesModal = dynamic(() => import('./modals/messages-modal').then(m => ({ default: m.MessagesModal })));
 const NotificationsModal = dynamic(() => import('./modals/notifications-modal').then(m => ({ default: m.NotificationsModal })));
@@ -35,9 +43,57 @@ const MapView = dynamic(() => import('@/components/map/map-view').then(m => ({ d
   ),
 });
 
+const PANEL_TO_MODAL: Record<string, ModalState> = {
+  tags: 'my-tags',
+  alerts: 'notifications',
+  messages: 'messages',
+  emergency: 'emergency',
+};
+
+const NAV_MODALS: ModalState[] = [
+  'my-tags',
+  'notifications',
+  'messages',
+  'emergency',
+  'register-tag',
+  'tag-detail',
+  'lost-alerts',
+];
+
+function PanelUrlSync({ onPanel }: { onPanel: (panel: string | null) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    onPanel(searchParams.get('panel'));
+  }, [searchParams, onPanel]);
+  return null;
+}
+
+function AreaReportUrlSync({ onOpen }: { onOpen: (seed: AreaPanelSeed) => void }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  useEffect(() => {
+    const latStr = searchParams.get('areaLat');
+    const lngStr = searchParams.get('areaLng');
+    if (!latStr || !lngStr) return;
+    const lat = Number(latStr);
+    const lng = Number(lngStr);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    onOpen({ lat, lng, name: searchParams.get('areaName') ?? '' });
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete('areaLat');
+    next.delete('areaLng');
+    next.delete('areaName');
+    const rest = next.toString();
+    router.replace(rest ? `/dashboard?${rest}` : '/dashboard', { scroll: false });
+  }, [searchParams, onOpen, router]);
+  return null;
+}
+
 export function DashboardClient() {
   const { user } = useAuth();
   const router = useRouter();
+  const isDesktop = useIsDesktop();
+  const reduceMotion = useReducedMotion();
 
   const [modal, setModal] = useState<ModalState>('none');
   const [activeDock, setActiveDock] = useState('map');
@@ -54,12 +110,69 @@ export function DashboardClient() {
   const [h3Tiles, setH3Tiles] = useState<H3TileCollection | null>(null);
   const [areaSummary, setAreaSummary] = useState<AreaSummary | null>(null);
   const [areaSummaryLoading, setAreaSummaryLoading] = useState(false);
-  const [selectedH3, setSelectedH3] = useState<{ h3: string; score: number | null; band: string; color: string; incidentCount: number } | null>(null);
+  const [selectedH3, setSelectedH3] = useState<H3ClickPayload | null>(null);
   const [safetyMode, setSafetyMode] = useState<'uk' | 'global'>('uk');
   const [lastBounds, setLastBounds] = useState<{ minLat: number; minLng: number; maxLat: number; maxLng: number } | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [locating, setLocating] = useState(false);
+  const [searchedPlace, setSearchedPlace] = useState<SearchedPlace | null>(null);
+  const [areaPanel, setAreaPanel] = useState<AreaPanelSeed | null>(null);
 
-  const closeModal = useCallback(() => setModal('none'), []);
+  const {
+    location: userLocation,
+    permission: locationPermission,
+    loading: locationLoading,
+    error: locationError,
+    requestLocation,
+  } = useUserLocation();
+
+  // Sync location to backend when we get a fix
+  useEffect(() => {
+    if (!user || !userLocation) return;
+    usersApi.updateLocation(userLocation.lat, userLocation.lng).catch(() => {});
+  }, [user, userLocation?.lat, userLocation?.lng]);
+
+  const closeModal = useCallback(() => {
+    setModal('none');
+    setActiveDock('map');
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('panel')) {
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [router]);
+
+  const applyPanel = useCallback((panel: string | null) => {
+    if (!panel) {
+      setModal((current) => (NAV_MODALS.includes(current) ? 'none' : current));
+      return;
+    }
+    const next = PANEL_TO_MODAL[panel];
+    if (next) {
+      setModal(next);
+      setActiveDock(panel === 'alerts' ? 'alerts' : panel);
+    }
+  }, []);
+
+  const openAreaPanelFromUrl = useCallback((seed: AreaPanelSeed) => {
+    setAreaPanel(seed);
+  }, []);
+
+  useEffect(() => {
+    if (!areaPanel) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setAreaPanel(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [areaPanel]);
+
+  // Center map on first GPS fix (like mobile)
+  const hasCenteredOnUser = useRef(false);
+  useEffect(() => {
+    if (!userLocation || hasCenteredOnUser.current) return;
+    hasCenteredOnUser.current = true;
+    setMapCenter(userLocation);
+    setMapZoom(14);
+  }, [userLocation]);
 
   // Fetch unread notification count on mount
   useEffect(() => {
@@ -100,11 +213,11 @@ export function DashboardClient() {
       ]);
       setH3Tiles(h3Res);
       setSafetyOverlayOn(true);
-      // Load area summary for map centre
-      const centerLat = (lastBounds.minLat + lastBounds.maxLat) / 2;
-      const centerLng = (lastBounds.minLng + lastBounds.maxLng) / 2;
+      const centerLat = searchedPlace?.lat ?? (lastBounds.minLat + lastBounds.maxLat) / 2;
+      const centerLng = searchedPlace?.lng ?? (lastBounds.minLng + lastBounds.maxLng) / 2;
+      const city = searchedPlace?.label ?? '';
       setAreaSummaryLoading(true);
-      safetyEngine.getAreaSummary({ lat: centerLat, lng: centerLng, radius: 5000 })
+      safetyEngine.getAreaSummary({ lat: centerLat, lng: centerLng, radius: 5000, city })
         .then(setAreaSummary)
         .catch(() => setAreaSummary(null))
         .finally(() => setAreaSummaryLoading(false));
@@ -113,11 +226,31 @@ export function DashboardClient() {
     } finally {
       setSafetyOverlayLoading(false);
     }
-  }, [safetyOverlayOn, lastBounds]);
+  }, [safetyOverlayOn, lastBounds, searchedPlace]);
 
-  const handleH3Click = useCallback((props: { h3: string; score: number | null; band: string; color: string; incidentCount: number }) => {
+  const handleH3Click = useCallback((props: H3ClickPayload) => {
     setSelectedH3(props);
   }, []);
+
+  const openAreaReport = useCallback(async (opts?: { lat?: number; lng?: number; name?: string }) => {
+    const lat = opts?.lat ?? selectedH3?.lat ?? searchedPlace?.lat ?? mapCenter?.lat ?? userLocation?.lat;
+    const lng = opts?.lng ?? selectedH3?.lng ?? searchedPlace?.lng ?? mapCenter?.lng ?? userLocation?.lng;
+    let name = (opts?.name || searchedPlace?.label || areaSummary?.cityName || '').trim();
+    if (lat == null || lng == null) return;
+    if (!name) {
+      name = await reversePlaceName(lat, lng);
+    }
+    if (isDesktop) {
+      setAreaPanel({ lat, lng, name });
+      return;
+    }
+    const qs = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+    });
+    if (name) qs.set('name', name);
+    router.push(`/dashboard/area?${qs}`);
+  }, [selectedH3, searchedPlace, mapCenter, userLocation, areaSummary, isDesktop, router]);
 
   function handleDockSelect(id: string) {
     setActiveDock(id);
@@ -125,8 +258,19 @@ export function DashboardClient() {
     else if (id === 'alerts') setModal('notifications');
     else if (id === 'messages') setModal('messages');
     else if (id === 'emergency') setModal('emergency');
+    else if (id === 'profile') { router.push('/dashboard/profile'); return; }
     else if (id === 'places') { router.push('/dashboard/places'); return; }
     else closeModal();
+  }
+
+  async function handleRecenterToUser() {
+    setLocating(true);
+    const loc = await requestLocation();
+    setLocating(false);
+    if (loc) {
+      setMapCenter(loc);
+      setMapZoom(15);
+    }
   }
 
   function handlePinClick(pin: PinData) {
@@ -140,8 +284,18 @@ export function DashboardClient() {
   }
 
   function handleSearchSelect(result: { label: string; location: LatLng }) {
+    const label = shortPlaceName(result.label);
+    const place = { label, lat: result.location.lat, lng: result.location.lng };
+    setSearchedPlace(place);
     setMapCenter(result.location);
     setMapZoom(15);
+    if (safetyOverlayOn) {
+      setAreaSummaryLoading(true);
+      safetyEngine.getAreaSummary({ lat: place.lat, lng: place.lng, radius: 5000, city: label })
+        .then(setAreaSummary)
+        .catch(() => setAreaSummary(null))
+        .finally(() => setAreaSummaryLoading(false));
+    }
   }
 
   function handleTagSelect(tag: TrackedItem) {
@@ -149,8 +303,15 @@ export function DashboardClient() {
     setModal('tag-detail');
   }
 
+  const toolBtn =
+    'flex-shrink-0 h-11 w-11 cursor-pointer rounded-xl glass flex items-center justify-center border transition-colors duration-200';
+
   return (
-    <div className="fixed inset-0 bg-surface flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-surface flex flex-col overflow-hidden lg:left-[var(--desktop-rail)]">
+      <Suspense fallback={null}>
+        <PanelUrlSync onPanel={applyPanel} />
+        <AreaReportUrlSync onOpen={openAreaPanelFromUrl} />
+      </Suspense>
       {/* Map — full screen */}
       <div className="absolute inset-0 z-0">
         <MapView
@@ -160,6 +321,7 @@ export function DashboardClient() {
           h3Tiles={safetyOverlayOn ? h3Tiles : null}
           center={mapCenter}
           zoom={mapZoom}
+          userLocation={userLocation}
           onPinClick={handlePinClick}
           onMapLongPress={handleMapLongPress}
           onBoundsChange={handleBoundsChange}
@@ -167,8 +329,8 @@ export function DashboardClient() {
         />
       </div>
 
-      {/* Top bar */}
-      <div className="relative z-10 flex items-center gap-2 px-4 pt-safe pt-4 pb-2">
+      {/* Top bar — mobile only */}
+      <div className="relative z-10 flex items-center gap-2 px-4 pt-safe pt-4 pb-2 lg:hidden">
         <div className="flex-1">
           <SearchBar onSelect={handleSearchSelect} />
         </div>
@@ -185,6 +347,14 @@ export function DashboardClient() {
         >
           <ShieldCheck className="w-4 h-4" />
         </button>
+        <button
+          onClick={() => { void openAreaReport(); }}
+          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-[#FF7B14] hover:text-brand-400 transition-colors"
+          aria-label="Area safety report"
+          title="Area safety & travel guide"
+        >
+          <BarChart3 className="w-4 h-4" />
+        </button>
         {safetyOverlayOn && (
           <button
             onClick={() => setSafetyMode((m) => m === 'uk' ? 'global' : 'uk')}
@@ -195,6 +365,19 @@ export function DashboardClient() {
           </button>
         )}
         <button
+          onClick={handleRecenterToUser}
+          disabled={locating || locationLoading}
+          className={`flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border transition-colors ${
+            userLocation
+              ? 'border-blue-500/40 text-blue-500'
+              : 'border-surface-border text-[#7a6957] hover:text-white'
+          }`}
+          aria-label="My location"
+          title={locationError ?? 'Center map on your location'}
+        >
+          <LocateFixed className={`w-4 h-4 ${locating || locationLoading ? 'animate-pulse' : ''}`} />
+        </button>
+        <button
           onClick={() => setModal('directions')}
           className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-[#7a6957] hover:text-white transition-colors"
           aria-label="Directions"
@@ -203,17 +386,82 @@ export function DashboardClient() {
           <Navigation className="w-4 h-4" />
         </button>
         <button
-          onClick={() => setModal('profile')}
-          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center text-sm font-bold text-brand-400 border border-brand-500/30"
+          onClick={() => router.push('/dashboard/profile')}
+          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center text-sm font-bold text-brand-400 border border-brand-500/30 overflow-hidden"
           aria-label="Profile"
+          title="Profile"
         >
-          {user?.firstName?.[0]?.toUpperCase() ?? 'U'}
+          {user?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            user?.firstName?.[0]?.toUpperCase() ?? 'U'
+          )}
         </button>
+      </div>
+
+      {/* Desktop overlay chrome — search left, tools right */}
+      <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block">
+        <div className="pointer-events-auto absolute left-4 top-4 w-[var(--desktop-panel)]">
+          <SearchBar onSelect={handleSearchSelect} />
+        </div>
+        <div
+          className={`pointer-events-auto absolute top-4 flex flex-col gap-2 ${
+            areaPanel ? 'right-[calc(var(--desktop-panel)+1.5rem)]' : safetyOverlayOn ? 'right-[22rem]' : 'right-4'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={toggleSafetyOverlay}
+            disabled={safetyOverlayLoading}
+            className={`${toolBtn} ${
+              safetyOverlayOn
+                ? 'border-green-500/50 bg-green-500/15 text-green-700'
+                : 'border-surface-border text-[#7a6957] hover:text-[var(--text-primary)]'
+            }`}
+            aria-label="Toggle safety overlay"
+            title="Safety overlay"
+          >
+            <ShieldCheck className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => { void openAreaReport(); }}
+            className={`${toolBtn} border-surface-border text-[#FF7B14] hover:text-brand-500`}
+            aria-label="Area safety report"
+            title="Area safety & travel guide"
+          >
+            <BarChart3 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleRecenterToUser}
+            disabled={locating || locationLoading}
+            className={`${toolBtn} ${
+              userLocation
+                ? 'border-blue-500/40 text-blue-500'
+                : 'border-surface-border text-[#7a6957] hover:text-[var(--text-primary)]'
+            }`}
+            aria-label="My location"
+            title={locationError ?? 'Center map on your location'}
+          >
+            <LocateFixed className={`h-4 w-4 ${locating || locationLoading ? 'animate-pulse' : ''}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setModal('directions')}
+            className={`${toolBtn} border-surface-border text-[#7a6957] hover:text-[var(--text-primary)]`}
+            aria-label="Directions"
+            title="Get directions"
+          >
+            <Navigation className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Active route banner */}
       {route && route.length >= 2 && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 glass px-4 py-2 rounded-full border border-surface-border shadow-lg">
+        <div className="absolute top-20 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-surface-border glass px-4 py-2 shadow-lg lg:top-4">
           <Navigation className="w-3.5 h-3.5 text-brand-500" />
           <span className="text-xs font-medium text-[var(--text-primary)]">Route active</span>
           <button
@@ -226,10 +474,28 @@ export function DashboardClient() {
         </div>
       )}
 
+      {/* GPS status */}
+      <div className="absolute left-4 bottom-24 z-20 lg:bottom-8">
+        <div
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold glass border shadow-sm ${
+            userLocation
+              ? 'border-green-500/30 text-green-600'
+              : locationPermission === 'denied'
+                ? 'border-amber-500/30 text-amber-600'
+                : 'border-surface-border text-[#7a6957]'
+          }`}
+        >
+          <LocateFixed className="h-3 w-3" />
+          {userLocation ? 'GPS' : locationPermission === 'denied' ? 'No GPS' : locating || locationLoading ? 'Locating…' : 'No GPS'}
+        </div>
+      </div>
+
       {/* FAB — create pin */}
       <button
         onClick={() => setModal('create-pin')}
-        className="absolute right-4 bottom-24 z-20 w-14 h-14 rounded-full bg-brand-500 hover:bg-brand-600 text-white text-2xl flex items-center justify-center shadow-lg brand-glow transition-transform hover:scale-105 active:scale-95"
+        className={`absolute z-20 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-lg brand-glow transition-transform hover:scale-105 hover:bg-brand-600 active:scale-95 bottom-24 right-4 lg:bottom-8 ${
+          areaPanel ? 'lg:right-[calc(var(--desktop-panel)+1.5rem)]' : safetyOverlayOn ? 'lg:right-[22rem]' : 'lg:right-4'
+        }`}
         aria-label="Add pin"
       >
         +
@@ -243,6 +509,7 @@ export function DashboardClient() {
           { id: 'alerts', icon: <Bell className="w-5 h-5" />, label: 'Alerts', badge: unreadCount },
           { id: 'messages', icon: <MessageSquare className="w-5 h-5" />, label: 'Messages' },
           { id: 'places', icon: <Star className="w-5 h-5" />, label: 'Places' },
+          { id: 'profile', icon: <User className="w-5 h-5" />, label: 'Profile' },
           { id: 'emergency', icon: <Shield className="w-5 h-5" />, label: 'SOS' },
         ]}
         activeId={activeDock}
@@ -296,10 +563,6 @@ export function DashboardClient() {
         {modal === 'lost-alerts' && <LostAlertsModal onClose={closeModal} />}
       </BottomSheet>
 
-      <BottomSheet open={modal === 'profile'} onClose={closeModal} title="Profile">
-        {modal === 'profile' && <ProfileModal onClose={closeModal} />}
-      </BottomSheet>
-
       <BottomSheet open={modal === 'emergency'} onClose={closeModal} title="Emergency" snapPoint="full">
         {modal === 'emergency' && <EmergencyModal onClose={closeModal} />}
       </BottomSheet>
@@ -340,87 +603,103 @@ export function DashboardClient() {
         )}
       </BottomSheet>
 
-      {/* ── Safety Sidebar (desktop, shown when overlay on) ── */}
-      {safetyOverlayOn && (
-        <div className="hidden md:flex fixed top-0 right-0 bottom-0 z-20 w-80 flex-col bg-[#1a1d27] border-l border-[#2a2f45] overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#2a2f45]">
+      {/* ── Safety panel (desktop, shown when overlay on) ── */}
+      {safetyOverlayOn && !areaPanel && (
+        <div className="fixed z-20 hidden w-80 flex-col overflow-hidden rounded-2xl border border-surface-border bg-surface-card shadow-xl lg:flex"
+          style={{ top: '5.5rem', right: '1rem', bottom: '1rem' }}
+        >
+          <div className="flex items-center justify-between border-b border-surface-border px-5 py-3.5">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-green-400" />
-              <span className="text-sm font-bold text-white">Safety Report</span>
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              <span className="text-sm font-bold text-[var(--text-primary)]">Safety Report</span>
             </div>
-            <button onClick={() => { setSafetyOverlayOn(false); setH3Tiles(null); setAreaSummary(null); }} className="text-[#64748b] hover:text-white">
-              <X className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={() => { setSafetyOverlayOn(false); setH3Tiles(null); setAreaSummary(null); }}
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[#7a6957] transition-colors hover:bg-surface-elevated hover:text-[var(--text-primary)]"
+              aria-label="Close safety report"
+            >
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-            {/* UK/Global toggle */}
-            <div className="flex rounded-lg border border-[#2a2f45] overflow-hidden text-xs font-semibold">
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+            <div className="flex overflow-hidden rounded-lg border border-surface-border text-xs font-semibold">
               {(['uk', 'global'] as const).map((m) => (
                 <button
                   key={m}
+                  type="button"
                   onClick={() => setSafetyMode(m)}
-                  className={`flex-1 py-2 transition-colors ${safetyMode === m ? 'bg-green-500/20 text-green-400' : 'text-[#64748b] hover:text-white'}`}
+                  className={`flex-1 cursor-pointer py-2.5 transition-colors ${safetyMode === m ? 'bg-green-500/15 text-green-700' : 'text-[#7a6957] hover:text-[var(--text-primary)]'}`}
                 >
-                  {m === 'uk' ? '🇬🇧 UK Mode' : '🌍 Global Mode'}
+                  {m === 'uk' ? 'UK Mode' : 'Global Mode'}
                 </button>
               ))}
             </div>
 
-            {/* Score card */}
             {areaSummaryLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
               </div>
             ) : areaSummary ? (
               <>
-                <div className="bg-[#0f1117] rounded-xl p-4 flex items-center gap-4">
+                <div className="flex items-center gap-4 rounded-xl bg-surface-elevated p-4">
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-black border-2"
+                    className="flex h-16 w-16 items-center justify-center rounded-full border-2 text-xl font-black"
                     style={{ borderColor: SIDEBAR_BAND_META[areaSummary.band ?? '']?.color ?? '#888', color: SIDEBAR_BAND_META[areaSummary.band ?? '']?.color ?? '#888' }}
                   >
                     {areaSummary.score != null ? Math.round(areaSummary.score) : '–'}
                   </div>
                   <div>
-                    <div className="text-base font-bold text-white">
+                    <div className="text-base font-bold text-[var(--text-primary)]">
                       {SIDEBAR_BAND_META[areaSummary.band ?? '']?.label ?? areaSummary.band ?? 'No Data'}
                     </div>
-                    <div className="text-xs text-[#64748b] mt-1">
-                      {areaSummary.cityName || 'Current area'}
+                    <div className="mt-1 text-xs text-[#7a6957]">
+                      {areaSummary.cityName || searchedPlace?.label || 'Current area'}
                     </div>
-                    <div className="text-xs text-[#64748b] mt-0.5">
+                    <div className="mt-0.5 text-xs text-[#7a6957]">
                       {areaSummary.incidentCount.toLocaleString()} crimes · {areaSummary.dataMonth}
                     </div>
                   </div>
                 </div>
 
-                {/* Band strip */}
-                <div className="flex gap-1 rounded-md overflow-hidden h-2">
+                <div className="flex h-2 gap-1 overflow-hidden rounded-md">
                   {['#D7263D', '#F46036', '#FFC857', '#A4C957', '#3FA34D'].map((c, i) => {
                     const bandNum = SIDEBAR_BAND_META[areaSummary.band ?? '']?.num ?? 0;
                     return <div key={i} style={{ flex: 1, backgroundColor: c, opacity: (bandNum > 0 && i + 1 === bandNum) ? 1 : 0.2 }} />;
                   })}
                 </div>
 
-                <div className="text-[10px] text-[#64748b]">{areaSummary.scoreMethodology}</div>
+                <div className="text-[10px] text-[#7a6957]">{areaSummary.scoreMethodology}</div>
 
-                {/* Stats */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    void openAreaReport({
+                      lat: areaSummary.lat,
+                      lng: areaSummary.lng,
+                      name: searchedPlace?.label || areaSummary.cityName,
+                    });
+                  }}
+                  className="w-full cursor-pointer rounded-lg border border-green-600/30 bg-green-500/10 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-500/20"
+                >
+                  Full report & travel guide →
+                </button>
+
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-[#0f1117] rounded-lg p-3 text-center">
-                    <div className="text-lg font-black text-white">{areaSummary.incidentCount.toLocaleString()}</div>
-                    <div className="text-[10px] text-[#64748b]">Crimes Recorded</div>
+                  <div className="rounded-lg bg-surface-elevated p-3 text-center">
+                    <div className="text-lg font-black text-[var(--text-primary)]">{areaSummary.incidentCount.toLocaleString()}</div>
+                    <div className="text-[10px] text-[#7a6957]">Crimes Recorded</div>
                   </div>
-                  <div className="bg-[#0f1117] rounded-lg p-3 text-center">
-                    <div className="text-lg font-black text-white">{areaSummary.weightedPerKm2}</div>
-                    <div className="text-[10px] text-[#64748b]">Weighted/km²</div>
+                  <div className="rounded-lg bg-surface-elevated p-3 text-center">
+                    <div className="text-lg font-black text-[var(--text-primary)]">{areaSummary.weightedPerKm2}</div>
+                    <div className="text-[10px] text-[#7a6957]">Weighted/km²</div>
                   </div>
                 </div>
 
-                {/* Crime breakdown */}
                 {areaSummary.crimeBreakdown.length > 0 && (
-                  <div className="bg-[#0f1117] rounded-xl p-4">
-                    <div className="text-xs font-bold text-white mb-3">Crime Breakdown</div>
+                  <div className="rounded-xl bg-surface-elevated p-4">
+                    <div className="mb-3 text-xs font-bold text-[var(--text-primary)]">Crime Breakdown</div>
                     <div className="flex flex-col gap-2">
                       {areaSummary.crimeBreakdown.slice(0, 6).map((item, i) => {
                         const colors = ['#D7263D', '#F46036', '#FFC857', '#A4C957', '#3FA34D', '#2196F3'];
@@ -428,16 +707,16 @@ export function DashboardClient() {
                         const pct = topTotal > 0 ? (item.count / topTotal) * 100 : 0;
                         return (
                           <div key={item.type}>
-                            <div className="flex items-center justify-between mb-1">
+                            <div className="mb-1 flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[i] }} />
-                                <span className="text-[11px] text-[#94a3b8] truncate max-w-[140px]">
+                                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[i] }} />
+                                <span className="max-w-[140px] truncate text-[11px] text-[#5a4a3d]">
                                   {item.type.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                                 </span>
                               </div>
-                              <span className="text-[11px] font-semibold text-[#64748b]">{item.count.toLocaleString()}</span>
+                              <span className="text-[11px] font-semibold text-[#7a6957]">{item.count.toLocaleString()}</span>
                             </div>
-                            <div className="h-1 rounded bg-[#2a2f45]">
+                            <div className="h-1 rounded bg-surface-border">
                               <div className="h-1 rounded" style={{ backgroundColor: colors[i], width: `${Math.round(pct)}%` }} />
                             </div>
                           </div>
@@ -448,39 +727,85 @@ export function DashboardClient() {
                 )}
               </>
             ) : (
-              <div className="text-xs text-[#64748b] text-center py-4">
+              <div className="py-4 text-center text-xs text-[#7a6957]">
                 Click a hex cell to view safety data
               </div>
             )}
 
-            {/* Selected hex detail */}
             {selectedH3 && (
-              <div className="bg-[#0f1117] rounded-xl p-4 border border-[#2a2f45]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-white">Selected Cell</span>
-                  <button onClick={() => setSelectedH3(null)} className="text-[#64748b] hover:text-white">
-                    <X className="w-3 h-3" />
+              <div className="rounded-xl border border-surface-border bg-surface-elevated p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[var(--text-primary)]">Selected Cell</span>
+                  <button type="button" onClick={() => setSelectedH3(null)} className="cursor-pointer text-[#7a6957] hover:text-[var(--text-primary)]" aria-label="Clear selected cell">
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black"
                     style={{ borderColor: selectedH3.color, color: selectedH3.color }}
                   >
                     {selectedH3.score != null ? Math.round(selectedH3.score) : '–'}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-white">
+                    <div className="text-sm font-semibold text-[var(--text-primary)]">
                       {SIDEBAR_BAND_META[selectedH3.band]?.label ?? selectedH3.band}
                     </div>
-                    <div className="text-xs text-[#64748b]">{selectedH3.incidentCount} incidents</div>
+                    <div className="text-xs text-[#7a6957]">{selectedH3.incidentCount} incidents</div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void openAreaReport({
+                      lat: selectedH3.lat,
+                      lng: selectedH3.lng,
+                    });
+                  }}
+                  className="mt-3 w-full cursor-pointer rounded-lg bg-brand-500/15 py-2 text-xs font-semibold text-brand-600 hover:bg-brand-500/25"
+                >
+                  View area report & travel guide
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* ── Area Safety right slider (desktop) ── */}
+      <AnimatePresence>
+        {areaPanel && (
+          <motion.div
+            role="dialog"
+            aria-modal="false"
+            aria-label="Area Safety"
+            initial={reduceMotion ? { opacity: 0 } : { x: 28, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { x: 24, opacity: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: 'tween', duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="fixed z-30 hidden min-h-0 overflow-hidden rounded-2xl border border-surface-border bg-surface-card shadow-xl lg:flex lg:flex-col"
+            style={{
+              top: '5.5rem',
+              right: '1rem',
+              bottom: '1rem',
+              width: 'var(--desktop-panel)',
+            }}
+          >
+            <AreaSafetyPanel
+              key={`${areaPanel.lat}-${areaPanel.lng}-${areaPanel.name}`}
+              seedLat={areaPanel.lat}
+              seedLng={areaPanel.lng}
+              seedName={areaPanel.name}
+              variant="panel"
+              onClose={() => setAreaPanel(null)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
