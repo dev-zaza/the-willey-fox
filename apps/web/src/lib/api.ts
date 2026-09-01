@@ -1416,19 +1416,59 @@ export const safetyEngine = {
     }>(`/safety-engine/travel-guide/${encodeURIComponent(citySlug)}`, {}, false),
 };
 
+export interface FamilyMembership {
+  familyId: string;
+  role: string;
+  familyName: string;
+  ownerId: string;
+  createdAt: string;
+}
+
+export interface FamilyMember {
+  id: string;
+  userId: string;
+  role: string;
+  joinedAt: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  avatarUrl: string | null;
+}
+
+export interface FamilyQrCode {
+  id: string;
+  name: string;
+  category: string;
+  uniqueCode: string;
+  isLost: boolean;
+}
+
+export interface FamilyGroup {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FamilyDetail extends FamilyGroup {
+  members: FamilyMember[];
+  qrCodes: FamilyQrCode[];
+}
+
 export const families = {
-  list: () => request<any[]>('/families'),
-  get: (id: string) => request<any>(`/families/${id}`),
-  create: (name: string) => request<any>('/families', { method: 'POST', body: JSON.stringify({ name }) }),
+  list: () => request<FamilyMembership[]>('/families'),
+  get: (id: string) => request<FamilyDetail>(`/families/${id}`),
+  create: (name: string) => request<FamilyGroup>('/families', { method: 'POST', body: JSON.stringify({ name }) }),
   addMember: (familyId: string, payload: { userId?: string; email?: string }) =>
-    request<any>(`/families/${familyId}/members`, { method: 'POST', body: JSON.stringify(payload) }),
+    request<FamilyMember>(`/families/${familyId}/members`, { method: 'POST', body: JSON.stringify(payload) }),
   removeMember: (familyId: string, userId: string) =>
-    request<any>(`/families/${familyId}/members/${userId}`, { method: 'DELETE' }),
+    request<{ success: boolean }>(`/families/${familyId}/members/${userId}`, { method: 'DELETE' }),
   addQrCode: (familyId: string, qrCodeId: string) =>
-    request<any>(`/families/${familyId}/qr-codes`, { method: 'POST', body: JSON.stringify({ qrCodeId }) }),
+    request<{ success: boolean }>(`/families/${familyId}/qr-codes`, { method: 'POST', body: JSON.stringify({ qrCodeId }) }),
   removeQrCode: (familyId: string, qrCodeId: string) =>
-    request<any>(`/families/${familyId}/qr-codes/${qrCodeId}`, { method: 'DELETE' }),
-  delete: (familyId: string) => request<any>(`/families/${familyId}`, { method: 'DELETE' }),
+    request<{ success: boolean }>(`/families/${familyId}/qr-codes/${qrCodeId}`, { method: 'DELETE' }),
+  delete: (familyId: string) => request<{ success: boolean }>(`/families/${familyId}`, { method: 'DELETE' }),
 };
 
 export interface Spot {

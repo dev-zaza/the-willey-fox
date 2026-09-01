@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ONBOARD_FAMILY_NAME_KEY } from '@/lib/family-profiles';
 
 export default function OnboardGroupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
 
   function continueFlow() {
-    sessionStorage.setItem('onboard_family_name', name.trim() || 'My Family');
+    sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, name.trim() || 'My Family');
     router.push('/onboard/members');
   }
 

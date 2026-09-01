@@ -15,7 +15,7 @@ export default function OnboardWelcomePage() {
     <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center" style={{ background: '#f0e7d6', color: '#1b1410' }}>
       <h1 className="text-3xl font-bold">Welcome to TheWileyfox</h1>
       <p className="mt-4 max-w-md text-sm leading-6" style={{ color: '#5a4a3d' }}>
-        Set up your family group and register your first QR tag in a few steps.
+        Set up your family group and create QR safety profiles for the people and pets in your care.
       </p>
       <button
         type="button"
