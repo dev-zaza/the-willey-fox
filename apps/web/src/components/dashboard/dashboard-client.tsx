@@ -4,16 +4,17 @@ import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Map, Tag, Bell, MessageSquare, Shield, Star, Navigation, ShieldCheck, X, LocateFixed, User, BarChart3 } from 'lucide-react';
+import { Map, Tag, Bell, MessageSquare, Shield, Navigation, ShieldCheck, X, LocateFixed, BarChart3, Plus } from 'lucide-react';
 
 import { BottomDock } from '@/components/ui/bottom-dock';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { SearchBar } from '@/components/ui/search-bar';
 import { AreaSafetyPanel } from '@/components/dashboard/area-safety-panel';
+import { MobileMenuButton } from '@/components/dashboard/mobile-menu-button';
 import { useAuth } from '@/context/auth-context';
 import { useUserLocation } from '@/hooks/use-user-location';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
-import { pins as pinsApi, notifications as notificationsApi, safetyEngine, users as usersApi, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary } from '@/lib/api';
+import { pins as pinsApi, notifications as notificationsApi, reports, safetyEngine, users as usersApi, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary, type Report } from '@/lib/api';
 import { reversePlaceName, shortPlaceName } from '@/lib/place-name';
 import type { H3ClickPayload } from '@/components/map/map-view';
 
@@ -117,6 +118,8 @@ export function DashboardClient() {
   const [locating, setLocating] = useState(false);
   const [searchedPlace, setSearchedPlace] = useState<SearchedPlace | null>(null);
   const [areaPanel, setAreaPanel] = useState<AreaPanelSeed | null>(null);
+  const [mapAlert, setMapAlert] = useState<Report | null>(null);
+  const [alertDismissed, setAlertDismissed] = useState(false);
 
   const {
     location: userLocation,
@@ -180,6 +183,13 @@ export function DashboardClient() {
     notificationsApi
       .list()
       .then((data) => setUnreadCount(data.unreadCount))
+      .catch(() => {/* silently ignore */});
+    reports
+      .list()
+      .then((items) => {
+        const open = items.find((r) => r.status !== 'resolved' && r.status !== 'found' && r.status !== 'closed');
+        setMapAlert(open ?? null);
+      })
       .catch(() => {/* silently ignore */});
   }, [user]);
 
@@ -258,8 +268,6 @@ export function DashboardClient() {
     else if (id === 'alerts') setModal('notifications');
     else if (id === 'messages') setModal('messages');
     else if (id === 'emergency') setModal('emergency');
-    else if (id === 'profile') { router.push('/dashboard/profile'); return; }
-    else if (id === 'places') { router.push('/dashboard/places'); return; }
     else closeModal();
   }
 
@@ -330,44 +338,36 @@ export function DashboardClient() {
       </div>
 
       {/* Top bar — mobile only */}
-      <div className="relative z-10 flex items-center gap-2 px-4 pt-safe pt-4 pb-2 lg:hidden">
-        <div className="flex-1">
+      <div className="relative z-10 flex items-center gap-2 px-3 pt-safe pt-3 pb-2 lg:hidden">
+        <MobileMenuButton />
+        <div className="min-w-0 flex-1">
           <SearchBar onSelect={handleSearchSelect} />
         </div>
         <button
           onClick={toggleSafetyOverlay}
           disabled={safetyOverlayLoading}
-          className={`flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border transition-colors ${
+          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border glass transition-colors ${
             safetyOverlayOn
-              ? 'bg-green-500/20 border-green-500/50 text-green-400'
+              ? 'border-green-500/50 bg-green-500/20 text-green-400'
               : 'border-surface-border text-[#7a6957] hover:text-white'
           }`}
           aria-label="Toggle safety overlay"
           title="Safety overlay"
         >
-          <ShieldCheck className="w-4 h-4" />
+          <ShieldCheck className="h-4 w-4" />
         </button>
         <button
           onClick={() => { void openAreaReport(); }}
-          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-[#FF7B14] hover:text-brand-400 transition-colors"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-surface-border glass text-[#FF7B14] transition-colors hover:text-brand-400"
           aria-label="Area safety report"
           title="Area safety & travel guide"
         >
-          <BarChart3 className="w-4 h-4" />
+          <BarChart3 className="h-4 w-4" />
         </button>
-        {safetyOverlayOn && (
-          <button
-            onClick={() => setSafetyMode((m) => m === 'uk' ? 'global' : 'uk')}
-            className="flex-shrink-0 h-10 px-3 rounded-full glass flex items-center justify-center border border-surface-border text-[#7a6957] hover:text-white transition-colors text-xs font-semibold"
-            title="Toggle UK / Global mode"
-          >
-            {safetyMode === 'uk' ? '🇬🇧 UK' : '🌍 Global'}
-          </button>
-        )}
         <button
           onClick={handleRecenterToUser}
           disabled={locating || locationLoading}
-          className={`flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border transition-colors ${
+          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border glass transition-colors ${
             userLocation
               ? 'border-blue-500/40 text-blue-500'
               : 'border-surface-border text-[#7a6957] hover:text-white'
@@ -375,19 +375,11 @@ export function DashboardClient() {
           aria-label="My location"
           title={locationError ?? 'Center map on your location'}
         >
-          <LocateFixed className={`w-4 h-4 ${locating || locationLoading ? 'animate-pulse' : ''}`} />
-        </button>
-        <button
-          onClick={() => setModal('directions')}
-          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center border border-surface-border text-[#7a6957] hover:text-white transition-colors"
-          aria-label="Directions"
-          title="Get directions"
-        >
-          <Navigation className="w-4 h-4" />
+          <LocateFixed className={`h-4 w-4 ${locating || locationLoading ? 'animate-pulse' : ''}`} />
         </button>
         <button
           onClick={() => router.push('/dashboard/profile')}
-          className="flex-shrink-0 w-10 h-10 rounded-full glass flex items-center justify-center text-sm font-bold text-brand-400 border border-brand-500/30 overflow-hidden"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-brand-500/30 glass text-sm font-bold text-brand-400"
           aria-label="Profile"
           title="Profile"
         >
@@ -400,11 +392,60 @@ export function DashboardClient() {
         </button>
       </div>
 
-      {/* Desktop overlay chrome — search left, tools right */}
+      {/* Desktop overlay chrome — search + UK/Global left, tools right */}
       <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block">
-        <div className="pointer-events-auto absolute left-4 top-4 w-[var(--desktop-panel)]">
-          <SearchBar onSelect={handleSearchSelect} />
+        <div className="pointer-events-auto absolute left-4 top-4 z-30 flex max-w-[calc(100%-420px)] flex-wrap items-start gap-2">
+          <div className="w-[min(344px,var(--desktop-panel))]">
+            <SearchBar onSelect={handleSearchSelect} placeholder="Search a city or country…" />
+          </div>
+          <div className="flex overflow-hidden rounded-xl border border-[#D8CBB6] bg-white shadow-[0_10px_26px_-14px_rgba(23,19,15,.5)]">
+            {(['uk', 'global'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  setSafetyMode(m);
+                  if (!safetyOverlayOn) void toggleSafetyOverlay();
+                }}
+                className={`px-3.5 py-2.5 text-xs font-bold ${
+                  safetyMode === m ? 'bg-[#17130F] text-white' : 'text-[#5C5245] hover:bg-[#FBF7F1]'
+                }`}
+              >
+                {m === 'uk' ? 'UK · Live data' : 'Global · 186 countries'}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {mapAlert && !alertDismissed ? (
+          <div className="pointer-events-auto absolute left-4 top-[4.75rem] z-20 flex max-w-md items-center gap-3 rounded-2xl border border-[#D8CBB6] bg-white px-3 py-2.5 shadow-lg">
+            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-black text-white">
+              !
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-[#17130F]">Lost item reported</p>
+              <p className="truncate text-xs text-[#8A7B67]">
+                {mapAlert.locationAddress || mapAlert.finderNotes || 'Open inbox for details'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push(`/dashboard/alerts/${mapAlert.id}`)}
+              className="rounded-lg bg-brand-500 px-2.5 py-1 text-xs font-bold text-white"
+            >
+              Help
+            </button>
+            <button
+              type="button"
+              onClick={() => setAlertDismissed(true)}
+              className="text-[#8A7B67] hover:text-[#17130F]"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
+
         <div
           className={`pointer-events-auto absolute top-4 flex flex-col gap-2 ${
             areaPanel ? 'right-[calc(var(--desktop-panel)+1.5rem)]' : safetyOverlayOn ? 'right-[22rem]' : 'right-4'
@@ -457,6 +498,24 @@ export function DashboardClient() {
             <Navigation className="h-4 w-4" />
           </button>
         </div>
+
+        <div className="pointer-events-auto absolute bottom-8 left-4 z-20 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setModal('create-pin')}
+            className="inline-flex h-10 items-center gap-2 rounded-xl border border-[#D8CBB6] bg-white px-3.5 text-[13px] font-bold text-[#17130F] shadow-[0_8px_22px_-12px_rgba(23,19,15,.5)]"
+          >
+            <Plus className="h-4 w-4" />
+            Report
+          </button>
+          <button
+            type="button"
+            onClick={() => setModal('emergency')}
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-red-600 px-3.5 text-[13px] font-bold text-white shadow-[0_8px_22px_-12px_rgba(23,19,15,.5)]"
+          >
+            SOS
+          </button>
+        </div>
       </div>
 
       {/* Active route banner */}
@@ -475,7 +534,7 @@ export function DashboardClient() {
       )}
 
       {/* GPS status */}
-      <div className="absolute left-4 bottom-24 z-20 lg:bottom-8">
+      <div className="absolute left-4 bottom-24 z-20 lg:bottom-[4.75rem]">
         <div
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold glass border shadow-sm ${
             userLocation
@@ -501,15 +560,13 @@ export function DashboardClient() {
         +
       </button>
 
-      {/* Bottom dock */}
+      {/* Bottom dock — 5 core items; People / Places / Shop / Account in hamburger */}
       <BottomDock
         items={[
           { id: 'map', icon: <Map className="w-5 h-5" />, label: 'Map' },
           { id: 'tags', icon: <Tag className="w-5 h-5" />, label: 'My Tags' },
           { id: 'alerts', icon: <Bell className="w-5 h-5" />, label: 'Alerts', badge: unreadCount },
           { id: 'messages', icon: <MessageSquare className="w-5 h-5" />, label: 'Messages' },
-          { id: 'places', icon: <Star className="w-5 h-5" />, label: 'Places' },
-          { id: 'profile', icon: <User className="w-5 h-5" />, label: 'Profile' },
           { id: 'emergency', icon: <Shield className="w-5 h-5" />, label: 'SOS' },
         ]}
         activeId={activeDock}
@@ -802,6 +859,11 @@ export function DashboardClient() {
               seedName={areaPanel.name}
               variant="panel"
               onClose={() => setAreaPanel(null)}
+              onFlyTo={(lat, lng, name) => {
+                setMapCenter({ lat, lng });
+                setMapZoom(12);
+                setAreaPanel({ lat, lng, name });
+              }}
             />
           </motion.div>
         )}

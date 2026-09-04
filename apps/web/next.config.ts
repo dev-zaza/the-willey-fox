@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: workspaceRoot,
   transpilePackages: ['@safetag/shared'],
+  // Keep Next.js “N” indicator off the mobile bottom dock
+  devIndicators: {
+    position: 'bottom-right',
+  },
   // Required for three-globe and leaflet which use browser globals
   webpack: (config, { isServer }) => {
     if (isServer) {

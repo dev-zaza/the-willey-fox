@@ -1,32 +1,65 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send, Search, MoreVertical, Ban, Flag, X } from 'lucide-react';
-import { messages as messagesApi, users as usersApi, type Conversation, type Message } from '@/lib/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Ban, Flag, MapPin, MoreVertical, Send, X } from 'lucide-react';
+import {
+  messages as messagesApi,
+  reports,
+  users as usersApi,
+  type Conversation,
+  type Message,
+  type Report,
+} from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
+import { cn } from '@/lib/utils';
+
+type Filter = 'all' | 'found' | 'family' | 'community';
 
 export default function MessagesPage() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [lostReports, setLostReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>('all');
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
+  const [activeReport, setActiveReport] = useState<Report | null>(null);
   const [msgs, setMsgs] = useState<Message[]>([]);
   const [msgsLoading, setMsgsLoading] = useState(false);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
-  const [search, setSearch] = useState('');
   const [showConvoMenu, setShowConvoMenu] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [showReportModal, setShowReportModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [sighting, setSighting] = useState('');
+  const [sightingSent, setSightingSent] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesApi.listConversations(search || undefined).then(setConversations).finally(() => setLoading(false));
-  }, [search]);
+    Promise.all([messagesApi.listConversations(), reports.list().catch(() => [] as Report[])])
+      .then(([convos, items]) => {
+        setConversations(convos);
+        setLostReports(items);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredConvos = useMemo(() => {
+    if (filter === 'found' || filter === 'community') return [];
+    return conversations;
+  }, [conversations, filter]);
+
+  const filteredReports = useMemo(() => {
+    if (filter === 'family') return [];
+    if (filter === 'community') return lostReports.filter((r) => r.isPublicBroadcast);
+    if (filter === 'found') return lostReports;
+    return lostReports;
+  }, [lostReports, filter]);
 
   async function openConversation(convo: Conversation) {
+    setActiveReport(null);
     setActiveConvo(convo);
     setMsgsLoading(true);
     try {
@@ -63,7 +96,7 @@ export default function MessagesPage() {
     try {
       await usersApi.blockUser(other.id);
       setActiveConvo(null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Failed to block user');
     } finally {
       setActionLoading(false);
@@ -78,211 +111,353 @@ export default function MessagesPage() {
       setShowReportModal(false);
       setReportReason('');
       alert('Report submitted. Our team will review it.');
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Failed to submit report');
     } finally {
       setActionLoading(false);
     }
   }
 
-  if (activeConvo) {
-    const other = activeConvo.otherParticipant;
-    return (
-      <div className="flex flex-col h-screen bg-surface">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 bg-surface-card border-b border-surface-border flex-shrink-0">
-          <button onClick={() => setActiveConvo(null)} className="text-[#7a6957] hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 font-bold text-xs flex-shrink-0">
-            {other ? `${other.firstName[0]}${other.lastName[0]}` : '?'}
-          </div>
-          <p className="font-semibold text-white text-sm flex-1">{other ? `${other.firstName} ${other.lastName}` : 'Conversation'}</p>
-          {/* Conversation actions menu */}
-          {other && (
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowConvoMenu((v) => !v)}
-                className="text-[#7a6957] hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5"
-              >
-                <MoreVertical className="w-5 h-5" />
-              </button>
-              {showConvoMenu && (
-                <div className="absolute right-0 top-8 w-44 bg-surface-card border border-surface-border rounded-xl shadow-lg z-50 overflow-hidden">
-                  <button
-                    onClick={() => { setShowConvoMenu(false); setShowReportModal(true); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#5a4a3d] hover:bg-white/5 transition-colors"
-                  >
-                    <Flag className="w-4 h-4 text-amber-400" />
-                    Report user
-                  </button>
-                  <button
-                    onClick={handleBlockUser}
-                    disabled={actionLoading}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <Ban className="w-4 h-4" />
-                    Block user
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Report modal */}
-        {showReportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="bg-surface-card border border-surface-border rounded-2xl p-6 w-full max-w-md">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-semibold">Report User</h3>
-                <button onClick={() => { setShowReportModal(false); setReportReason(''); }} className="text-[#7a6957] hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-[#7a6957] text-sm mb-4">
-                Describe why you're reporting {other?.firstName} {other?.lastName}. Our moderation team will review your report.
-              </p>
-              <textarea
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-                placeholder="Describe the issue (e.g. harassment, spam, threats…)"
-                rows={4}
-                maxLength={500}
-                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)] mb-4"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowReportModal(false); setReportReason(''); }}
-                  className="flex-1 py-2 rounded-xl border border-surface-border text-[#7a6957] text-sm hover:border-surface-border transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleReportUser}
-                  disabled={actionLoading || reportReason.trim().length < 3}
-                  className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white text-sm font-semibold transition-colors"
-                >
-                  {actionLoading ? 'Submitting…' : 'Submit Report'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {msgsLoading ? (
-            <div className="flex items-center justify-center h-full text-[#7a6957] text-sm">Loading…</div>
-          ) : (
-            msgs.map((msg) => {
-              const isMe = msg.senderId === user?.id;
-              return (
-                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs rounded-2xl px-4 py-2.5 ${
-                    isMe
-                      ? 'bg-brand-500 rounded-tr-sm'
-                      : 'bg-surface-card border border-surface-border rounded-tl-sm'
-                  }`}>
-                    <p className={`text-sm ${isMe ? 'text-white' : 'text-white'}`}>{msg.body}</p>
-                    <p className={`text-xs mt-1 ${isMe ? 'text-brand-200' : 'text-[#9d8c7a]'}`}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })
-          )}
-          <div ref={bottomRef} />
-        </div>
-
-        {/* Input */}
-        <form onSubmit={sendMessage} className="flex items-end gap-2 px-4 py-3 bg-surface-card border-t border-surface-border flex-shrink-0">
-          <textarea
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(e as any); }}}
-            placeholder="Type a message…"
-            rows={1}
-            maxLength={4000}
-            className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
-          />
-          <button
-            type="submit"
-            disabled={sending || !reply.trim()}
-            className="w-10 h-10 rounded-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 flex items-center justify-center flex-shrink-0 transition-colors"
-          >
-            <Send className="w-4 h-4 text-white" />
-          </button>
-        </form>
-      </div>
-    );
-  }
+  const other = activeConvo?.otherParticipant;
+  const showThread = Boolean(activeConvo || activeReport);
 
   return (
-    <div className="min-h-screen bg-surface p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-4">Messages</h1>
-
-        {/* Search */}
-        <div className="relative mb-5">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9d8c7a] pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations…"
-            className="w-full bg-surface-card border border-surface-border text-white text-sm rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9d8c7a] hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {loading && <div className="text-[#7a6957] text-sm text-center py-20">Loading…</div>}
-
-        {!loading && conversations.length === 0 && (
-          <div className="text-center py-20 text-[#9d8c7a]">
-            <p className="text-4xl mb-3">💬</p>
-            <p className="font-medium text-white">{search ? 'No results' : 'No Messages'}</p>
-            <p className="text-sm mt-1">{search ? `No conversations matching "${search}"` : 'Conversations with finders will appear here'}</p>
+    <div className="min-h-screen bg-[#F1E7D8] lg:h-screen lg:overflow-hidden">
+      <div className="flex min-h-screen flex-col lg:h-full lg:flex-row">
+        <aside className={cn('border-[#E3D8C6] bg-white lg:w-[380px] lg:flex-shrink-0 lg:border-r', showThread && 'hidden lg:block')}>
+          <div className="border-b border-[#E3D8C6] px-5 py-5">
+            <h1 className="text-2xl font-extrabold tracking-tight text-[#17130F]">Inbox</h1>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {(
+                [
+                  ['all', 'All'],
+                  ['found', 'Found items'],
+                  ['family', 'Family'],
+                  ['community', 'Community'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFilter(id)}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-bold',
+                    filter === id ? 'bg-[#17130F] text-white' : 'bg-[#F1E7D8] text-[#5C5245]',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
 
-        <div className="space-y-2">
-          {conversations.map((convo) => {
-            const other = convo.otherParticipant;
-            const initials = other ? `${other.firstName[0]}${other.lastName[0]}` : '?';
-            return (
+          <div className="overflow-y-auto lg:h-[calc(100vh-7.5rem)]">
+            {loading ? <p className="px-5 py-10 text-sm text-[#8A7B67]">Loading…</p> : null}
+
+            {!loading && filteredReports.map((r) => (
               <button
-                key={convo.id}
-                onClick={() => openConversation(convo)}
-                className="w-full bg-surface-card border border-surface-border rounded-2xl p-4 flex items-center gap-4 hover:border-brand-500/40 transition-colors text-left"
+                key={r.id}
+                type="button"
+                onClick={() => {
+                  setActiveConvo(null);
+                  setActiveReport(r);
+                  setSightingSent(false);
+                }}
+                className={cn(
+                  'flex w-full gap-3 border-b border-[#E3D8C6] px-5 py-4 text-left hover:bg-[#FBF7F1]',
+                  activeReport?.id === r.id && 'bg-[#FFF3EE]',
+                  r.isPublicBroadcast && 'bg-[#FFF3EE]/60',
+                )}
               >
-                <div className="w-11 h-11 rounded-full bg-brand-500/15 flex items-center justify-center flex-shrink-0 text-brand-400 font-bold text-sm">
-                  {initials}
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
+                  !
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-bold text-[#17130F]">
+                      {r.isPublicBroadcast ? 'Community alert' : 'Found item'}
+                    </span>
+                    <span className="text-[11px] text-[#8A7B67]">
+                      {new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-[#5C5245]">
+                    {r.finderNotes || r.locationAddress || r.finderContact}
+                  </span>
+                  <span className="mt-1 flex gap-1">
+                    <span className="rounded-full bg-[#FFF3EE] px-2 py-0.5 text-[10px] font-bold text-brand-600">
+                      {r.isPublicBroadcast ? 'Community' : 'Found'}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            ))}
+
+            {!loading && filteredConvos.map((convo) => {
+              const who = convo.otherParticipant;
+              const initials = who ? `${who.firstName[0]}${who.lastName[0]}` : '?';
+              return (
+                <button
+                  key={convo.id}
+                  type="button"
+                  onClick={() => void openConversation(convo)}
+                  className={cn(
+                    'flex w-full gap-3 border-b border-[#E3D8C6] px-5 py-4 text-left hover:bg-[#FBF7F1]',
+                    activeConvo?.id === convo.id && 'bg-[#FFF3EE]',
+                  )}
+                >
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#1D4ED8] text-xs font-bold text-white">
+                    {initials}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-bold text-[#17130F]">
+                        {who ? `${who.firstName} ${who.lastName}` : 'Conversation'}
+                      </span>
+                      <span className="text-[11px] text-[#8A7B67]">
+                        {convo.lastMessage
+                          ? new Date(convo.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : ''}
+                      </span>
+                    </span>
+                    {convo.lastMessage ? (
+                      <span className="mt-0.5 block truncate text-xs text-[#5C5245]">{convo.lastMessage.body}</span>
+                    ) : null}
+                    {convo.unreadCount > 0 ? (
+                      <span className="mt-1 inline-block rounded-full bg-[#E7DCCA] px-2 py-0.5 text-[10px] font-bold text-[#5C5245]">
+                        {convo.unreadCount} unread
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
+
+            {!loading && filteredConvos.length === 0 && filteredReports.length === 0 ? (
+              <p className="px-5 py-16 text-center text-sm text-[#8A7B67]">
+                Conversations with finders will appear here.
+              </p>
+            ) : null}
+          </div>
+        </aside>
+
+        <section className={cn('flex min-h-0 flex-1 flex-col bg-[#FBF7F1]', !showThread && 'hidden lg:flex')}>
+          {!showThread ? (
+            <div className="flex flex-1 items-center justify-center text-sm text-[#8A7B67]">Select a thread</div>
+          ) : activeReport ? (
+            <>
+              <div className="flex items-center gap-3 border-b border-[#E3D8C6] bg-white px-4 py-3">
+                <button type="button" className="lg:hidden" onClick={() => setActiveReport(null)} aria-label="Back">
+                  ←
+                </button>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-white">!</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-[#17130F]">
+                    {activeReport.isPublicBroadcast ? 'Community notice' : 'Finder report'}
+                  </p>
+                  <p className="truncate text-xs text-[#8A7B67]">
+                    {activeReport.locationAddress || 'Location shared by the finder'}
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-semibold text-sm">{other ? `${other.firstName} ${other.lastName}` : 'Unknown'}</p>
-                  {convo.lastMessage && (
-                    <p className="text-[#9d8c7a] text-xs truncate">{convo.lastMessage.body}</p>
+                <Link
+                  href={`/dashboard/alerts/${activeReport.id}`}
+                  className="rounded-lg border border-[#E3D8C6] px-3 py-1.5 text-xs font-bold text-[#17130F]"
+                >
+                  Open report
+                </Link>
+              </div>
+              <div className="flex-1 space-y-4 overflow-y-auto p-5">
+                <div className="rounded-2xl border border-[#E3D8C6] bg-white p-4">
+                  <p className="text-sm font-bold text-[#17130F]">
+                    {activeReport.finderNotes || 'A finder scanned a tag and left a note.'}
+                  </p>
+                  {activeReport.locationAddress ? (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs text-[#5C5245]">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {activeReport.locationAddress}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
+                      Emergency contacts
+                    </span>
+                    {activeReport.isPublicBroadcast ? (
+                      <span className="rounded-full bg-[#FFF3EE] px-2 py-0.5 text-[10px] font-bold text-brand-600">
+                        Members nearby
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[#E3D8C6] bg-white p-4">
+                  <p className="text-sm font-bold text-[#17130F]">I&apos;ve seen this</p>
+                  <p className="mt-1 text-xs text-[#8A7B67]">
+                    Goes to the owner. Your name is shared; your number is not.
+                  </p>
+                  {sightingSent ? (
+                    <p className="mt-3 text-sm font-semibold text-green-700">Sighting sent. Thank you.</p>
+                  ) : (
+                    <div className="mt-3 flex flex-col gap-2">
+                      <input
+                        className="rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm outline-none focus:border-brand-500"
+                        placeholder="Where and when"
+                        value={sighting}
+                        onChange={(e) => setSighting(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        disabled={!sighting.trim()}
+                        onClick={() => {
+                          reports.respond(activeReport.id, sighting.trim()).catch(() => {});
+                          setSightingSent(true);
+                        }}
+                        className="self-start rounded-lg bg-brand-500 px-3 py-2 text-xs font-bold text-white disabled:opacity-40"
+                      >
+                        Send sighting
+                      </button>
+                    </div>
                   )}
                 </div>
-                {convo.unreadCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {convo.unreadCount}
-                  </span>
+                <a href="tel:999" className="inline-flex rounded-lg border border-[#E3D8C6] px-3 py-2 text-xs font-bold">
+                  Call 999
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 border-b border-[#E3D8C6] bg-white px-4 py-3">
+                <button type="button" className="lg:hidden" onClick={() => setActiveConvo(null)} aria-label="Back">
+                  ←
+                </button>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1D4ED8] text-xs font-bold text-white">
+                  {other ? `${other.firstName[0]}${other.lastName[0]}` : '?'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-[#17130F]">
+                    {other ? `${other.firstName} ${other.lastName}` : 'Conversation'}
+                  </p>
+                  <p className="text-xs text-[#8A7B67]">Anonymous relay — your details are never shown</p>
+                </div>
+                {other ? (
+                  <div className="relative" ref={menuRef}>
+                    <button type="button" onClick={() => setShowConvoMenu((v) => !v)} className="p-1 text-[#8A7B67]">
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
+                    {showConvoMenu ? (
+                      <div className="absolute right-0 top-8 z-20 w-44 overflow-hidden rounded-xl border border-[#E3D8C6] bg-white shadow-lg">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowConvoMenu(false);
+                            setShowReportModal(true);
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm"
+                        >
+                          <Flag className="h-4 w-4 text-amber-500" />
+                          Report user
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleBlockUser()}
+                          disabled={actionLoading}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-red-600"
+                        >
+                          <Ban className="h-4 w-4" />
+                          Block user
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {showReportModal ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                  <div className="w-full max-w-md rounded-2xl border border-[#E3D8C6] bg-white p-6">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-semibold">Report User</h3>
+                      <button type="button" onClick={() => setShowReportModal(false)}>
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <textarea
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      placeholder="Describe the issue"
+                      rows={4}
+                      className="mb-4 w-full rounded-xl border border-[#E3D8C6] px-3 py-2.5 text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowReportModal(false)}
+                        className="flex-1 rounded-xl border py-2 text-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleReportUser()}
+                        disabled={actionLoading || reportReason.trim().length < 3}
+                        className="flex-1 rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex-1 space-y-2 overflow-y-auto p-4">
+                {msgsLoading ? (
+                  <p className="py-10 text-center text-sm text-[#8A7B67]">Loading…</p>
+                ) : (
+                  msgs.map((msg) => {
+                    const isMe = msg.senderId === user?.id;
+                    return (
+                      <div key={msg.id} className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
+                        <div
+                          className={cn(
+                            'max-w-xs rounded-2xl px-4 py-2.5 text-sm',
+                            isMe ? 'rounded-tr-sm bg-brand-500 text-white' : 'rounded-tl-sm border border-[#E3D8C6] bg-white',
+                          )}
+                        >
+                          {msg.body}
+                          <p className={cn('mt-1 text-[11px]', isMe ? 'text-white/80' : 'text-[#8A7B67]')}>
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
-              </button>
-            );
-          })}
-        </div>
+                <div ref={bottomRef} />
+              </div>
+
+              <form onSubmit={sendMessage} className="flex items-end gap-2 border-t border-[#E3D8C6] bg-white px-4 py-3">
+                <textarea
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void sendMessage(e);
+                    }
+                  }}
+                  placeholder="Write a reply…"
+                  rows={1}
+                  className="flex-1 resize-none rounded-2xl border border-[#E3D8C6] bg-[#FBF7F1] px-4 py-2.5 text-sm outline-none focus:border-brand-500"
+                />
+                <button
+                  type="submit"
+                  disabled={sending || !reply.trim()}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#17130F] text-white disabled:opacity-40"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </form>
+            </>
+          )}
+        </section>
       </div>
     </div>
   );

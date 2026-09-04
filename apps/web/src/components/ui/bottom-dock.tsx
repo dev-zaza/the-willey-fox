@@ -27,7 +27,7 @@ export function BottomDock({ items, activeId, onSelect }: BottomDockProps) {
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className="relative flex cursor-pointer flex-col items-center gap-1 rounded-xl px-4 py-1.5 transition-all"
+                className="relative flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 transition-all"
                 aria-label={item.label}
               >
                 {item.badge != null && item.badge > 0 && (

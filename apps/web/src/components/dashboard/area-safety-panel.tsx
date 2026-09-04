@@ -17,6 +17,8 @@ import {
   X,
 } from 'lucide-react';
 import { directions, safetyEngine, type AreaSummary } from '@/lib/api';
+import { GLOBAL_CITIES, UK_CITIES } from '@/lib/mockup-cities';
+import { SaveSpotForm } from '@/components/dashboard/save-spot-form';
 
 const BAND_META: Record<string, { label: string; color: string; bg: string; num: number }> = {
   band5: { label: 'Safe', color: '#3FA34D', bg: '#F0FDF4', num: 5 },
@@ -92,6 +94,7 @@ export interface AreaSafetyPanelProps {
   seedName?: string;
   variant?: 'page' | 'panel';
   onClose?: () => void;
+  onFlyTo?: (lat: number, lng: number, name: string) => void;
 }
 
 export function AreaSafetyPanel({
@@ -100,6 +103,7 @@ export function AreaSafetyPanel({
   seedName = '',
   variant = 'page',
   onClose,
+  onFlyTo,
 }: AreaSafetyPanelProps) {
   const router = useRouter();
   const isPanel = variant === 'panel';
@@ -221,6 +225,7 @@ export function AreaSafetyPanel({
     setSelectedArea(area);
     setSuggestions([]);
     setQuery(area.name);
+    onFlyTo?.(area.lat, area.lng, area.name);
     await loadSummary(area.lat, area.lng, area.name);
     void loadGuide(area.name);
   }
@@ -376,6 +381,61 @@ export function AreaSafetyPanel({
             : 'mx-auto max-w-2xl space-y-4 px-4 pt-5'
         }
       >
+        <section>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#8A7B67]">UK cities · live data</p>
+          <div className="grid grid-cols-2 gap-2">
+            {UK_CITIES.map((city) => (
+              <button
+                key={city.name}
+                type="button"
+                onClick={() =>
+                  void selectArea({
+                    id: city.name,
+                    name: city.name,
+                    fullName: city.name,
+                    lat: city.lat,
+                    lng: city.lng,
+                  })
+                }
+                className={`rounded-[10px] border px-3 py-2.5 text-left text-[13px] font-medium ${
+                  displayCity.toLowerCase() === city.name.toLowerCase()
+                    ? 'border-brand-500 bg-brand-500 text-white'
+                    : 'border-[#E3D8C6] bg-[#FBF7F1] text-[#17130F] hover:border-brand-500 hover:bg-white'
+                }`}
+              >
+                {city.name}
+              </button>
+            ))}
+          </div>
+          <p className="mb-2 mt-3 text-[11px] font-bold uppercase tracking-wider text-[#8A7B67]">Global cities · safety index</p>
+          <div className="grid grid-cols-2 gap-2">
+            {GLOBAL_CITIES.map((city) => (
+              <button
+                key={city.name}
+                type="button"
+                onClick={() =>
+                  void selectArea({
+                    id: city.name,
+                    name: city.name,
+                    fullName: city.name,
+                    lat: city.lat,
+                    lng: city.lng,
+                  })
+                }
+                className={`rounded-[10px] border px-3 py-2.5 text-left text-[13px] font-medium ${
+                  displayCity.toLowerCase() === city.name.toLowerCase()
+                    ? 'border-brand-500 bg-brand-500 text-white'
+                    : 'border-[#E3D8C6] bg-[#FBF7F1] text-[#17130F] hover:border-brand-500 hover:bg-white'
+                }`}
+              >
+                {city.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <SaveSpotForm fallbackLat={selectedArea?.lat ?? currentLocation?.lat} fallbackLng={selectedArea?.lng ?? currentLocation?.lng} />
+
         {summaryLoading && (
           <div className="flex flex-col items-center gap-3 py-16">
             <Loader2 className="h-8 w-8 animate-spin text-[#FF7B14]" />

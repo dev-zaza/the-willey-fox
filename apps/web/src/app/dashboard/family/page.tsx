@@ -315,12 +315,13 @@ export default function FamilyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface pb-8">
-      <div className="border-b border-surface-border bg-surface-card px-4 py-4">
-        <Link href="/dashboard" className="text-sm text-[#7a6957] hover:text-brand-500">
-          ← Dashboard
-        </Link>
-        <h1 className="mt-2 text-xl font-bold text-[var(--text-primary)]">Family groups</h1>
+    <div className="min-h-screen bg-[#F1E7D8] pb-8">
+      <div className="border-b border-[#E3D8C6] bg-white px-4 py-5 lg:px-10">
+        <p className="text-[11px] font-extrabold tracking-[0.12em] text-[#8A7B67]">SAFETY NETWORK</p>
+        <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-[#17130F]">Your family group</h1>
+        <p className="mt-1 max-w-[66ch] text-sm text-[#5C5245]">
+          Guardians can respond for a protected person. Emergency contacts are called first on SOS.
+        </p>
       </div>
 
       <div className="mx-auto max-w-2xl space-y-4 p-4">
@@ -333,7 +334,7 @@ export default function FamilyPage() {
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && createFamily()}
             placeholder="New family name"
-            className="w-full rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[#9d8c7a]"
+            className="w-full rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[#9d8c7a]"
           />
           <button
             type="button"
