@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { QrService } from './qr.service';
 import { DRIZZLE } from '../../database/database.module';
 import { SettingsService } from '../settings/settings.service';
+import { CloudinaryService } from '../users/cloudinary.service';
 
 // ─── Drizzle mock factory ─────────────────────────────────────────────────────
 // QrService uses two query patterns:
@@ -66,6 +67,12 @@ const mockSettings = {
   getPricingConfig: jest.fn(),
 };
 
+const mockCloudinary = {
+  uploadQrPhoto: jest.fn().mockResolvedValue('https://cdn.example.com/qr_photo.jpg'),
+  uploadAvatar: jest.fn(),
+  uploadReportPhoto: jest.fn(),
+};
+
 const baseQr = {
   id: 'qr-1',
   userId: 'user-1',
@@ -108,6 +115,7 @@ describe('QrService', () => {
         { provide: DRIZZLE, useValue: db },
         { provide: ConfigService, useValue: mockConfig },
         { provide: SettingsService, useValue: mockSettings },
+        { provide: CloudinaryService, useValue: mockCloudinary },
       ],
     }).compile();
 
@@ -116,6 +124,53 @@ describe('QrService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('uploadPhoto', () => {
+    it('uploads via Cloudinary and stores photoUrl', async () => {
+      enqueueLimit([{ id: 'qr-1' }]);
+      const result = await service.uploadPhoto('qr-1', Buffer.from('png'));
+      expect(mockCloudinary.uploadQrPhoto).toHaveBeenCalledWith(Buffer.from('png'), 'qr-1');
+      expect(result.photoUrl).toBe('https://cdn.example.com/qr_photo.jpg');
+      expect(db.update).toHaveBeenCalled();
+    });
+
+    it('throws QR_NOT_FOUND when missing', async () => {
+      enqueueLimit([]);
+      await expect(service.uploadPhoto('missing', Buffer.from('x'))).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update medicalInfo merge', () => {
+    it('merges medicalInfo into existing customFields without dropping relationship', async () => {
+      enqueueLimit([{ customFields: { relationship: 'Child' } }]);
+      db.returning.mockResolvedValueOnce([
+        {
+          ...baseQr,
+          customFields: {
+            relationship: 'Child',
+            medicalInfo: { bloodType: 'A+', allergies: 'None' },
+          },
+          visibilityConfig: { showCustomFields: true },
+        },
+      ]);
+
+      const result = await service.update('qr-1', {
+        medicalInfo: { bloodType: 'A+', allergies: 'None' },
+        visibilityConfig: { showCustomFields: true },
+      } as any);
+
+      expect((result.customFields as any).relationship).toBe('Child');
+      expect((result.customFields as any).medicalInfo.bloodType).toBe('A+');
+      expect(db.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customFields: expect.objectContaining({
+            relationship: 'Child',
+            medicalInfo: expect.objectContaining({ bloodType: 'A+' }),
+          }),
+        }),
+      );
+    });
   });
 
   // ── create ──────────────────────────────────────────────────────────────────

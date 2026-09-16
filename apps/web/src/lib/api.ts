@@ -242,6 +242,26 @@ export const twoFactor = {
 
 // ── QR Codes ─────────────────────────────────────────────────────────────────
 
+export interface MedicalInfoPayload {
+  allergies?: string;
+  bloodType?: string;
+  medicalConditions?: string;
+  medications?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  doctorName?: string;
+  doctorPhone?: string;
+  insuranceInfo?: string;
+  notes?: string;
+}
+
+export interface QrVisibilityConfig {
+  showName?: boolean;
+  showPhoto?: boolean;
+  showDescription?: boolean;
+  showCustomFields?: boolean;
+}
+
 export interface QrCode {
   id: string;
   uniqueCode: string;
@@ -253,10 +273,12 @@ export interface QrCode {
   ownerContactEmail?: string;
   ownerContactPhone?: string;
   rewardMessage?: string;
-  photoUrl?: string;
+  photoUrl?: string | null;
   description?: string;
   isActive: boolean;
   createdAt: string;
+  customFields?: Record<string, unknown> | null;
+  visibilityConfig?: QrVisibilityConfig | null;
 }
 
 export interface CreateQrCodePayload {
@@ -269,6 +291,9 @@ export interface CreateQrCodePayload {
   ownerContactEmail?: string;
   ownerContactPhone?: string;
   rewardMessage?: string;
+  customFields?: Record<string, unknown>;
+  medicalInfo?: MedicalInfoPayload;
+  visibilityConfig?: QrVisibilityConfig;
 }
 
 export interface UpdateQrCodePayload {
@@ -281,6 +306,9 @@ export interface UpdateQrCodePayload {
   ownerContactPhone?: string;
   rewardMessage?: string;
   isLost?: boolean;
+  customFields?: Record<string, unknown>;
+  medicalInfo?: MedicalInfoPayload;
+  visibilityConfig?: QrVisibilityConfig;
 }
 
 export interface BulkCreateQrPayload {
@@ -315,6 +343,11 @@ export const qrCodes = {
     request<QrCode[]>('/qr-codes/bulk', { method: 'POST', body: JSON.stringify(payload) }),
   setTheme: (id: string, themeId: string | null) =>
     request<QrCode>(`/qr-codes/${id}/theme`, { method: 'PATCH', body: JSON.stringify({ themeId }) }),
+  uploadPhoto: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request<{ photoUrl: string }>(`/qr-codes/${id}/photo`, { method: 'POST', body: formData }, false, false);
+  },
 };
 
 export const publicQr = {
@@ -374,6 +407,19 @@ export const reports = {
     }),
   uploadPhoto: (reportId: string, formData: FormData) =>
     request<{ photoUrl: string }>(`/public/reports/${reportId}/photo`, { method: 'POST', body: formData }, false, false),
+  createMissing: (payload: {
+    qrCodeId: string;
+    description?: string;
+    contact?: string;
+    lastSeenLocation?: string;
+    lat?: number;
+    lng?: number;
+    requestBroadcast?: boolean;
+  }) =>
+    request<{ id: string; broadcast: boolean }>('/reports', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };
 
 // ── Support ───────────────────────────────────────────────────────────────────
@@ -419,6 +465,8 @@ export interface BroadcastListItem {
   photoUrl?: string | null;
   lastSeenLocation?: string | null;
   lastSeenNotes?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   broadcastApprovedAt: string;
   broadcastExpiresAt: string;
 }
@@ -489,20 +537,23 @@ export const broadcasts = {
 
 export interface Guardian {
   id: string;
-  qrCodeId: string;
-  guardianId: string;
-  status: 'pending' | 'approved' | 'rejected';
-  guardian: UserProfile;
+  qrCodeId?: string;
+  userId: string;
+  status: 'pending' | 'active' | 'rejected' | 'removed' | 'approved';
+  user?: Pick<UserProfile, 'id' | 'firstName' | 'lastName' | 'email' | 'avatarUrl'>;
+  /** @deprecated use user */
+  guardian?: UserProfile;
   createdAt: string;
 }
 
 export const guardians = {
-  listForQr: (qrCodeId: string) => request<Guardian[]>(`/guardians?qrCodeId=${qrCodeId}`),
+  listForQr: (qrCodeId: string) => request<Guardian[]>(`/qr-codes/${qrCodeId}/guardians`),
   requestAccess: (qrCodeId: string) =>
-    request<Guardian>('/guardians', { method: 'POST', body: JSON.stringify({ qrCodeId }) }),
-  approve: (id: string) =>
-    request<Guardian>(`/guardians/${id}/approve`, { method: 'POST' }),
-  remove: (id: string) => request<void>(`/guardians/${id}`, { method: 'DELETE' }),
+    request<Guardian>(`/qr-codes/${qrCodeId}/guardians/request`, { method: 'POST' }),
+  approve: (qrCodeId: string, userId: string) =>
+    request<Guardian>(`/qr-codes/${qrCodeId}/guardians/${userId}/approve`, { method: 'POST' }),
+  remove: (qrCodeId: string, userId: string) =>
+    request<void>(`/qr-codes/${qrCodeId}/guardians/${userId}`, { method: 'DELETE' }),
   inviteByEmail: (qrCodeId: string, email: string) =>
     request<{ invited: boolean; email?: string; mapping?: Guardian }>(`/qr-codes/${qrCodeId}/guardians/invite`, {
       method: 'POST',
@@ -1378,6 +1429,8 @@ export interface AreaSummary {
   crimeBreakdown: Array<{ type: string; count: number }>;
   dataMonth: string;
   scoreMethodology: string;
+  /** True when fewer than 3 incidents in the query radius */
+  dataLimited?: boolean;
 }
 
 export const safetyEngine = {
@@ -1441,6 +1494,16 @@ export interface FamilyQrCode {
   category: string;
   uniqueCode: string;
   isLost: boolean;
+  photoUrl?: string | null;
+  customFields?: Record<string, unknown> | null;
+}
+
+export interface FamilyPendingInvite {
+  id: string;
+  email: string;
+  status: string;
+  expiresAt: string;
+  createdAt: string;
 }
 
 export interface FamilyGroup {
@@ -1454,6 +1517,7 @@ export interface FamilyGroup {
 export interface FamilyDetail extends FamilyGroup {
   members: FamilyMember[];
   qrCodes: FamilyQrCode[];
+  pendingInvites?: FamilyPendingInvite[];
 }
 
 export const families = {
@@ -1461,7 +1525,15 @@ export const families = {
   get: (id: string) => request<FamilyDetail>(`/families/${id}`),
   create: (name: string) => request<FamilyGroup>('/families', { method: 'POST', body: JSON.stringify({ name }) }),
   addMember: (familyId: string, payload: { userId?: string; email?: string }) =>
-    request<FamilyMember>(`/families/${familyId}/members`, { method: 'POST', body: JSON.stringify(payload) }),
+    request<{ invited?: boolean; added?: boolean; email?: string } & Partial<FamilyMember>>(
+      `/families/${familyId}/members`,
+      { method: 'POST', body: JSON.stringify(payload) },
+    ),
+  acceptInvite: (token: string) =>
+    request<{ familyId: string; success: boolean }>('/families/invite/accept', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
   removeMember: (familyId: string, userId: string) =>
     request<{ success: boolean }>(`/families/${familyId}/members/${userId}`, { method: 'DELETE' }),
   addQrCode: (familyId: string, qrCodeId: string) =>

@@ -4,6 +4,19 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "esModuleInterop": true,
+          "allowSyntheticDefaultImports": true
+        }
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^archiver$": "<rootDir>/test/mocks/archiver.js",
+    "^puppeteer$": "<rootDir>/test/mocks/puppeteer.js"
   }
 }

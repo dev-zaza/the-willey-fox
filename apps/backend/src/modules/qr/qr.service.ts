@@ -16,6 +16,7 @@ import { TIER_LIMITS } from '@safetag/shared';
 import { CreateQrDto, UpdateQrDto, ClaimQrDto, BulkCreateQrDto } from './dto';
 import { SetQrThemeDto } from './dto/set-qr-theme.dto';
 import { SettingsService } from '../settings/settings.service';
+import { CloudinaryService } from '../users/cloudinary.service';
 
 const nanoid = customAlphabet('23456789ABCDEFGHJKLMNPQRSTUVWXYZ', 8);
 
@@ -25,6 +26,7 @@ export class QrService {
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly configService: ConfigService,
     private readonly settingsService: SettingsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async create(userId: string, tier: string, dto: CreateQrDto) {
@@ -162,7 +164,14 @@ export class QrService {
     if (dto.isLost !== undefined) updateData.isLost = dto.isLost;
     if (dto.visibilityConfig !== undefined) updateData.visibilityConfig = dto.visibilityConfig;
     if (dto.customFields !== undefined || dto.medicalInfo !== undefined) {
+      const [existing] = await this.db
+        .select({ customFields: qrCodes.customFields })
+        .from(qrCodes)
+        .where(eq(qrCodes.id, id))
+        .limit(1);
+      const prev = (existing?.customFields as Record<string, unknown> | null) ?? {};
       updateData.customFields = {
+        ...prev,
         ...(dto.customFields ?? {}),
         ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
       };
@@ -175,6 +184,22 @@ export class QrService {
       .returning();
 
     return updated;
+  }
+
+  async uploadPhoto(id: string, buffer: Buffer): Promise<{ photoUrl: string }> {
+    const [qr] = await this.db
+      .select({ id: qrCodes.id })
+      .from(qrCodes)
+      .where(eq(qrCodes.id, id))
+      .limit(1);
+    if (!qr) throw new NotFoundException('QR_NOT_FOUND');
+
+    const photoUrl = await this.cloudinaryService.uploadQrPhoto(buffer, id);
+    await this.db
+      .update(qrCodes)
+      .set({ photoUrl, updatedAt: new Date() })
+      .where(eq(qrCodes.id, id));
+    return { photoUrl };
   }
 
   async markLost(id: string) {

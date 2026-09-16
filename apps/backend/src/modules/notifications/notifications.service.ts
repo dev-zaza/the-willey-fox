@@ -513,6 +513,74 @@ export class NotificationsService {
     this.logger.log(`Guardian invite email queued for ${email}`);
   }
 
+  async sendFamilyInviteEmail(
+    email: string,
+    inviterName: string,
+    familyName: string,
+    acceptUrl: string,
+    expiresAt: Date,
+    alreadyAdded: boolean,
+  ): Promise<void> {
+    const expiryStr = expiresAt.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const subject = alreadyAdded
+      ? `Wiley Fox: You've been added to "${familyName}"`
+      : `Wiley Fox: ${inviterName} invited you to join "${familyName}"`;
+    const body = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;padding:24px;">
+        <div style="background:#ffffff;border-radius:8px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="margin:0 0 16px;font-size:20px;color:#111827;">
+            ${alreadyAdded ? 'You joined a family group' : "You've been invited to a family group"}
+          </h2>
+          <p style="color:#374151;font-size:15px;margin:0 0 16px;">
+            <strong>${inviterName}</strong>
+            ${alreadyAdded ? ' added you to' : ' invited you to join'}
+            <strong>"${familyName}"</strong> on Wiley Fox.
+          </p>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 24px;">
+            ${alreadyAdded
+              ? 'Open the app to see protected people and respond to alerts.'
+              : `Accept this invite to help protect family members. Expires <strong>${expiryStr}</strong>.`}
+          </p>
+          <div style="text-align:center;">
+            <a href="${acceptUrl}" style="display:inline-block;padding:12px 28px;background:#ea2e00;color:#ffffff;text-decoration:none;border-radius:6px;font-size:15px;font-weight:600;">
+              ${alreadyAdded ? 'Open family' : 'Accept invitation'}
+            </a>
+          </div>
+        </div>
+      </div>
+    `.trim();
+
+    const [log] = await this.db
+      .insert(notificationLogs)
+      .values({
+        type: 'email',
+        recipientId: null,
+        recipientContact: email,
+        subject,
+        body,
+        metadata: { purpose: 'family-invite' },
+        status: 'pending',
+      })
+      .returning();
+
+    const jobData: NotificationJobData = {
+      logId: log.id,
+      type: 'email',
+      payload: { recipient: email, subject, body, metadata: { purpose: 'family-invite' } },
+    };
+
+    await this.notificationsQueue.add('send-email', jobData, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+    });
+
+    this.logger.log(`Family invite email queued for ${email}`);
+  }
+
   async notifyFinderOfResponse(
     reportId: string,
     responseMessage: string,

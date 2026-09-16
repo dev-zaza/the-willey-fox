@@ -5,7 +5,7 @@ import { Bell, MapPin, Mail, Phone, Flag, X, Loader2, Megaphone, Clock } from 'l
 import { qrCodes, reports, broadcasts, type Report, type QrCode } from '@/lib/api';
 
 const TOS_VERSION = 'broadcast-v1-2026-04-22';
-const BROADCAST_ELIGIBLE_CATEGORIES = ['child', 'minor', 'kid', 'children'];
+const BROADCAST_ELIGIBLE_CATEGORIES = ['child', 'minor', 'kid', 'children', 'person', 'medical'];
 
 interface AlertItem {
   report: Report;

@@ -15,6 +15,7 @@ export const FAMILY_PROFILE_LABELS: Record<FamilyProfileCategory, string> = {
 };
 
 export const ONBOARD_FAMILY_NAME_KEY = 'onboard_family_name';
+export const ONBOARD_FAMILY_ID_KEY = 'onboard_family_id';
 export const ONBOARD_QR_PROFILES_KEY = 'onboard_qr_profiles';
 
 export interface CreatedQrProfile {
@@ -49,6 +50,9 @@ export async function createAndLinkFamilyProfiles(
         name: draft.name,
         label: draft.name,
         category: draft.category,
+        customFields: draft.relationship
+          ? { relationship: draft.relationship }
+          : undefined,
       });
       await families.addQrCode(familyId, qr.id);
       created.push(qr);

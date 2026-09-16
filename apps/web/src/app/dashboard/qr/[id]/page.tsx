@@ -49,17 +49,27 @@ export default function QrDetailPage() {
   const [ownerContactEmail, setOwnerContactEmail] = useState('');
   const [ownerContactPhone, setOwnerContactPhone] = useState('');
   const [rewardMessage, setRewardMessage] = useState('');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [bloodType, setBloodType] = useState('');
+  const [allergies, setAllergies] = useState('');
+  const [medicalConditions, setMedicalConditions] = useState('');
+  const [medications, setMedications] = useState('');
+  const [iceName, setIceName] = useState('');
+  const [icePhone, setIcePhone] = useState('');
+  const [medicalNotes, setMedicalNotes] = useState('');
+  const [showMedicalOnScan, setShowMedicalOnScan] = useState(false);
+  const [requestBroadcast, setRequestBroadcast] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      qrCodes.get(id),
-      reports.listForQr(id),
-      guardians.listForQr(id),
-      settings.listVisualThemes(),
-      settings.listPrintTemplates(),
-      settings.getQrTemplate(),
-    ])
-      .then(([t, r, g, vt, pt, tpl]) => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        // Load QR first — secondary calls must not blank the whole profile page
+        const t = await qrCodes.get(id);
+        if (cancelled) return;
         setTag(t);
         setName(t.name);
         setLabel(t.label ?? t.name);
@@ -68,16 +78,43 @@ export default function QrDetailPage() {
         setOwnerContactEmail(t.ownerContactEmail ?? '');
         setOwnerContactPhone(t.ownerContactPhone ?? '');
         setRewardMessage(t.rewardMessage ?? '');
+        setPhotoUrl(t.photoUrl ?? null);
+        const med = (t.customFields?.medicalInfo ?? {}) as Record<string, string>;
+        setBloodType(med.bloodType ?? '');
+        setAllergies(med.allergies ?? '');
+        setMedicalConditions(med.medicalConditions ?? '');
+        setMedications(med.medications ?? '');
+        setIceName(med.emergencyContactName ?? '');
+        setIcePhone(med.emergencyContactPhone ?? '');
+        setMedicalNotes(med.notes ?? '');
+        setShowMedicalOnScan(Boolean(t.visibilityConfig?.showCustomFields));
+        setSelectedThemeId((t as QrCode & { themeId?: string | null }).themeId ?? null);
+
+        const [r, g, vt, pt, tpl] = await Promise.all([
+          reports.listForQr(id).catch(() => [] as Report[]),
+          guardians.listForQr(id).catch(() => [] as Guardian[]),
+          settings.listVisualThemes().catch(() => [] as VisualTheme[]),
+          settings.listPrintTemplates().catch(() => [] as PrintTemplate[]),
+          settings.getQrTemplate().catch(() => ({ logoUrl: null } as { logoUrl: string | null })),
+        ]);
+        if (cancelled) return;
         setTagReports(r);
         setTagGuardians(g);
         setThemes(vt);
         setPrintTemplates(pt);
         setLogoUrl(tpl.logoUrl ?? null);
-        setSelectedThemeId((t as QrCode & { themeId?: string | null }).themeId ?? null);
         if (pt.length > 0) setSelectedTemplate(pt[0]);
-      })
-      .catch(() => router.push('/dashboard/qr'))
-      .finally(() => setLoading(false));
+      } catch {
+        if (!cancelled) setTag(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function save() {
@@ -91,22 +128,69 @@ export default function QrDetailPage() {
         ownerContactEmail: ownerContactEmail || undefined,
         ownerContactPhone: ownerContactPhone || undefined,
         rewardMessage: rewardMessage || undefined,
+        medicalInfo: {
+          bloodType: bloodType || undefined,
+          allergies: allergies || undefined,
+          medicalConditions: medicalConditions || undefined,
+          medications: medications || undefined,
+          emergencyContactName: iceName || undefined,
+          emergencyContactPhone: icePhone || undefined,
+          notes: medicalNotes || undefined,
+        },
+        visibilityConfig: {
+          showName: true,
+          showPhoto: true,
+          showDescription: true,
+          showCustomFields: showMedicalOnScan,
+        },
       });
       setTag(updated);
-    } catch {}
-    finally { setSaving(false); }
+      setPhotoUrl(updated.photoUrl ?? photoUrl);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePhotoChange(file: File | null) {
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const { photoUrl: url } = await qrCodes.uploadPhoto(id, file);
+      setPhotoUrl(url);
+      setTag((prev) => (prev ? { ...prev, photoUrl: url } : prev));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Photo upload failed');
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function toggleLost() {
     if (!tag) return;
     setMarkingLost(true);
     try {
-      const updated = tag.isLost
-        ? await qrCodes.markFound(id)
-        : await qrCodes.markLost(id);
-      setTag(updated);
-    } catch {}
-    finally { setMarkingLost(false); }
+      if (tag.isLost) {
+        const updated = await qrCodes.markFound(id);
+        setTag(updated);
+      } else {
+        const updated = await qrCodes.markLost(id);
+        setTag(updated);
+        try {
+          await reports.createMissing({
+            qrCodeId: id,
+            requestBroadcast: requestBroadcast && (tag.category === 'person' || tag.category === 'medical'),
+          });
+        } catch {
+          // markLost succeeded; missing report is best-effort
+        }
+      }
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Failed to update lost status');
+    } finally {
+      setMarkingLost(false);
+    }
   }
 
   async function handleSetTheme(themeId: string | null) {
@@ -125,7 +209,18 @@ export default function QrDetailPage() {
   if (loading) return (
     <div className="min-h-screen bg-surface flex items-center justify-center text-[#7a6957]">Loading…</div>
   );
-  if (!tag) return null;
+  if (!tag) return (
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3 p-6 text-center">
+      <p className="text-sm text-[#7a6957]">Could not load this QR profile.</p>
+      <button
+        type="button"
+        onClick={() => router.push('/dashboard/qr')}
+        className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white"
+      >
+        Back to tags
+      </button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-surface p-6">
@@ -154,9 +249,29 @@ export default function QrDetailPage() {
             </p>
             <p className="text-xs text-[#9d8c7a] mt-0.5">
               {tag.isLost
-                ? 'Finders will see a red urgent banner when they scan this QR.'
-                : 'Mark as lost to alert finders when this QR is scanned.'}
+                ? 'Finders will see a red urgent banner when they scan this QR. Guardians were notified.'
+                : 'Mark as lost to alert guardians and optionally broadcast a missing-person alert.'}
             </p>
+            {!tag.isLost && (tag.category === 'person' || tag.category === 'medical') && (
+              <label className="mt-2 flex items-center gap-2 text-xs text-[#7a6957]">
+                <input
+                  type="checkbox"
+                  checked={requestBroadcast}
+                  onChange={(e) => setRequestBroadcast(e.target.checked)}
+                />
+                Request public missing-child broadcast
+              </label>
+            )}
+            {tag.isLost && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a href="tel:999" className="rounded-lg bg-[#D7263D] px-2.5 py-1 text-[11px] font-bold text-white">
+                  Call 999
+                </a>
+                <a href="tel:101" className="rounded-lg border border-surface-border px-2.5 py-1 text-[11px] font-bold text-[#5a4a3d]">
+                  Call 101
+                </a>
+              </div>
+            )}
           </div>
           <button
             onClick={toggleLost}
@@ -276,6 +391,27 @@ export default function QrDetailPage() {
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
           <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Tag Details</h2>
 
+          <div className="flex items-center gap-4">
+            {photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 text-xs text-[#7a6957]">
+                No photo
+              </div>
+            )}
+            <label className="cursor-pointer rounded-xl border border-surface-border px-3 py-2 text-xs font-semibold text-brand-500">
+              {uploadingPhoto ? 'Uploading…' : 'Add / change photo'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                disabled={uploadingPhoto}
+                onChange={(e) => void handlePhotoChange(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </div>
+
           {[
             { label: 'Name (shown on finder page)', value: name, set: setName, type: 'text' },
             { label: 'Display Label (optional shortname)', value: label, set: setLabel, type: 'text' },
@@ -307,6 +443,49 @@ export default function QrDetailPage() {
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
+        </div>
+
+        {/* Medical / ICE */}
+        <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-[#5a4a3d] uppercase tracking-wider">Medical alert info</h2>
+          <p className="text-xs text-[#9d8c7a]">
+            Stored on this profile for medical / ICE use. Off by default on public scan for children.
+          </p>
+          <label className="flex items-center gap-2 text-xs text-[#7a6957]">
+            <input
+              type="checkbox"
+              checked={showMedicalOnScan}
+              onChange={(e) => setShowMedicalOnScan(e.target.checked)}
+            />
+            Show medical fields when this QR is scanned
+          </label>
+          {[
+            { label: 'Blood type', value: bloodType, set: setBloodType },
+            { label: 'Allergies', value: allergies, set: setAllergies },
+            { label: 'Medical conditions', value: medicalConditions, set: setMedicalConditions },
+            { label: 'Medications', value: medications, set: setMedications },
+            { label: 'ICE contact name', value: iceName, set: setIceName },
+            { label: 'ICE contact phone', value: icePhone, set: setIcePhone },
+            { label: 'Notes', value: medicalNotes, set: setMedicalNotes },
+          ].map(({ label: lbl, value, set }) => (
+            <div key={lbl} className="space-y-1.5">
+              <label className="text-xs font-medium text-[#7a6957]">{lbl}</label>
+              <input
+                type="text"
+                value={value}
+                onChange={(e) => set(e.target.value)}
+                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save medical info'}
+          </button>
         </div>
 
         {/* Reports */}
@@ -353,16 +532,20 @@ export default function QrDetailPage() {
             <p className="text-[#9d8c7a] text-sm">No guardians assigned</p>
           ) : (
             <div className="space-y-2">
-              {tagGuardians.map((g) => (
+              {tagGuardians.map((g) => {
+                const person = g.user ?? g.guardian;
+                const isActive = g.status === 'active' || g.status === 'approved';
+                return (
                 <div key={g.id} className="flex items-center justify-between">
-                  <p className="text-sm text-white">{g.guardian.firstName} {g.guardian.lastName}</p>
+                  <p className="text-sm text-white">{person?.firstName} {person?.lastName}</p>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${
-                    g.status === 'approved' ? 'bg-green-500/15 text-green-400' :
+                    isActive ? 'bg-green-500/15 text-green-400' :
                     g.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
                     'bg-red-500/15 text-red-400'
-                  }`}>{g.status}</span>
+                  }`}>{isActive ? 'active' : g.status}</span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

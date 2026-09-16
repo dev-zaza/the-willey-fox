@@ -32,7 +32,17 @@ interface MapViewProps {
   center?: LatLng;
   zoom?: number;
   userLocation?: LatLng | null;
+  sosBeacons?: Array<{ id: string; lat: number; lng: number; message?: string | null }>;
+  missingAlerts?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    name?: string | null;
+    photoUrl?: string | null;
+  }>;
   onPinClick?: (pin: PinData) => void;
+  onSosClick?: (id: string) => void;
+  onMissingClick?: (id: string) => void;
   /** Long-press / right-click to create a pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number }) => void;

@@ -14,6 +14,8 @@ import {
 import { useAuth } from '@/context/auth-context';
 import {
   families,
+  qrCodes,
+  reports,
   type FamilyDetail,
   type FamilyMembership,
 } from '@/lib/api';
@@ -93,9 +95,15 @@ export default function FamilyPage() {
     setInviting(true);
     setInviteError('');
     try {
-      await families.addMember(selectedId, { email: memberEmail.trim() });
+      const result = await families.addMember(selectedId, { email: memberEmail.trim() });
       setMemberEmail('');
       await openFamily(selectedId);
+      if (result.invited) {
+        setInviteError('');
+        alert('Invite email sent. They can join once they accept the link.');
+      } else if (result.added) {
+        alert('Member added and notified by email.');
+      }
     } catch (e: unknown) {
       setInviteError(e instanceof Error ? e.message : 'Failed to invite member');
     } finally {
@@ -159,7 +167,7 @@ export default function FamilyPage() {
                   People with accounts · {detail.members.length}
                 </p>
                 <p className="mb-3 px-1 text-xs leading-5 text-[#7a6957]">
-                  Invite adults who already have a Wiley Fox account. Kids don&apos;t need email — add them as QR profiles below.
+                  Invite adults by email — they get a join link even if they don&apos;t have an account yet. Kids don&apos;t need email — add them as QR profiles below.
                 </p>
                 <div className="overflow-hidden rounded-2xl border border-surface-border bg-surface-card">
                   {detail.members.map((m, i) => {
@@ -228,6 +236,21 @@ export default function FamilyPage() {
                     {inviteError && <p className="text-xs text-red-600">{inviteError}</p>}
                   </div>
                 )}
+
+                {(detail.pendingInvites?.length ?? 0) > 0 && (
+                  <div className="mt-3 rounded-2xl border border-dashed border-[#E3D8C6] bg-[#FBF7F1] px-4 py-3">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[#7a6957]">
+                      Pending invites
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {detail.pendingInvites!.map((inv) => (
+                        <li key={inv.id} className="text-xs text-[#5C5245]">
+                          {inv.email} · expires {new Date(inv.expiresAt).toLocaleDateString('en-GB')}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
 
               <section>
@@ -255,30 +278,76 @@ export default function FamilyPage() {
                   <div className="overflow-hidden rounded-2xl border border-surface-border bg-surface-card">
                     {detail.qrCodes.map((qr, i) => {
                       const Icon = qr.category === 'pet' ? PawPrint : User;
+                      const relationship =
+                        typeof qr.customFields?.relationship === 'string'
+                          ? qr.customFields.relationship
+                          : null;
                       return (
-                        <Link
+                        <div
                           key={qr.id}
-                          href={`/dashboard/qr/${qr.id}`}
-                          className={`flex items-center gap-3 px-4 py-3 hover:bg-black/5 ${
+                          className={`flex flex-col gap-2 px-4 py-3 ${
                             i < detail.qrCodes.length - 1 ? 'border-b border-surface-border' : ''
                           }`}
                         >
-                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/10">
-                            <Icon className="h-4 w-4 text-brand-500" />
+                          <div className="flex items-center gap-3">
+                            {qr.photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={qr.photoUrl}
+                                alt=""
+                                className="h-10 w-10 flex-shrink-0 rounded-xl object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500/10">
+                                <Icon className="h-4 w-4 text-brand-500" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-[var(--text-primary)]">{qr.name}</p>
+                              <p className="text-xs capitalize text-[#7a6957]">
+                                {relationship ||
+                                  FAMILY_PROFILE_LABELS[qr.category as 'person' | 'pet'] ||
+                                  qr.category}
+                              </p>
+                            </div>
+                            {qr.isLost && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                                <AlertTriangle className="h-3 w-3" />
+                                Lost
+                              </span>
+                            )}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">{qr.name}</p>
-                            <p className="text-xs capitalize text-[#7a6957]">
-                              {FAMILY_PROFILE_LABELS[qr.category as 'person' | 'pet'] ?? qr.category}
-                            </p>
+                          <div className="flex flex-wrap gap-2 pl-[52px]">
+                            <Link
+                              href={`/dashboard/qr/${qr.id}`}
+                              className="rounded-lg bg-brand-500/10 px-2.5 py-1 text-[11px] font-bold text-brand-600"
+                            >
+                              View QR / Edit
+                            </Link>
+                            <button
+                              type="button"
+                              className="rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600"
+                              onClick={async () => {
+                                try {
+                                  if (qr.isLost) {
+                                    await qrCodes.markFound(qr.id);
+                                  } else {
+                                    await qrCodes.markLost(qr.id);
+                                    await reports.createMissing({
+                                      qrCodeId: qr.id,
+                                      requestBroadcast: qr.category === 'person',
+                                    });
+                                  }
+                                  await openFamily(selectedId);
+                                } catch (e: unknown) {
+                                  alert(e instanceof Error ? e.message : 'Failed to update status');
+                                }
+                              }}
+                            >
+                              {qr.isLost ? 'Mark found' : 'Mark missing'}
+                            </button>
                           </div>
-                          {qr.isLost && (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
-                              <AlertTriangle className="h-3 w-3" />
-                              Lost
-                            </span>
-                          )}
-                        </Link>
+                        </div>
                       );
                     })}
                   </div>

@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { DRIZZLE } from '../../database/database.module';
 import { NotificationsService } from '../notifications/notifications.service';
+import { BroadcastConsentLogService } from '../broadcasts/broadcast-consent-log.service';
 
 // ─── Drizzle mock ─────────────────────────────────────────────────────────────
 const mockDb: any = {
@@ -17,11 +18,17 @@ const mockDb: any = {
   returning: jest.fn(),
   update: jest.fn(),
   set: jest.fn(),
+  execute: jest.fn().mockResolvedValue([]),
 };
 
 const mockNotifications = {
   notifyFinderOfResponse: jest.fn().mockResolvedValue(undefined),
   notifyGuardiansOfReport: jest.fn().mockResolvedValue(undefined),
+  sendPush: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockConsentLog = {
+  log: jest.fn().mockResolvedValue(undefined),
 };
 
 const baseReport = {
@@ -54,12 +61,18 @@ describe('ReportsService', () => {
     mockDb.returning.mockResolvedValue([]);
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
+    mockDb.execute.mockResolvedValue([]);
+    mockNotifications.notifyFinderOfResponse.mockResolvedValue(undefined);
+    mockNotifications.notifyGuardiansOfReport.mockResolvedValue(undefined);
+    mockNotifications.sendPush.mockResolvedValue(undefined);
+    mockConsentLog.log.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReportsService,
         { provide: DRIZZLE, useValue: mockDb },
         { provide: NotificationsService, useValue: mockNotifications },
+        { provide: BroadcastConsentLogService, useValue: mockConsentLog },
       ],
     }).compile();
 
@@ -68,6 +81,45 @@ describe('ReportsService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('createMissingReport', () => {
+    it('creates missing report and notifies guardians', async () => {
+      mockDb.select.mockReturnThis();
+      mockDb.from.mockReturnThis();
+      mockDb.where.mockReturnThis();
+      mockDb.insert.mockReturnThis();
+      mockDb.values.mockReturnThis();
+      mockDb.limit.mockResolvedValueOnce([
+        { id: 'qr-1', userId: 'owner-1', name: 'Sam', uniqueCode: 'ABC' },
+      ]);
+      mockDb.returning.mockResolvedValueOnce([{ id: 'report-new' }]);
+      // family lookup inside notifyFamilyMembersOfMissing
+      mockDb.limit.mockResolvedValueOnce([{ familyId: null, userId: 'owner-1' }]);
+
+      const result = await service.createMissingReport('owner-1', {
+        qrCodeId: 'qr-1',
+        description: 'Missing near park',
+        requestBroadcast: false,
+      } as any);
+
+      expect(result.id).toBe('report-new');
+      expect(result.broadcast).toBe(false);
+      expect(mockNotifications.notifyGuardiansOfReport).toHaveBeenCalledWith('report-new', 'qr-1');
+    });
+
+    it('forbids non-owner non-guardian', async () => {
+      mockDb.select.mockReturnThis();
+      mockDb.from.mockReturnThis();
+      mockDb.where.mockReturnThis();
+      mockDb.limit
+        .mockResolvedValueOnce([{ id: 'qr-1', userId: 'owner-1', name: 'Sam', uniqueCode: 'ABC' }])
+        .mockResolvedValueOnce([]); // no guardian link
+
+      await expect(
+        service.createMissingReport('stranger', { qrCodeId: 'qr-1' } as any),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   // ── findById ─────────────────────────────────────────────────────────────────

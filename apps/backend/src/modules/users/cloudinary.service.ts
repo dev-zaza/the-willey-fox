@@ -59,4 +59,27 @@ export class CloudinaryService {
         .end(buffer);
     });
   }
+
+  async uploadQrPhoto(buffer: Buffer, qrCodeId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: 'qr-photos',
+            public_id: `qr_${qrCodeId}`,
+            overwrite: true,
+            transformation: [{ width: 800, height: 800, crop: 'limit' }],
+          },
+          (error: Error | undefined, result: UploadApiResponse | undefined) => {
+            if (error) {
+              this.logger.error(`Cloudinary QR photo upload failed: ${error.message}`);
+              reject(new InternalServerErrorException('PHOTO_UPLOAD_FAILED'));
+            } else {
+              resolve(result!.secure_url);
+            }
+          },
+        )
+        .end(buffer);
+    });
+  }
 }

@@ -8,6 +8,7 @@ import {
   families,
   messages,
   qrCodes,
+  reports,
   type Conversation,
   type FamilyDetail,
   type FamilyMember,
@@ -37,23 +38,43 @@ export default function PeoplePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      families.list().catch(() => []),
-      qrCodes.list().catch(() => []),
-      messages.listConversations().catch(() => []),
-      emergency.listContacts().catch(() => []),
-    ])
-      .then(async ([memberships, tagList, conversations, contacts]) => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const [memberships, tagList, conversations, contacts] = await Promise.all([
+          families.list().catch(() => []),
+          qrCodes.list().catch(() => []),
+          messages.listConversations().catch(() => []),
+          emergency.listContacts().catch(() => []),
+        ]);
+        if (cancelled) return;
         setTags(tagList);
         setConvos(conversations);
         const primary = contacts.find((c) => c.isPrimary && c.status === 'accepted' && c.contact);
         if (primary?.contact) setSosName(`${primary.contact.firstName} ${primary.contact.lastName}`);
         if (memberships[0]) {
           const detail = await families.get(memberships[0].familyId);
-          setFamily(detail);
+          if (!cancelled) setFamily(detail);
+        } else {
+          setFamily(null);
         }
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+
+    function onFocus() {
+      void load();
+    }
+    window.addEventListener('focus', onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   const unread = convos.reduce((n, c) => n + (c.unreadCount || 0), 0);
@@ -221,22 +242,30 @@ export default function PeoplePage() {
                   />
                 ))}
                 {visibleProfiles.map((p, i) => (
-                  <Link
+                  <div
                     key={p.id}
-                    href={`/dashboard/qr/${p.id}`}
                     className="flex flex-col rounded-2xl border border-[#E3D8C6] bg-white p-4"
                   >
                     <div className="flex items-center gap-2.5">
-                      <span
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
-                        style={{ background: AVATAR_COLORS[(i + 3) % AVATAR_COLORS.length] }}
-                      >
-                        {p.name[0]?.toUpperCase() ?? '?'}
-                      </span>
+                      {p.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                      ) : (
+                        <span
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
+                          style={{ background: AVATAR_COLORS[(i + 3) % AVATAR_COLORS.length] }}
+                        >
+                          {p.name[0]?.toUpperCase() ?? '?'}
+                        </span>
+                      )}
                       <div>
                         <p className="text-sm font-bold text-[#17130F]">{p.name}</p>
                         <p className="text-xs capitalize text-[#8A7B67]">
-                          {p.category === 'pet' ? 'Pet' : 'Protected person'}
+                          {typeof p.customFields?.relationship === 'string'
+                            ? p.customFields.relationship
+                            : p.category === 'pet'
+                              ? 'Pet'
+                              : 'Protected person'}
                         </p>
                       </div>
                     </div>
@@ -252,7 +281,41 @@ export default function PeoplePage() {
                         </span>
                       ) : null}
                     </div>
-                  </Link>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/dashboard/qr/${p.id}`}
+                        className="rounded-lg bg-brand-500/10 px-2.5 py-1 text-[11px] font-bold text-brand-600"
+                      >
+                        View QR / Edit
+                      </Link>
+                      <button
+                        type="button"
+                        className="rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600"
+                        onClick={async () => {
+                          try {
+                            if (p.isLost) {
+                              await qrCodes.markFound(p.id);
+                            } else {
+                              await qrCodes.markLost(p.id);
+                              await reports.createMissing({
+                                qrCodeId: p.id,
+                                requestBroadcast: p.category === 'person',
+                              });
+                            }
+                            const memberships = await families.list();
+                            if (memberships[0]) {
+                              setFamily(await families.get(memberships[0].familyId));
+                            }
+                            setTags(await qrCodes.list());
+                          } catch (e: unknown) {
+                            alert(e instanceof Error ? e.message : 'Failed to update');
+                          }
+                        }}
+                      >
+                        {p.isLost ? 'Mark found' : 'Mark missing'}
+                      </button>
+                    </div>
+                  </div>
                 ))}
                 <Link
                   href="/dashboard/family"

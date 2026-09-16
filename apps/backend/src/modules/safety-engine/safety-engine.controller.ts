@@ -11,6 +11,7 @@ import type { DrizzleDB } from '../../database/database.module';
 import { areaRatings } from '../../database/schema';
 import { cellToBoundary, polygonToCells, latLngToCell } from 'h3-js';
 import { colourFor } from './lib/bands';
+import { UkPoliceAdapter } from './adapters/uk-police.adapter';
 
 interface CityGuide {
   city: string;
@@ -55,6 +56,7 @@ export class SafetyEngineController {
   constructor(
     @Inject(DRIZZLE) private readonly db: DrizzleDB,
     private readonly h3Scorer: H3Scorer,
+    private readonly ukPolice: UkPoliceAdapter,
   ) {}
 
   @Post('rescore')
@@ -197,9 +199,34 @@ export class SafetyEngineController {
       throw new BadRequestException((err as Error).message);
     }
 
+    // Per-cell incident totals so hex clicks show unique counts (not always 0)
+    const h3Col =
+      resolution === 7 ? 'h3_index_r7' : resolution === 11 ? 'h3_index_r11' : 'h3_index_r9';
+    const countByH3 = new Map<string, number>();
+    if (rows.length) {
+      try {
+        const rowCells = rows.map((r) => r.h3_index);
+        const countCellValues = sql.raw(
+          rowCells.map((c) => `'${c.replace(/'/g, "''")}'`).join(','),
+        );
+        const countRows = (await this.db.execute(
+          sql`SELECT ${sql.raw(h3Col)} AS h3, SUM(incident_count)::int AS total
+              FROM crime_incidents
+              WHERE ${sql.raw(h3Col)} IN (SELECT unnest(ARRAY[${countCellValues}]))
+              GROUP BY ${sql.raw(h3Col)}`,
+        )) as Array<{ h3: string; total: number }>;
+        for (const c of countRows) {
+          countByH3.set(c.h3, Number(c.total) || 0);
+        }
+      } catch {
+        // Best-effort — tiles still return without counts
+      }
+    }
+
     const features = rows.map((row) => {
       const boundary = cellToBoundary(row.h3_index, true) as [number, number][];
       const ring = [...boundary, boundary[0]];
+      const incidentCount = countByH3.get(row.h3_index) ?? 0;
       return {
         type: 'Feature',
         geometry: { type: 'Polygon', coordinates: [ring] },
@@ -209,6 +236,7 @@ export class SafetyEngineController {
           score: row.score != null ? Number(row.score) : null,
           band: row.band,
           color: colourFor(row.band),
+          incidentCount,
         },
       };
     });
@@ -318,44 +346,59 @@ export class SafetyEngineController {
     @Query('lng') lngStr?: string,
     @Query('radius') radiusStr?: string,
     @Query('city') cityParam?: string,
+    @Query('fetch') fetchParam?: string,
   ) {
     const lat = Number(latStr);
     const lng = Number(lngStr);
     const radiusMetres = Number(radiusStr) || 5000;
+    const allowOnDemand = fetchParam !== '0' && fetchParam !== 'false';
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       throw new BadRequestException('lat and lng query params required');
     }
-    if (radiusMetres < 500 || radiusMetres > 50000) {
-      throw new BadRequestException('radius must be 500–50000 metres');
+    if (radiusMetres < 200 || radiusMetres > 50000) {
+      throw new BadRequestException('radius must be 200–50000 metres');
     }
 
-    // Approximate degree delta for the radius (1° ≈ 111km)
-    const delta = radiusMetres / 111000;
-    const minLat = lat - delta;
-    const maxLat = lat + delta;
-    const minLng = lng - delta;
-    const maxLng = lng + delta;
+    const queryCrime = async () => {
+      const delta = radiusMetres / 111000;
+      const minLat = lat - delta;
+      const maxLat = lat + delta;
+      const minLng = lng - delta;
+      const maxLng = lng + delta;
 
-    // Crime breakdown by type within bounding box
-    const crimeRows = (await this.db.execute(sql`
-      SELECT crime_type, SUM(incident_count)::int AS total
-      FROM crime_incidents
-      WHERE lat BETWEEN ${minLat} AND ${maxLat}
-        AND lng BETWEEN ${minLng} AND ${maxLng}
-      GROUP BY crime_type
-      ORDER BY total DESC
-      LIMIT 20
-    `)) as Array<{ crime_type: string; total: number }>;
+      const crimeRows = (await this.db.execute(sql`
+        SELECT crime_type, SUM(incident_count)::int AS total
+        FROM crime_incidents
+        WHERE lat BETWEEN ${minLat} AND ${maxLat}
+          AND lng BETWEEN ${minLng} AND ${maxLng}
+        GROUP BY crime_type
+        ORDER BY total DESC
+        LIMIT 20
+      `)) as Array<{ crime_type: string; total: number }>;
 
-    const totalIncidents = crimeRows.reduce((s, r) => s + Number(r.total), 0);
-    const crimeBreakdown = crimeRows.map((r) => ({
-      type: r.crime_type,
-      count: Number(r.total),
-    }));
+      return crimeRows.map((r) => ({
+        type: r.crime_type,
+        count: Number(r.total),
+      }));
+    };
 
-    // Nearest H3 score at resolution 9 (neighbourhood level)
-    const { latLngToCell } = await import('h3-js');
+    let crimeBreakdown = await queryCrime();
+    let totalIncidents = crimeBreakdown.reduce((s, r) => s + r.count, 0);
+
+    // UK on-demand: if this neighbourhood has no local data, pull street crimes for the point
+    const inUk =
+      lat >= 49.5 && lat <= 61.0 && lng >= -8.5 && lng <= 2.0;
+    if (allowOnDemand && inUk && totalIncidents === 0) {
+      try {
+        await this.ukPolice.fetchAndUpsertAt(lat, lng);
+        crimeBreakdown = await queryCrime();
+        totalIncidents = crimeBreakdown.reduce((s, r) => s + r.count, 0);
+      } catch {
+        // Keep empty result — UI shows Limited data
+      }
+    }
+
     const h3Cell = latLngToCell(lat, lng, 9);
     const scoreRows = (await this.db.execute(sql`
       SELECT score, band, source_country
@@ -365,16 +408,19 @@ export class SafetyEngineController {
     `)) as Array<{ score: string | null; band: string | null; source_country: string }>;
 
     const rawScore = scoreRows[0]?.score != null ? Number(scoreRows[0].score) : null;
-    const band = scoreRows[0]?.band ?? null;
-    const countryIso = scoreRows[0]?.source_country ?? 'GB';
+    let band = scoreRows[0]?.band ?? null;
+    const countryIso = scoreRows[0]?.source_country ?? (inUk ? 'GB' : 'XX');
     const cityName = cityParam?.trim() ?? '';
+    const dataLimited = totalIncidents < 3;
 
-    // Blend with Numbeo if we have a police score
+    if (!band && dataLimited) {
+      band = 'low_count';
+    }
+
     const blendedScore = rawScore != null
       ? this.h3Scorer.blendWithNumbeo(rawScore, cityName, countryIso)
       : null;
 
-    // Area in km² for weighted/km² metric
     const radiusKm = radiusMetres / 1000;
     const areaKm2 = Math.PI * radiusKm * radiusKm;
     const weightedPerKm2 = totalIncidents > 0 ? Math.round((totalIncidents / areaKm2) * 10) / 10 : 0;
@@ -390,8 +436,11 @@ export class SafetyEngineController {
       incidentCount: totalIncidents,
       weightedPerKm2,
       crimeBreakdown,
+      dataLimited,
       dataMonth: new Date().toISOString().slice(0, 7),
-      scoreMethodology: '70% live police data · 30% Numbeo · population-adjusted',
+      scoreMethodology: dataLimited
+        ? 'Limited local crime data for this area · try a nearby street or wider report'
+        : '70% live police data · 30% Numbeo · population-adjusted',
     };
   }
 

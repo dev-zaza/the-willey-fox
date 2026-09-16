@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -15,6 +16,13 @@ import { CreateFamilyDto } from './dto/create-family.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { AddQrToFamilyDto } from './dto/add-qr-to-family.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { IsString, MinLength } from 'class-validator';
+
+class AcceptFamilyInviteDto {
+  @IsString()
+  @MinLength(16)
+  token: string;
+}
 
 @ApiBearerAuth('JWT')
 @ApiTags('families')
@@ -31,6 +39,14 @@ export class FamiliesController {
   @Get()
   async list(@CurrentUser('id') userId: string) {
     return this.familiesService.listForUser(userId);
+  }
+
+  @Post('invite/accept')
+  async acceptInvite(
+    @CurrentUser('id') userId: string,
+    @Body() dto: AcceptFamilyInviteDto,
+  ) {
+    return this.familiesService.acceptInvite(dto.token, userId);
   }
 
   @Get(':id')
@@ -53,7 +69,7 @@ export class FamiliesController {
     if (dto.userId) {
       return this.familiesService.addMember(familyId, userId, dto.userId);
     }
-    return { error: 'Provide either userId or email' };
+    throw new BadRequestException('Provide either userId or email');
   }
 
   @Delete(':id/members/:userId')

@@ -353,7 +353,17 @@ interface MapInnerProps {
   center?: LatLng;
   zoom?: number;
   userLocation?: LatLng | null;
+  sosBeacons?: Array<{ id: string; lat: number; lng: number; message?: string | null }>;
+  missingAlerts?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    name?: string | null;
+    photoUrl?: string | null;
+  }>;
   onPinClick?: (pin: PinData) => void;
+  onSosClick?: (id: string) => void;
+  onMissingClick?: (id: string) => void;
   /** Fired on long-press / right-click — used to open create-pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
@@ -368,7 +378,23 @@ interface MapInnerProps {
   }) => void;
 }
 
-export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, zoom, userLocation, onPinClick, onMapLongPress, onBoundsChange, onH3Click }: MapInnerProps) {
+export function MapInner({
+  pins = [],
+  route,
+  safetyZones = [],
+  h3Tiles,
+  center,
+  zoom,
+  userLocation,
+  sosBeacons = [],
+  missingAlerts = [],
+  onPinClick,
+  onSosClick,
+  onMissingClick,
+  onMapLongPress,
+  onBoundsChange,
+  onH3Click,
+}: MapInnerProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hasSize, setHasSize] = useState(false);
 
@@ -410,6 +436,30 @@ export function MapInner({ pins = [], route, safetyZones = [], h3Tiles, center, 
 
         {pins.map((pin) => (
           <EventPin key={pin.id} pin={pin} onClick={onPinClick} />
+        ))}
+
+        {sosBeacons.map((sos) => (
+          <Circle
+            key={`sos-${sos.id}`}
+            center={[sos.lat, sos.lng]}
+            radius={80}
+            pathOptions={{ color: '#D7263D', fillColor: '#D7263D', fillOpacity: 0.45, weight: 2 }}
+            eventHandlers={{ click: () => onSosClick?.(sos.id) }}
+          >
+            <Tooltip sticky>SOS nearby{sos.message ? ` — ${sos.message}` : ''}</Tooltip>
+          </Circle>
+        ))}
+
+        {missingAlerts.map((m) => (
+          <Circle
+            key={`missing-${m.id}`}
+            center={[m.lat, m.lng]}
+            radius={70}
+            pathOptions={{ color: '#ea2e00', fillColor: '#ea2e00', fillOpacity: 0.4, weight: 2 }}
+            eventHandlers={{ click: () => onMissingClick?.(m.id) }}
+          >
+            <Tooltip sticky>Missing: {m.name ?? 'Child'}</Tooltip>
+          </Circle>
         ))}
 
         {route && route.length >= 2 && <RouteLayer route={route} />}

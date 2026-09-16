@@ -14,7 +14,7 @@ import { MobileMenuButton } from '@/components/dashboard/mobile-menu-button';
 import { useAuth } from '@/context/auth-context';
 import { useUserLocation } from '@/hooks/use-user-location';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
-import { pins as pinsApi, notifications as notificationsApi, reports, safetyEngine, users as usersApi, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary, type Report } from '@/lib/api';
+import { pins as pinsApi, notifications as notificationsApi, reports, safetyEngine, users as usersApi, emergency, broadcasts, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary, type Report, type BroadcastListItem, type SosAlert } from '@/lib/api';
 import { reversePlaceName, shortPlaceName } from '@/lib/place-name';
 import type { H3ClickPayload } from '@/components/map/map-view';
 
@@ -120,6 +120,15 @@ export function DashboardClient() {
   const [areaPanel, setAreaPanel] = useState<AreaPanelSeed | null>(null);
   const [mapAlert, setMapAlert] = useState<Report | null>(null);
   const [alertDismissed, setAlertDismissed] = useState(false);
+  const [sosBeacons, setSosBeacons] = useState<Array<{ id: string; lat: number; lng: number; message?: string | null }>>([]);
+  const [missingAlerts, setMissingAlerts] = useState<
+    Array<{ id: string; lat: number; lng: number; name?: string | null; photoUrl?: string | null }>
+  >([]);
+  const [areaAlertSheet, setAreaAlertSheet] = useState<
+    | { kind: 'sos'; id: string; lat: number; lng: number; message?: string | null }
+    | { kind: 'missing'; id: string; lat: number; lng: number; name?: string | null; photoUrl?: string | null }
+    | null
+  >(null);
 
   const {
     location: userLocation,
@@ -134,6 +143,67 @@ export function DashboardClient() {
     if (!user || !userLocation) return;
     usersApi.updateLocation(userLocation.lat, userLocation.lng).catch(() => {});
   }, [user, userLocation?.lat, userLocation?.lng]);
+
+  // Load nearby SOS + missing-child broadcasts for map overlays
+  useEffect(() => {
+    const lat = userLocation?.lat ?? mapCenter?.lat ?? searchedPlace?.lat;
+    const lng = userLocation?.lng ?? mapCenter?.lng ?? searchedPlace?.lng;
+    if (lat == null || lng == null) return;
+
+    let cancelled = false;
+    emergency
+      .getActiveSosNear(lat, lng, 3200)
+      .then((rows) => {
+        if (cancelled) return;
+        const beacons = (rows as SosAlert[])
+          .map((r) => {
+            const slat = r.lat != null ? Number(r.lat) : NaN;
+            const slng = r.lng != null ? Number(r.lng) : NaN;
+            if (!Number.isFinite(slat) || !Number.isFinite(slng)) return null;
+            return { id: r.id, lat: slat, lng: slng, message: r.message ?? null };
+          })
+          .filter((x): x is { id: string; lat: number; lng: number; message: string | null } => x != null);
+        setSosBeacons(beacons);
+      })
+      .catch(() => {
+        if (!cancelled) setSosBeacons([]);
+      });
+
+    broadcasts
+      .listPublic(1, 50)
+      .then((res) => {
+        if (cancelled) return;
+        const items = (res.items as BroadcastListItem[])
+          .map((b) => {
+            const blat = b.lat != null ? Number(b.lat) : NaN;
+            const blng = b.lng != null ? Number(b.lng) : NaN;
+            if (!Number.isFinite(blat) || !Number.isFinite(blng)) return null;
+            // Rough 5 km filter around current map focus
+            const dLat = (blat - lat) * 111000;
+            const dLng = (blng - lng) * 111000 * Math.cos((lat * Math.PI) / 180);
+            if (Math.hypot(dLat, dLng) > 8000) return null;
+            return {
+              id: b.id,
+              lat: blat,
+              lng: blng,
+              name: b.name ?? null,
+              photoUrl: b.photoUrl ?? null,
+            };
+          })
+          .filter(
+            (x): x is { id: string; lat: number; lng: number; name: string | null; photoUrl: string | null } =>
+              x != null,
+          );
+        setMissingAlerts(items);
+      })
+      .catch(() => {
+        if (!cancelled) setMissingAlerts([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userLocation?.lat, userLocation?.lng, mapCenter?.lat, mapCenter?.lng, searchedPlace?.lat, searchedPlace?.lng]);
 
   const closeModal = useCallback(() => {
     setModal('none');
@@ -202,8 +272,17 @@ export function DashboardClient() {
       } catch {
         // Silently ignore — map pins are best-effort
       }
+      // Refresh H3 overlay while safety mode is on (do not require a new search)
+      if (safetyOverlayOn) {
+        try {
+          const h3Res = await safetyEngine.getTiles(bounds, 9);
+          setH3Tiles(h3Res);
+        } catch {
+          // Best-effort overlay refresh
+        }
+      }
     },
-    [],
+    [safetyOverlayOn],
   );
 
   const toggleSafetyOverlay = useCallback(async () => {
@@ -240,6 +319,28 @@ export function DashboardClient() {
 
   const handleH3Click = useCallback((props: H3ClickPayload) => {
     setSelectedH3(props);
+    if (props.lat == null || props.lng == null) return;
+    const lat = props.lat;
+    const lng = props.lng;
+    setAreaSummaryLoading(true);
+    // Hex-scoped radius (~700 m) so neighbouring cells show distinct crime totals
+    safetyEngine
+      .getAreaSummary({ lat, lng, radius: 700 })
+      .then(async (summary) => {
+        if (!summary.cityName) {
+          const name = await reversePlaceName(lat, lng);
+          if (name) {
+            setSearchedPlace({ label: name, lat, lng });
+            setAreaSummary({ ...summary, cityName: name });
+            return;
+          }
+        } else {
+          setSearchedPlace({ label: summary.cityName, lat, lng });
+        }
+        setAreaSummary(summary);
+      })
+      .catch(() => setAreaSummary(null))
+      .finally(() => setAreaSummaryLoading(false));
   }, []);
 
   const openAreaReport = useCallback(async (opts?: { lat?: number; lng?: number; name?: string }) => {
@@ -330,12 +431,82 @@ export function DashboardClient() {
           center={mapCenter}
           zoom={mapZoom}
           userLocation={userLocation}
+          sosBeacons={sosBeacons}
+          missingAlerts={missingAlerts}
           onPinClick={handlePinClick}
+          onSosClick={(id) => {
+            const sos = sosBeacons.find((s) => s.id === id);
+            if (sos) setAreaAlertSheet({ kind: 'sos', ...sos });
+          }}
+          onMissingClick={(id) => {
+            const m = missingAlerts.find((x) => x.id === id);
+            if (m) setAreaAlertSheet({ kind: 'missing', ...m });
+          }}
           onMapLongPress={handleMapLongPress}
           onBoundsChange={handleBoundsChange}
           onH3Click={handleH3Click}
         />
       </div>
+
+      {areaAlertSheet && (
+        <div className="absolute bottom-24 left-3 right-3 z-30 mx-auto max-w-md rounded-2xl border border-surface-border bg-white p-4 shadow-xl lg:bottom-8 lg:left-auto lg:right-6">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-[#8A7B67]">
+                {areaAlertSheet.kind === 'sos' ? 'SOS in your area' : 'Missing child nearby'}
+              </p>
+              <p className="mt-1 text-sm font-bold text-[#17130F]">
+                {areaAlertSheet.kind === 'sos'
+                  ? areaAlertSheet.message || 'Someone nearby needs help'
+                  : areaAlertSheet.name || 'Missing person'}
+              </p>
+            </div>
+            <button type="button" onClick={() => setAreaAlertSheet(null)} className="text-[#7a6957]" aria-label="Close">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {areaAlertSheet.kind === 'missing' && areaAlertSheet.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={areaAlertSheet.photoUrl} alt="" className="mb-3 h-24 w-full rounded-xl object-cover" />
+          ) : null}
+          <p className="mb-3 text-xs leading-5 text-[#5C5245]">
+            Notify guardians in-app if you can help. Call emergency services yourself — Wiley Fox does not dispatch police.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="tel:999"
+              className="rounded-xl bg-[#D7263D] px-3 py-2 text-xs font-bold text-white"
+            >
+              Call 999
+            </a>
+            <a
+              href="tel:101"
+              className="rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-xs font-bold text-[#17130F]"
+            >
+              Call 101
+            </a>
+            {areaAlertSheet.kind === 'missing' ? (
+              <a
+                href={`/broadcasts/${areaAlertSheet.id}`}
+                className="rounded-xl bg-brand-500 px-3 py-2 text-xs font-bold text-white"
+              >
+                View alert
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAreaAlertSheet(null);
+                  setModal('emergency');
+                }}
+                className="rounded-xl bg-brand-500 px-3 py-2 text-xs font-bold text-white"
+              >
+                Open SOS contacts
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Top bar — mobile only */}
       <div className="relative z-10 flex items-center gap-2 px-3 pt-safe pt-3 pb-2 lg:hidden">
@@ -715,7 +886,9 @@ export function DashboardClient() {
                       {areaSummary.cityName || searchedPlace?.label || 'Current area'}
                     </div>
                     <div className="mt-0.5 text-xs text-[#7a6957]">
-                      {areaSummary.incidentCount.toLocaleString()} crimes · {areaSummary.dataMonth}
+                      {areaSummary.dataLimited
+                        ? 'Limited crime data for this area'
+                        : `${areaSummary.incidentCount.toLocaleString()} crimes · ${areaSummary.dataMonth}`}
                     </div>
                   </div>
                 </div>

@@ -5,6 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Shield, CheckCircle, Trash2, Mail } from 'lucide-react';
 import { guardians, type Guardian } from '@/lib/api';
 
+function guardianPerson(g: Guardian) {
+  return g.user ?? g.guardian;
+}
+
 export default function GuardiansPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -15,18 +19,18 @@ export default function GuardiansPage() {
   const [inviteMsg, setInviteMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    guardians.listForQr(id).then(setList).finally(() => setLoading(false));
+    guardians.listForQr(id).then(setList).catch(() => setList([])).finally(() => setLoading(false));
   }, [id]);
 
-  async function approve(gId: string) {
-    const updated = await guardians.approve(gId);
-    setList((prev) => prev.map((g) => (g.id === gId ? updated : g)));
+  async function approve(userId: string) {
+    const updated = await guardians.approve(id, userId);
+    setList((prev) => prev.map((g) => (g.userId === userId ? { ...g, ...updated, status: 'active' } : g)));
   }
 
-  async function remove(gId: string) {
+  async function remove(userId: string) {
     if (!confirm('Remove this guardian?')) return;
-    await guardians.remove(gId);
-    setList((prev) => prev.filter((g) => g.id !== gId));
+    await guardians.remove(id, userId);
+    setList((prev) => prev.filter((g) => g.userId !== userId));
   }
 
   async function invite(e: React.FormEvent) {
@@ -40,8 +44,7 @@ export default function GuardiansPage() {
         setInviteMsg({ type: 'success', text: `Invite sent to ${result.email}. They'll receive an email to accept.` });
       } else {
         setInviteMsg({ type: 'success', text: `${inviteEmail.trim()} was found and added as a guardian.` });
-        // Refresh list
-        guardians.listForQr(id).then(setList);
+        guardians.listForQr(id).then(setList).catch(() => undefined);
       }
       setInviteEmail('');
     } catch (err: any) {
@@ -62,7 +65,6 @@ export default function GuardiansPage() {
           <h1 className="text-xl font-bold text-white">Guardian Management</h1>
         </div>
 
-        {/* Invite by email */}
         <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
             <Mail className="w-4 h-4 text-brand-400" /> Invite Guardian by Email
@@ -100,30 +102,34 @@ export default function GuardiansPage() {
             </div>
           )}
           <div className="space-y-3">
-            {list.map((g) => (
+            {list.map((g) => {
+              const person = guardianPerson(g);
+              const isActive = g.status === 'active' || g.status === 'approved';
+              return (
               <div key={g.id} className="flex items-center gap-3 border border-surface-border rounded-xl p-3">
                 <div className="w-9 h-9 rounded-full bg-brand-500/15 flex items-center justify-center flex-shrink-0 text-brand-400 font-bold text-sm">
-                  {g.guardian.firstName[0]}{g.guardian.lastName[0]}
+                  {(person?.firstName?.[0] ?? '?')}{(person?.lastName?.[0] ?? '')}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium">{g.guardian.firstName} {g.guardian.lastName}</p>
-                  <p className="text-[#9d8c7a] text-xs">{g.guardian.email}</p>
+                  <p className="text-white text-sm font-medium">{person?.firstName} {person?.lastName}</p>
+                  <p className="text-[#9d8c7a] text-xs">{person?.email}</p>
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize flex-shrink-0 ${
-                  g.status === 'approved' ? 'bg-green-500/15 text-green-400' :
+                  isActive ? 'bg-green-500/15 text-green-400' :
                   g.status === 'pending' ? 'bg-amber-500/15 text-amber-400' :
                   'bg-red-500/15 text-red-400'
-                }`}>{g.status}</span>
+                }`}>{isActive ? 'active' : g.status}</span>
                 {g.status === 'pending' && (
-                  <button onClick={() => approve(g.id)} className="text-green-400 hover:text-green-300 transition-colors">
+                  <button onClick={() => approve(g.userId)} className="text-green-400 hover:text-green-300 transition-colors">
                     <CheckCircle className="w-4 h-4" />
                   </button>
                 )}
-                <button onClick={() => remove(g.id)} className="text-[#7a6957] hover:text-red-400 transition-colors">
+                <button onClick={() => remove(g.userId)} className="text-[#7a6957] hover:text-red-400 transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

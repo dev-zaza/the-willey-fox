@@ -3,15 +3,36 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ONBOARD_FAMILY_NAME_KEY } from '@/lib/family-profiles';
+import { families } from '@/lib/api';
+import { ONBOARD_FAMILY_ID_KEY, ONBOARD_FAMILY_NAME_KEY } from '@/lib/family-profiles';
 
 export default function OnboardGroupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  function continueFlow() {
-    sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, name.trim() || 'My Family');
-    router.push('/onboard/members');
+  async function continueFlow() {
+    const familyName = name.trim() || 'My Family';
+    setLoading(true);
+    setError('');
+    try {
+      // Create immediately so the group exists before adding members
+      const existingId =
+        typeof window !== 'undefined' ? sessionStorage.getItem(ONBOARD_FAMILY_ID_KEY) : null;
+      if (existingId) {
+        sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, familyName);
+        router.push('/onboard/members');
+        return;
+      }
+      const family = await families.create(familyName);
+      sessionStorage.setItem(ONBOARD_FAMILY_ID_KEY, family.id);
+      sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, family.name);
+      router.push('/onboard/members');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Could not create family group');
+      setLoading(false);
+    }
   }
 
   return (
@@ -25,9 +46,17 @@ export default function OnboardGroupPage() {
         placeholder="e.g. Smith Family"
         className="mt-6 w-full rounded-xl border px-4 py-3 text-sm"
         style={{ borderColor: 'rgba(27,20,16,0.15)', background: '#fffdf8' }}
+        disabled={loading}
       />
-      <button type="button" onClick={continueFlow} className="mt-6 rounded-2xl py-3 text-sm font-semibold text-white" style={{ background: '#ea2e00' }}>
-        Continue
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      <button
+        type="button"
+        onClick={() => void continueFlow()}
+        disabled={loading}
+        className="mt-6 rounded-2xl py-3 text-sm font-semibold text-white disabled:opacity-50"
+        style={{ background: '#ea2e00' }}
+      >
+        {loading ? 'Creating…' : 'Continue'}
       </button>
     </div>
   );

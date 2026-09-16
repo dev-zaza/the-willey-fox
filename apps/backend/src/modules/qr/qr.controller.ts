@@ -10,7 +10,11 @@ import {
   Res,
   UseGuards,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { QrService } from './qr.service';
@@ -19,6 +23,9 @@ import { CreateQrDto, UpdateQrDto, BulkCreateQrDto } from './dto';
 import { SetQrThemeDto } from './dto/set-qr-theme.dto';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 @ApiBearerAuth('JWT')
 @ApiTags('qr-codes')
@@ -63,6 +70,22 @@ export class QrController {
     @Body() dto: UpdateQrDto,
   ) {
     return this.qrService.update(id, dto);
+  }
+
+  @UseGuards(QrAccessGuard)
+  @Post(':id/photo')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_PHOTO_SIZE_BYTES } }))
+  uploadPhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('FILE_REQUIRED');
+    }
+    if (file.mimetype && !ALLOWED_MIME.has(file.mimetype)) {
+      throw new BadRequestException('INVALID_FILE_TYPE');
+    }
+    return this.qrService.uploadPhoto(id, file.buffer);
   }
 
   @UseGuards(QrAccessGuard)

@@ -13,6 +13,7 @@ import {
   createAndLinkFamilyProfiles,
   FAMILY_PROFILE_LABELS,
   FamilyProfileLimitError,
+  ONBOARD_FAMILY_ID_KEY,
   ONBOARD_FAMILY_NAME_KEY,
   ONBOARD_QR_PROFILES_KEY,
   toCreatedQrProfiles,
@@ -51,20 +52,30 @@ export default function OnboardMembersPage() {
     setLoading(true);
     setError('');
     try {
+      let familyId =
+        (typeof window !== 'undefined' && sessionStorage.getItem(ONBOARD_FAMILY_ID_KEY)) || '';
       const familyName =
         (typeof window !== 'undefined' && sessionStorage.getItem(ONBOARD_FAMILY_NAME_KEY)) ||
         'My Family';
-      const family = await families.create(familyName);
-      const created = await createAndLinkFamilyProfiles(family.id, members);
-      sessionStorage.removeItem(ONBOARD_FAMILY_NAME_KEY);
+
+      // Fallback if user skipped group step persistence
+      if (!familyId) {
+        const family = await families.create(familyName);
+        familyId = family.id;
+        sessionStorage.setItem(ONBOARD_FAMILY_ID_KEY, family.id);
+      }
+
+      const created = await createAndLinkFamilyProfiles(familyId, members);
       sessionStorage.setItem(ONBOARD_QR_PROFILES_KEY, JSON.stringify(toCreatedQrProfiles(created)));
-      sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, family.name);
+      sessionStorage.setItem(ONBOARD_FAMILY_NAME_KEY, familyName);
+      sessionStorage.removeItem(ONBOARD_FAMILY_ID_KEY);
       router.push('/onboard/generating');
     } catch (e: unknown) {
       if (e instanceof FamilyProfileLimitError) {
         sessionStorage.setItem(ONBOARD_QR_PROFILES_KEY, JSON.stringify(toCreatedQrProfiles(e.created)));
         setError(e.message);
         if (e.created.length > 0) {
+          sessionStorage.removeItem(ONBOARD_FAMILY_ID_KEY);
           router.push('/onboard/generating');
           return;
         }

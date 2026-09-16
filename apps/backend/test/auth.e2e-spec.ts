@@ -22,7 +22,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { authenticator } from '@otplib/preset-default';
 import * as jwt from 'jsonwebtoken';
 import { AppModule } from '../src/app.module';

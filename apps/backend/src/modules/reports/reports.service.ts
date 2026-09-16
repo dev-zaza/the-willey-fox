@@ -2,7 +2,7 @@ import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestEx
 import { eq, and, inArray, lt, isNotNull, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
-import { reports, qrCodes, guardianMappings, reportResponses, users } from '../../database/schema';
+import { reports, qrCodes, guardianMappings, reportResponses, users, familyMembers } from '../../database/schema';
 import { UpdateReportStatusDto, CreateResponseDto, FlagReportDto, CreateMissingReportDto, CreateSightingDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BroadcastConsentLogService } from '../broadcasts/broadcast-consent-log.service';
@@ -218,6 +218,11 @@ export class ReportsService {
       .notifyGuardiansOfReport(report.id, qr.id)
       .catch((err) => this.logger.error(`Guardian notify failed for report ${report.id}`, err));
 
+    // Also notify family group members if the QR is linked to a family
+    this.notifyFamilyMembersOfMissing(qr.id, qr.name ?? 'Protected person', report.id).catch(
+      (err) => this.logger.warn(`Family missing notify failed: ${(err as Error).message}`),
+    );
+
     // Push nearby users if broadcast requested and GPS provided
     if (dto.requestBroadcast && dto.lat != null && dto.lng != null) {
       this.pushNearbyMissingAlert(report.id, qr.name ?? 'Missing person', dto.lat, dto.lng).catch(
@@ -226,6 +231,33 @@ export class ReportsService {
     }
 
     return { id: report.id, broadcast: dto.requestBroadcast ?? false };
+  }
+
+  private async notifyFamilyMembersOfMissing(qrCodeId: string, tagName: string, reportId: string) {
+    const [qr] = await this.db
+      .select({ familyId: qrCodes.familyId, userId: qrCodes.userId })
+      .from(qrCodes)
+      .where(eq(qrCodes.id, qrCodeId))
+      .limit(1);
+    if (!qr?.familyId) return;
+
+    const members = await this.db
+      .select({ userId: familyMembers.userId })
+      .from(familyMembers)
+      .where(eq(familyMembers.familyId, qr.familyId));
+
+    for (const m of members) {
+      if (m.userId === qr.userId) continue;
+      void this.notificationsService.sendPush(
+        m.userId,
+        {
+          title: 'Missing person alert',
+          body: `${tagName} was marked missing. Open Wiley Fox for details.`,
+          data: { type: 'missing_person_family', reportId, qrCodeId },
+        },
+        { priority: 'critical' },
+      );
+    }
   }
 
   private async pushNearbyMissingAlert(reportId: string, tagName: string, lat: number, lng: number) {

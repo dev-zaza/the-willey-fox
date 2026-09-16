@@ -48,6 +48,7 @@ export { pinFlags } from './pin-flags.schema';
 export { visualThemes } from './visual-themes.schema';
 export { printTemplates } from './print-templates.schema';
 export { familyGroups, familyMembers } from './family-groups.schema';
+export { familyInvites } from './family-invites.schema';
 export { broadcastConsentLog } from './broadcast-consent-log.schema';
 export { qrBatches } from './qr-batches.schema';
 export { shopifyProductMappings } from './shopify-product-mappings.schema';
