@@ -8,7 +8,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, count } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
@@ -21,6 +21,7 @@ import {
   users,
 } from '../../database/schema';
 import { NotificationsService } from '../notifications/notifications.service';
+import { TIER_LIMITS, isProTier } from '@safetag/shared';
 
 @Injectable()
 export class FamiliesService {
@@ -32,7 +33,18 @@ export class FamiliesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async create(userId: string, name: string) {
+  async create(userId: string, name: string, tier = 'free') {
+    if (!isProTier(tier)) {
+      const maxFamilies = TIER_LIMITS.free.maxFamilies;
+      const [{ ownedCount }] = await this.db
+        .select({ ownedCount: count() })
+        .from(familyGroups)
+        .where(eq(familyGroups.ownerId, userId));
+      if (Number(ownedCount) >= maxFamilies) {
+        throw new ForbiddenException('FAMILY_LIMIT_REACHED');
+      }
+    }
+
     const [family] = await this.db
       .insert(familyGroups)
       .values({ name, ownerId: userId })
@@ -364,14 +376,37 @@ export class FamiliesService {
       .where(and(eq(qrCodes.id, qrCodeId), eq(qrCodes.familyId, familyId)));
   }
 
+  async rename(familyId: string, requesterId: string, name: string) {
+    await this.assertOwner(familyId, requesterId);
+    const trimmed = name.trim();
+    if (!trimmed) {
+      throw new BadRequestException('FAMILY_NAME_REQUIRED');
+    }
+
+    const [updated] = await this.db
+      .update(familyGroups)
+      .set({ name: trimmed, updatedAt: new Date() })
+      .where(eq(familyGroups.id, familyId))
+      .returning();
+
+    if (!updated) {
+      throw new NotFoundException('FAMILY_NOT_FOUND');
+    }
+    return updated;
+  }
+
   async deleteFamily(familyId: string, requesterId: string) {
     await this.assertOwner(familyId, requesterId);
 
+    // Clear QR links first (mapped_member_id also references family_members)
     await this.db
       .update(qrCodes)
-      .set({ familyId: null, updatedAt: new Date() })
+      .set({ familyId: null, mappedMemberId: null, updatedAt: new Date() })
       .where(eq(qrCodes.familyId, familyId));
 
+    // Explicit cleanup so delete never fails on residual FK rows
+    await this.db.delete(familyInvites).where(eq(familyInvites.familyId, familyId));
+    await this.db.delete(familyMembers).where(eq(familyMembers.familyId, familyId));
     await this.db.delete(familyGroups).where(eq(familyGroups.id, familyId));
   }
 

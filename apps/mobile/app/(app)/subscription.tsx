@@ -17,41 +17,30 @@ import { extractApiErrorMessage } from '@/lib/api-error';
 
 // ─── Plan feature lists ───────────────────────────────────────────────────────
 
-const PLAN_FEATURES: Record<string, string[]> = {
-  basic: [
-    'Up to 5 QR tags',
-    'Community safety pins',
-    'Email notifications',
-    'Basic guardian access',
-  ],
-  premium: [
-    'Unlimited QR tags',
-    'Priority safety alerts',
-    'SMS + push notifications',
-    'Advanced guardian management',
-    'Bulk QR generation',
-    'Route safety scoring',
-    'Places & reviews access',
-  ],
-};
+const PRO_FEATURES = [
+  'Unlimited digital QR tags',
+  'Unlimited family groups',
+  'Travel guide & crime reports',
+  'Bulk QR generation',
+  'Priority safety alerts',
+  'SMS + push notifications',
+  'Route safety scoring',
+];
 
-const PLAN_PRICES: Record<string, { monthly: string; annual: string }> = {
-  basic: { monthly: '$4.99/mo', annual: '$49.99/yr' },
-  premium: { monthly: '$9.99/mo', annual: '$99.99/yr' },
-};
+const PRO_PRICES = { monthly: '$9.99/mo', annual: '$95.99/yr' };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function TierBadge({ tier }: { tier: string }) {
-  const colors: Record<string, { bg: string; text: string; border: string }> = {
-    free: { bg: 'rgba(100,116,139,0.1)', text: '#64748b', border: 'rgba(100,116,139,0.3)' },
-    basic: { bg: 'rgba(59,130,246,0.1)', text: '#3b82f6', border: 'rgba(59,130,246,0.3)' },
-    premium: { bg: 'rgba(249,115,22,0.1)', text: '#f97316', border: 'rgba(249,115,22,0.3)' },
-  };
-  const c = colors[tier] ?? colors.free;
+  const isPro =
+    tier === 'basic' || tier === 'premium' || tier === 'enterprise' || tier === 'pro';
+  const label = isPro ? 'Pro' : 'Free';
+  const c = isPro
+    ? { bg: 'rgba(249,115,22,0.1)', text: '#f97316', border: 'rgba(249,115,22,0.3)' }
+    : { bg: 'rgba(100,116,139,0.1)', text: '#64748b', border: 'rgba(100,116,139,0.3)' };
   return (
     <View style={{ backgroundColor: c.bg, borderWidth: 1, borderColor: c.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-      <Text style={{ color: c.text, fontWeight: '700', fontSize: 12, textTransform: 'capitalize' }}>{tier}</Text>
+      <Text style={{ color: c.text, fontWeight: '700', fontSize: 12 }}>{label}</Text>
     </View>
   );
 }
@@ -217,110 +206,99 @@ export default function SubscriptionScreen() {
             )}
           </View>
 
-          {/* Upgrade cards (shown when free) */}
+          {/* Upgrade card (shown when free) */}
           {!isPaid && (
             <>
               <Text style={{ color: textSecondary, fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                Upgrade Your Plan
+                Upgrade to Pro
               </Text>
 
-              {(['basic', 'premium'] as const).map((tier) => (
-                <View
-                  key={tier}
-                  style={{
-                    backgroundColor: cardBg, borderWidth: 1,
-                    borderColor: tier === 'premium' ? 'rgba(249,115,22,0.4)' : border,
-                    borderRadius: 20, padding: 20, gap: 14,
-                  }}
-                >
-                  {tier === 'premium' && (
-                    <View style={{ alignSelf: 'flex-start', backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                      <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>MOST POPULAR</Text>
-                    </View>
-                  )}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ color: textPrimary, fontWeight: '700', fontSize: 18, textTransform: 'capitalize' }}>{tier}</Text>
-                    <Text style={{ color: '#f97316', fontWeight: '700', fontSize: 16 }}>{PLAN_PRICES[tier].monthly}</Text>
-                  </View>
-
-                  <View style={{ gap: 6 }}>
-                    {PLAN_FEATURES[tier].map((feature) => (
-                      <View key={feature} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="checkmark-circle" size={14} color="#f97316" />
-                        <Text style={{ color: textSecondary, fontSize: 13 }}>{feature}</Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <TouchableOpacity
-                      style={{
-                        flex: 1, backgroundColor: '#f97316', borderRadius: 12,
-                        paddingVertical: 12, alignItems: 'center',
-                        opacity: checkoutLoading === 'monthly' ? 0.6 : 1,
-                      }}
-                      onPress={() => handleUpgrade('monthly')}
-                      disabled={checkoutLoading !== null}
-                    >
-                      {checkoutLoading === 'monthly' ? (
-                        <ActivityIndicator color="#fff" size="small" />
-                      ) : (
-                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Monthly</Text>
-                      )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        flex: 1, backgroundColor: 'rgba(249,115,22,0.15)', borderWidth: 1,
-                        borderColor: 'rgba(249,115,22,0.4)', borderRadius: 12,
-                        paddingVertical: 12, alignItems: 'center',
-                        opacity: checkoutLoading === 'annual' ? 0.6 : 1,
-                      }}
-                      onPress={() => handleUpgrade('annual')}
-                      disabled={checkoutLoading !== null}
-                    >
-                      {checkoutLoading === 'annual' ? (
-                        <ActivityIndicator color="#f97316" size="small" />
-                      ) : (
-                        <View style={{ alignItems: 'center' }}>
-                          <Text style={{ color: '#f97316', fontWeight: '700', fontSize: 13 }}>Annual</Text>
-                          <Text style={{ color: '#f97316', fontSize: 10 }}>Save ~17%</Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  </View>
+              <View
+                style={{
+                  backgroundColor: cardBg,
+                  borderWidth: 1,
+                  borderColor: 'rgba(249,115,22,0.4)',
+                  borderRadius: 20,
+                  padding: 20,
+                  gap: 14,
+                }}
+              >
+                <View style={{ alignSelf: 'flex-start', backgroundColor: '#f97316', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>UNLIMITED ACCESS</Text>
                 </View>
-              ))}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ color: textPrimary, fontWeight: '700', fontSize: 18 }}>Pro</Text>
+                  <Text style={{ color: '#f97316', fontWeight: '700', fontSize: 16 }}>{PRO_PRICES.monthly}</Text>
+                </View>
+
+                <View style={{ gap: 6 }}>
+                  {PRO_FEATURES.map((feature) => (
+                    <View key={feature} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Ionicons name="checkmark-circle" size={14} color="#f97316" />
+                      <Text style={{ color: textSecondary, fontSize: 13 }}>{feature}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#f97316',
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      opacity: checkoutLoading === 'monthly' ? 0.6 : 1,
+                    }}
+                    onPress={() => handleUpgrade('monthly')}
+                    disabled={checkoutLoading !== null}
+                  >
+                    {checkoutLoading === 'monthly' ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Monthly</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      backgroundColor: 'rgba(249,115,22,0.15)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(249,115,22,0.4)',
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      opacity: checkoutLoading === 'annual' ? 0.6 : 1,
+                    }}
+                    onPress={() => handleUpgrade('annual')}
+                    disabled={checkoutLoading !== null}
+                  >
+                    {checkoutLoading === 'annual' ? (
+                      <ActivityIndicator color="#f97316" size="small" />
+                    ) : (
+                      <View style={{ alignItems: 'center' }}>
+                        <Text style={{ color: '#f97316', fontWeight: '700', fontSize: 13 }}>Annual</Text>
+                        <Text style={{ color: '#f97316', fontSize: 10 }}>{PRO_PRICES.annual}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
             </>
           )}
 
           {/* Paid plan actions */}
           {isPaid && (
             <View style={{ gap: 10 }}>
-              {/* Upgrade to Premium (only shown on basic) */}
-              {currentTier === 'basic' && (
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#f97316', borderRadius: 14,
-                    paddingVertical: 14, alignItems: 'center',
-                    opacity: checkoutLoading !== null ? 0.6 : 1,
-                  }}
-                  onPress={() => handleUpgrade('monthly')}
-                  disabled={checkoutLoading !== null}
-                >
-                  {checkoutLoading !== null ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Upgrade to Premium</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-
               {/* Manage billing via Stripe portal */}
               <TouchableOpacity
                 style={{
-                  backgroundColor: 'rgba(249,115,22,0.1)', borderWidth: 1,
-                  borderColor: 'rgba(249,115,22,0.3)', borderRadius: 14,
-                  paddingVertical: 14, alignItems: 'center',
+                  backgroundColor: 'rgba(249,115,22,0.1)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(249,115,22,0.3)',
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
                   opacity: portalLoading ? 0.6 : 1,
                 }}
                 onPress={handleBillingPortal}

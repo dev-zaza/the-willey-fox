@@ -6,16 +6,15 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { settings, type PricingConfig } from '@/lib/api';
 
 const FEATURES = [
-  { label: 'QR Tags', free: (p: PricingConfig) => `${p.tierLimits.free.maxQrCodes} tags`, pro: 'Unlimited tags' },
-  { label: 'Emergency contacts', free: (p: PricingConfig) => `${p.tierLimits.free.maxEmergencyContacts} contacts`, pro: (p: PricingConfig) => `${p.tierLimits.premium.maxEmergencyContacts} contacts` },
-  { label: 'Community safety map', free: true, pro: true },
-  { label: 'Basic safety alerts', free: true, pro: true },
+  { label: 'Digital QR tags', free: (p: PricingConfig) => `${p.tierLimits.free.maxQrCodes} tags`, pro: 'Unlimited' },
+  { label: 'Family groups', free: '1 group', pro: 'Unlimited' },
+  { label: 'Physical tag claims', free: 'Unlimited', pro: 'Unlimited' },
+  { label: 'Area safety stats', free: true, pro: true },
+  { label: 'Travel guide & crime reports', free: false, pro: true },
+  { label: 'Bulk QR generation', free: false, pro: true },
   { label: 'Safety-aware routing', free: false, pro: true },
   { label: 'Priority notifications', free: false, pro: true },
   { label: 'SOS push to contacts', free: false, pro: true },
-  { label: 'Full report history', free: false, pro: true },
-  { label: 'Bulk QR generation', free: false, pro: true },
-  { label: 'Medical alert on tag', free: false, pro: true },
 ] as const;
 
 type FeatureValue = boolean | string | ((p: PricingConfig) => string);
@@ -122,16 +121,16 @@ export default function PricingPage() {
             </div>
             <ul className="space-y-3 mb-8 flex-1">
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} QR tags
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} digital QR tags
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxEmergencyContacts} emergency contacts
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> 1 family group
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Community safety map
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited physical tag claims
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Basic safety alerts
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Area safety stats
               </li>
             </ul>
             <Link
@@ -166,22 +165,22 @@ export default function PricingPage() {
             </div>
             <ul className="space-y-3 mb-8 flex-1">
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited QR tags
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited digital QR tags
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited family groups
+              </li>
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Travel guide &amp; crime reports
+              </li>
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Bulk QR generation
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
                 <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Safety-aware routing
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> SOS push to contacts
-              </li>
-              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Medical alert on tag
-              </li>
-              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Full report history
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Priority notifications &amp; SOS
               </li>
             </ul>
             <Link

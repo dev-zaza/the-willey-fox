@@ -327,8 +327,8 @@ export class PaymentsService {
 
   private async upsertSubscription(userId: string, stripeSub: Stripe.Subscription) {
     const priceId = stripeSub.items.data[0]?.price.id;
-    const monthlyPriceId = this.configService.get<string>('STRIPE_PRICE_ID_MONTHLY');
-    const tier = priceId === monthlyPriceId ? 'basic' : 'premium';
+    // Monthly and yearly both grant Pro (stored as premium). Interval is on stripePriceId.
+    const tier = 'premium' as const;
 
     // In Stripe API v2026, current_period_start/end moved to items.data[0]
     const firstItem = stripeSub.items.data[0];
@@ -341,7 +341,7 @@ export class PaymentsService {
 
     const subData = {
       userId,
-      tier: tier as 'basic' | 'premium',
+      tier,
       stripeCustomerId: stripeSub.customer as string,
       stripeSubscriptionId: stripeSub.id,
       stripePriceId: priceId ?? null,
@@ -366,7 +366,7 @@ export class PaymentsService {
     if (['active', 'trialing'].includes(stripeSub.status)) {
       await this.db
         .update(users)
-        .set({ subscriptionTier: tier as 'basic' | 'premium', updatedAt: new Date() })
+        .set({ subscriptionTier: tier, updatedAt: new Date() })
         .where(eq(users.id, userId));
     }
   }

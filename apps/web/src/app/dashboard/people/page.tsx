@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { MessageSquare, Plus, Search, Shield, ShoppingBag } from 'lucide-react';
+import { MessageSquare, Plus, Search, Shield, ShoppingBag, Tag } from 'lucide-react';
 import {
   emergency,
   families,
@@ -16,6 +16,7 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
+import { LinkBoughtTagSheet } from '@/components/family/link-bought-tag-sheet';
 
 const AVATAR_COLORS = ['#0F766E', '#B45309', '#1D4ED8', '#7C3AED', '#B91C1C'];
 
@@ -36,6 +37,11 @@ export default function PeoplePage() {
   const [sosName, setSosName] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [creatingFamily, setCreatingFamily] = useState(false);
+  const [createFamilyName, setCreateFamilyName] = useState('');
+  const [createFamilyOpen, setCreateFamilyOpen] = useState(false);
+  const [createFamilyError, setCreateFamilyError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -55,8 +61,7 @@ export default function PeoplePage() {
         const primary = contacts.find((c) => c.isPrimary && c.status === 'accepted' && c.contact);
         if (primary?.contact) setSosName(`${primary.contact.firstName} ${primary.contact.lastName}`);
         if (memberships[0]) {
-          const detail = await families.get(memberships[0].familyId);
-          if (!cancelled) setFamily(detail);
+          setFamily(await families.get(memberships[0].familyId));
         } else {
           setFamily(null);
         }
@@ -76,6 +81,22 @@ export default function PeoplePage() {
       window.removeEventListener('focus', onFocus);
     };
   }, []);
+
+  async function handleCreateFamily() {
+    if (!createFamilyName.trim() || creatingFamily) return;
+    setCreatingFamily(true);
+    setCreateFamilyError('');
+    try {
+      const created = await families.create(createFamilyName.trim());
+      setCreateFamilyOpen(false);
+      setCreateFamilyName('');
+      setFamily(await families.get(created.id));
+    } catch (e: unknown) {
+      setCreateFamilyError(e instanceof Error ? e.message : 'Could not create family');
+    } finally {
+      setCreatingFamily(false);
+    }
+  }
 
   const unread = convos.reduce((n, c) => n + (c.unreadCount || 0), 0);
   const lostTags = tags.filter((t) => t.isLost);
@@ -224,11 +245,34 @@ export default function PeoplePage() {
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-[11px] font-extrabold tracking-[0.12em] text-[#8A7B67]">FAMILY</p>
-                <Link href="/dashboard/family" className="text-sm font-bold text-brand-600">
-                  Manage group
-                </Link>
+                <div className="flex flex-wrap items-center gap-3">
+                  {family ? (
+                    <Link href="/dashboard/family" className="text-sm font-bold text-brand-600">
+                      Edit / delete
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreateFamilyError('');
+                        setCreateFamilyOpen(true);
+                      }}
+                      className="text-sm font-bold text-brand-600"
+                    >
+                      Create family
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setLinkOpen(true)}
+                    className="inline-flex items-center gap-1 text-sm font-bold text-[#5C5245]"
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    Quick-add bought tag
+                  </button>
+                </div>
               </div>
               <div className={cn('grid gap-3', hasPeople ? 'sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1')}>
                 {visibleMembers.map((m, i) => (
@@ -318,7 +362,14 @@ export default function PeoplePage() {
                   </div>
                 ))}
                 <Link
-                  href="/dashboard/family"
+                  href={family ? '/dashboard/family' : '#'}
+                  onClick={(e) => {
+                    if (!family) {
+                      e.preventDefault();
+                      setCreateFamilyError('');
+                      setCreateFamilyOpen(true);
+                    }
+                  }}
                   className={cn(
                     'flex rounded-2xl border-2 border-dashed border-brand-500/40 bg-white p-4',
                     hasPeople ? 'flex-col justify-center' : 'items-center gap-3',
@@ -328,11 +379,15 @@ export default function PeoplePage() {
                     <Plus className="h-4 w-4" />
                   </span>
                   <span className="min-w-0">
-                    <p className="text-sm font-bold text-[#17130F]">Add a family member</p>
+                    <p className="text-sm font-bold text-[#17130F]">
+                      {family ? 'Add a family member' : 'Create your family group'}
+                    </p>
                     <p className="mt-1 text-[12.5px] leading-5 text-[#8A7B67]">
-                      {hasPeople
-                        ? 'Send a link, show a QR code, or pick from contacts. Takes about 20 seconds.'
-                        : 'Send a link or pick from contacts.'}
+                      {family
+                        ? hasPeople
+                          ? 'Send a link, show a QR code, or pick from contacts. Takes about 20 seconds.'
+                          : 'Send a link or pick from contacts.'
+                        : 'Free plan includes 1 family group. Edit or delete it anytime under Edit / delete.'}
                     </p>
                   </span>
                 </Link>
@@ -454,6 +509,57 @@ export default function PeoplePage() {
           </div>
         </div>
       </div>
+
+      {linkOpen ? (
+        <LinkBoughtTagSheet
+          familyId={family?.id}
+          onClose={() => setLinkOpen(false)}
+          onLinked={async (t) => {
+            setTags((prev) => [t, ...prev]);
+            setLinkOpen(false);
+            if (family?.id) {
+              try {
+                setFamily(await families.get(family.id));
+              } catch {
+                /* ignore refresh errors */
+              }
+            }
+          }}
+        />
+      ) : null}
+
+      {createFamilyOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[#E3D8C6] bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-extrabold text-[#17130F]">Create family group</h3>
+            <p className="mt-1 text-sm text-[#8A7B67]">Free plan includes 1 family group.</p>
+            <input
+              value={createFamilyName}
+              onChange={(e) => setCreateFamilyName(e.target.value)}
+              placeholder="e.g. The Wilsons"
+              className="mt-4 w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+            />
+            {createFamilyError ? <p className="mt-2 text-xs text-red-600">{createFamilyError}</p> : null}
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void handleCreateFamily()}
+                disabled={creatingFamily}
+                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white"
+              >
+                {creatingFamily ? 'Creating…' : 'Create'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreateFamilyOpen(false)}
+                className="rounded-xl border px-4 py-2 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

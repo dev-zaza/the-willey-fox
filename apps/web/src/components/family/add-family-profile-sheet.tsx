@@ -18,7 +18,7 @@ export const QUICK_ADD = [
 interface AddFamilyProfileSheetProps {
   open: boolean;
   onClose: () => void;
-  onAdd: (draft: DraftFamilyProfile) => void;
+  onAdd: (draft: DraftFamilyProfile) => void | Promise<void>;
   initialRelationship?: string;
   initialCategory?: FamilyProfileCategory;
 }
@@ -36,18 +36,22 @@ export function AddFamilyProfileSheet({
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState(initialRelationship);
   const [category, setCategory] = useState<FamilyProfileCategory>(initialCategory);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (!open) return;
     setName('');
     setRelationship(initialRelationship);
     setCategory(initialCategory);
+    setFormError('');
+    setSubmitting(false);
   }, [open, initialRelationship, initialCategory]);
 
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !submitting) onClose();
     }
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -56,17 +60,25 @@ export function AddFamilyProfileSheet({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open, onClose, submitting]);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
-    onAdd({
-      name: name.trim(),
-      relationship: relationship.trim(),
-      category,
-    });
-    onClose();
+    if (!name.trim() || submitting) return;
+    setSubmitting(true);
+    setFormError('');
+    try {
+      await onAdd({
+        name: name.trim(),
+        relationship: relationship.trim(),
+        category,
+      });
+      onClose();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : 'Failed to add profile');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (!open) return null;
@@ -138,8 +150,9 @@ export function AddFamilyProfileSheet({
                 <button
                   key={cat}
                   type="button"
+                  disabled={submitting}
                   onClick={() => setCategory(cat)}
-                  className="flex flex-1 flex-col items-center rounded-xl border-2 py-2.5"
+                  className="flex flex-1 flex-col items-center rounded-xl border-2 py-2.5 disabled:opacity-50"
                   style={{
                     background: selected ? 'rgba(234,46,0,0.08)' : '#f0e7d6',
                     borderColor: selected ? '#ea2e00' : 'rgba(27,20,16,0.12)',
@@ -157,13 +170,17 @@ export function AddFamilyProfileSheet({
             })}
           </div>
 
+          {formError ? (
+            <p className="text-xs font-semibold text-red-600">{formError}</p>
+          ) : null}
+
           <button
             type="submit"
-            disabled={!name.trim()}
+            disabled={!name.trim() || submitting}
             className="w-full rounded-2xl py-3.5 text-sm font-bold text-white disabled:opacity-40"
             style={{ background: '#ea2e00' }}
           >
-            Add to group
+            {submitting ? 'Adding…' : 'Add to group'}
           </button>
         </div>
       </form>

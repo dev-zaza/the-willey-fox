@@ -1,7 +1,9 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Inject, NotFoundException, Param, Post, Query, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, ForbiddenException, Get, HttpCode, Inject, NotFoundException, Param, Post, Query, Req } from '@nestjs/common';
 import { IsString, MinLength } from 'class-validator';
 import { H3Scorer } from './scoring/h3-scorer';
 import { Public } from '../../common/decorators/public.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
 import { ApiTags } from '@nestjs/swagger';
 import { avg, count, eq, sql } from 'drizzle-orm';
 import * as fs from 'fs';
@@ -12,6 +14,7 @@ import { areaRatings } from '../../database/schema';
 import { cellToBoundary, polygonToCells, latLngToCell } from 'h3-js';
 import { colourFor } from './lib/bands';
 import { UkPoliceAdapter } from './adapters/uk-police.adapter';
+import { isProTier } from '@safetag/shared';
 
 interface CityGuide {
   city: string;
@@ -444,10 +447,17 @@ export class SafetyEngineController {
     };
   }
 
-  // Auth-protected: city in body → no enumerable public URL
+  // Auth-protected: city in body → no enumerable public URL; paid plans only
   @Post('travel-guide/render')
   @HttpCode(200)
-  renderTravelGuide(@Body() dto: TravelGuideRenderDto): { available: boolean; html: string | null; city: string } {
+  renderTravelGuide(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: TravelGuideRenderDto,
+  ): { available: boolean; html: string | null; city: string } {
+    const paid = isProTier(user.tier);
+    if (!paid) {
+      throw new ForbiddenException('PREMIUM_REQUIRED');
+    }
     // Only city-guides (11 curated) qualify — knowledge-only files are raw YouTube scrapes
     const normalized = dto.city.toLowerCase().trim().replace(/\s+/g, '_').replace(/-/g, '_');
     const guidePath = path.join(GUIDES_DIR, `${normalized}.json`);

@@ -89,6 +89,7 @@ describe('FamiliesService (UAT invite + create)', () => {
   });
 
   it('create — inserts family + owner membership', async () => {
+    mock.enqueueDirect([{ ownedCount: 0 }]);
     mock.db.returning
       .mockResolvedValueOnce([{ id: 'fam-1', name: 'Smith', ownerId: 'u-1' }])
       .mockResolvedValueOnce([{ id: 'mem-1' }]);
@@ -96,6 +97,12 @@ describe('FamiliesService (UAT invite + create)', () => {
     const family = await service.create('u-1', 'Smith');
     expect(family.id).toBe('fam-1');
     expect(mock.db.insert).toHaveBeenCalled();
+  });
+
+  it('create — throws FAMILY_LIMIT_REACHED when free user already owns a family', async () => {
+    mock.enqueueDirect([{ ownedCount: 1 }]);
+
+    await expect(service.create('u-1', 'Second', 'free')).rejects.toThrow(ForbiddenException);
   });
 
   describe('addMemberByEmail', () => {

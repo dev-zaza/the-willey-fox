@@ -37,9 +37,10 @@ export const ERROR_MESSAGES: Record<string, string> = {
   QR_NOT_FOUND: 'QR code not found.',
   QR_ACCESS_DENIED: 'You do not have access to this QR code.',
   QR_NOT_OWNER: 'You are not the owner of this QR code.',
-  QR_LIMIT_REACHED: 'You have reached your QR code limit. Upgrade for more.',
+  QR_LIMIT_REACHED: 'You have reached your free digital tag limit (5). Claim bought tags anytime, or upgrade for unlimited generate.',
   QR_ALREADY_CLAIMED: 'This QR code has already been claimed.',
   QR_BULK_LIMIT_EXCEEDED: 'Bulk creation exceeds your plan limit.',
+  FAMILY_LIMIT_REACHED: 'Free plan includes 1 family group. Upgrade to create more.',
 
   // Guardians
   GUARDIAN_NOT_FOUND: 'Guardian not found.',
@@ -86,7 +87,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   SUBSCRIPTION_NOT_FOUND: 'No active subscription found.',
   SUBSCRIPTION_ALREADY_ACTIVE: 'You already have an active subscription.',
   SUBSCRIPTION_ITEM_NOT_FOUND: 'Subscription item not found.',
-  PREMIUM_REQUIRED: 'This feature requires a premium subscription.',
+  PREMIUM_REQUIRED: 'This feature requires Pro. Upgrade for unlimited access.',
   SHOPIFY_INVALID_SIGNATURE: 'Order verification failed. Please contact support.',
   SHOPIFY_UNKNOWN_PRODUCT_TYPE: 'Unknown QR product type.',
   SHOPIFY_PRODUCT_ID_REQUIRED: 'Shopify product ID is required.',

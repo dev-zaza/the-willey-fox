@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Zap, Crown, XCircle, CreditCard, RefreshCw } from 'lucide-react';
 import { payments, settings, type SubscriptionStatus, type Invoice, type PricingConfig } from '@/lib/api';
+import { isProTier } from '@safetag/shared';
 
 const PRICING_FALLBACK: PricingConfig = {
   monthlyPriceCents: 999,
@@ -61,7 +62,7 @@ export default function SubscriptionPage() {
     }
   }
 
-  const isPro = sub?.tier === 'premium' || sub?.tier === 'pro';
+  const isPro = isProTier(sub?.tier) || sub?.tier === 'pro';
   const isActive = sub?.status === 'active' || sub?.status === 'trialing';
   const annualPriceId = pricing.stripePriceIdAnnual || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL;
   const isAnnual = annualPriceId
@@ -108,7 +109,7 @@ export default function SubscriptionPage() {
           <div className="bg-surface-card border border-surface-border rounded-2xl p-5">
             <div className="flex items-center gap-3 mb-4">
               {isPro ? <Crown className="w-5 h-5 text-amber-400" /> : <Zap className="w-5 h-5 text-brand-400" />}
-              <h2 className="text-white font-semibold capitalize">{sub.tier} Plan</h2>
+              <h2 className="text-white font-semibold">{isPro ? 'Pro' : 'Free'} Plan</h2>
               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                 sub.status === 'active' ? 'bg-green-500/15 text-green-400' :
                 sub.status === 'trialing' ? 'bg-blue-500/15 text-blue-400' :
@@ -166,12 +167,12 @@ export default function SubscriptionPage() {
                 <p className="text-[#7a6957] text-sm">{pricing.monthlyPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited digital tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited family groups</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Travel guide &amp; crime reports</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Bulk QR generation</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications &amp; SOS</li>
               </ul>
               <button
                 onClick={() => checkout('month')}
@@ -190,12 +191,12 @@ export default function SubscriptionPage() {
                 <p className="text-[#7a6957] text-sm">{pricing.annualPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited Tags</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> {pricing.tierLimits.premium.maxEmergencyContacts} emergency contacts</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited digital tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited family groups</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Travel guide &amp; crime reports</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Bulk QR generation</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Safety-aware routing</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> SOS push to contacts</li>
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Full report history</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications &amp; SOS</li>
               </ul>
               <button
                 onClick={() => checkout('year')}

@@ -6,13 +6,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { eq, and, count } from 'drizzle-orm';
+import { eq, and, count, isNull, sql } from 'drizzle-orm';
 import { customAlphabet } from 'nanoid';
 import * as QRCode from 'qrcode';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { qrCodes, guardianMappings, visualThemes, familyGroups, familyMembers } from '../../database/schema';
-import { TIER_LIMITS } from '@safetag/shared';
+import { TIER_LIMITS, isProTier } from '@safetag/shared';
 import { CreateQrDto, UpdateQrDto, ClaimQrDto, BulkCreateQrDto } from './dto';
 import { SetQrThemeDto } from './dto/set-qr-theme.dto';
 import { SettingsService } from '../settings/settings.service';
@@ -29,20 +29,43 @@ export class QrService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async create(userId: string, tier: string, dto: CreateQrDto) {
-    const tierKey = tier as keyof typeof TIER_LIMITS;
-    const staticLimits = TIER_LIMITS[tierKey];
-
-    const pricing = await this.settingsService.getPricingConfig();
-    const liveLimit = (pricing.tierLimits as Record<string, { maxQrCodes: number }>)[tierKey];
-    const maxQrCodes = liveLimit?.maxQrCodes ?? staticLimits.maxQrCodes;
-
+  /**
+   * Digital self-serve tags only (not Shopify / batch physical claims).
+   * Free users may claim unlimited physical tags but may only generate this many.
+   */
+  private async countDigitalOwnedTags(userId: string): Promise<number> {
     const [{ activeCount }] = await this.db
       .select({ activeCount: count() })
       .from(qrCodes)
-      .where(and(eq(qrCodes.userId, userId), eq(qrCodes.isActive, true)));
+      .where(
+        and(
+          eq(qrCodes.userId, userId),
+          eq(qrCodes.isActive, true),
+          isNull(qrCodes.batchId),
+          isNull(qrCodes.shopifyOrderId),
+          isNull(qrCodes.shopifyOrderItemId),
+          sql`coalesce((${qrCodes.customFields}->>'acquisition'), 'digital') = 'digital'`,
+        ),
+      );
+    return Number(activeCount);
+  }
 
-    if (activeCount >= maxQrCodes) {
+  private async resolveMaxDigitalTags(tier: string): Promise<number> {
+    // Pro (monthly/yearly) and legacy paid tiers: unlimited digital generate
+    if (isProTier(tier)) return Infinity;
+
+    const tierKey = tier as keyof typeof TIER_LIMITS;
+    const staticLimits = TIER_LIMITS[tierKey] ?? TIER_LIMITS.free;
+    const pricing = await this.settingsService.getPricingConfig();
+    const liveLimit = (pricing.tierLimits as Record<string, { maxQrCodes?: number }>)[tierKey];
+    return liveLimit?.maxQrCodes ?? staticLimits.maxQrCodes;
+  }
+
+  async create(userId: string, tier: string, dto: CreateQrDto) {
+    const maxQrCodes = await this.resolveMaxDigitalTags(tier);
+    const activeCount = await this.countDigitalOwnedTags(userId);
+
+    if (Number.isFinite(maxQrCodes) && activeCount >= maxQrCodes) {
       throw new ForbiddenException('QR_LIMIT_REACHED');
     }
 
@@ -72,6 +95,7 @@ export class QrService {
           ? { ...defaultVisibility, ...dto.visibilityConfig }
           : defaultVisibility,
         customFields: {
+          acquisition: 'digital',
           ...(dto.customFields || {}),
           ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
         },
@@ -262,7 +286,7 @@ export class QrService {
     });
   }
 
-  async claimQrCode(code: string, userId: string, tier: string, dto: ClaimQrDto) {
+  async claimQrCode(code: string, userId: string, _tier: string, dto: ClaimQrDto) {
     const [qrCode] = await this.db
       .select()
       .from(qrCodes)
@@ -277,17 +301,7 @@ export class QrService {
       throw new BadRequestException('QR_ALREADY_CLAIMED');
     }
 
-    const tierKey = tier as keyof typeof TIER_LIMITS;
-    const limits = TIER_LIMITS[tierKey];
-
-    const [{ activeCount }] = await this.db
-      .select({ activeCount: count() })
-      .from(qrCodes)
-      .where(and(eq(qrCodes.userId, userId), eq(qrCodes.isActive, true)));
-
-    if (activeCount >= limits.maxQrCodes) {
-      throw new ForbiddenException('QR_LIMIT_REACHED');
-    }
+    // Physical / purchased claims are unlimited on every tier — only digital generate is capped.
 
     const defaultVisibility = {
       showName: true,
@@ -320,6 +334,11 @@ export class QrService {
       resolvedMappedMemberId = null; // ignore mappedMemberId without familyId
     }
 
+    const existingFields =
+      qrCode.customFields && typeof qrCode.customFields === 'object'
+        ? (qrCode.customFields as Record<string, unknown>)
+        : {};
+
     const [updated] = await this.db
       .update(qrCodes)
       .set({
@@ -338,9 +357,11 @@ export class QrService {
           ? { ...defaultVisibility, ...dto.visibilityConfig }
           : defaultVisibility,
         customFields: {
+          ...existingFields,
           ...(dto.customFields || {}),
           ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
           ...(dto.petInfo ? { petInfo: dto.petInfo } : {}),
+          acquisition: 'claimed',
         },
         familyId: resolvedFamilyId,
         mappedMemberId: resolvedMappedMemberId,
@@ -379,19 +400,14 @@ export class QrService {
   }
 
   async bulkCreate(userId: string, tier: string, dto: BulkCreateQrDto) {
-    if (tier !== 'premium' && tier !== 'enterprise') {
+    if (!isProTier(tier)) {
       throw new ForbiddenException('PREMIUM_REQUIRED');
     }
 
-    const tierKey = tier as keyof typeof TIER_LIMITS;
-    const limits = TIER_LIMITS[tierKey];
+    const maxQrCodes = await this.resolveMaxDigitalTags(tier);
+    const activeCount = await this.countDigitalOwnedTags(userId);
 
-    const [{ activeCount }] = await this.db
-      .select({ activeCount: count() })
-      .from(qrCodes)
-      .where(and(eq(qrCodes.userId, userId), eq(qrCodes.isActive, true)));
-
-    if (activeCount + dto.count > limits.maxQrCodes) {
+    if (Number.isFinite(maxQrCodes) && activeCount + dto.count > maxQrCodes) {
       throw new ForbiddenException('QR_LIMIT_REACHED');
     }
 
@@ -408,7 +424,7 @@ export class QrService {
       uniqueCode: nanoid(),
       name: `${dto.category.charAt(0).toUpperCase() + dto.category.slice(1)} Tag`,
       visibilityConfig: defaultVisibility,
-      customFields: {},
+      customFields: { acquisition: 'digital' },
     }));
 
     const inserted = await this.db.insert(qrCodes).values(rows).returning();

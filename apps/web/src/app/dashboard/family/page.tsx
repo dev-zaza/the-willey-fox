@@ -1,15 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowLeft,
+  Pencil,
   PawPrint,
   Plus,
   Tag,
+  Trash2,
   User,
   UserPlus,
   Users,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 import {
@@ -19,6 +24,7 @@ import {
   type FamilyDetail,
   type FamilyMembership,
 } from '@/lib/api';
+import { isProTier } from '@safetag/shared';
 import {
   AddFamilyProfileSheet,
   QuickAddChips,
@@ -32,6 +38,7 @@ import {
 
 export default function FamilyPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [items, setItems] = useState<FamilyMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
@@ -47,10 +54,15 @@ export default function FamilyPage() {
   const [sheetCategory, setSheetCategory] = useState<FamilyProfileCategory>('person');
   const [addingProfile, setAddingProfile] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [savingRename, setSavingRename] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadList = useCallback(async () => {
     const data = await families.list();
     setItems(data);
+    return data;
   }, []);
 
   useEffect(() => {
@@ -58,6 +70,15 @@ export default function FamilyPage() {
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, [loadList]);
+
+  function backToList() {
+    setSelectedId(null);
+    setDetail(null);
+    setSheetOpen(false);
+    setInviteError('');
+    setProfileError('');
+    setRenamingId(null);
+  }
 
   async function createFamily() {
     if (!name.trim()) return;
@@ -79,14 +100,64 @@ export default function FamilyPage() {
     setDetailLoading(true);
     setInviteError('');
     setProfileError('');
+    setRenamingId(null);
     try {
       const data = await families.get(id);
       setDetail(data);
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Failed to load family');
       setSelectedId(null);
+      setDetail(null);
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  async function saveRename(familyId: string) {
+    if (!renameValue.trim()) return;
+    setSavingRename(true);
+    try {
+      const updated = await families.rename(familyId, renameValue.trim());
+      setItems((prev) =>
+        prev.map((f) => (f.familyId === familyId ? { ...f, familyName: updated.name } : f)),
+      );
+      if (detail?.id === familyId) {
+        setDetail({ ...detail, name: updated.name });
+      }
+      setRenamingId(null);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Failed to rename family');
+    } finally {
+      setSavingRename(false);
+    }
+  }
+
+  async function deleteFamily(familyId: string, familyName: string) {
+    if (
+      !confirm(
+        `Delete “${familyName}”? Members lose access. QR profiles stay on the owner’s account but leave this group.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingId(familyId);
+    try {
+      await families.delete(familyId);
+      const next = await loadList();
+      if (selectedId === familyId) {
+        backToList();
+      }
+      if (next.length === 0) {
+        router.push('/dashboard/people');
+      }
+    } catch (e: unknown) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : 'Failed to delete family. Only the owner can delete a group.';
+      alert(msg);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -122,9 +193,11 @@ export default function FamilyPage() {
       if (e instanceof FamilyProfileLimitError) {
         setProfileError(e.message);
         if (e.created.length > 0) await openFamily(selectedId);
-      } else {
-        setProfileError(e instanceof Error ? e.message : 'Failed to add profile');
+        throw e;
       }
+      const message = e instanceof Error ? e.message : 'Failed to add profile';
+      setProfileError(message);
+      throw e instanceof Error ? e : new Error(message);
     } finally {
       setAddingProfile(false);
     }
@@ -137,24 +210,91 @@ export default function FamilyPage() {
   }
 
   const isOwner = Boolean(user && detail && detail.ownerId === user.id);
+  const isPro = isProTier(user?.subscriptionTier);
+  const ownedFamilyCount = items.filter(
+    (f) => f.role?.toLowerCase() === 'owner' || (!!user?.id && f.ownerId === user.id),
+  ).length;
+  const atFamilyLimit = !isPro && ownedFamilyCount >= 1;
 
   if (selectedId) {
     return (
       <div className="min-h-screen bg-surface pb-8">
         <div className="border-b border-surface-border bg-surface-card px-4 py-4">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedId(null);
-              setDetail(null);
-            }}
-            className="text-sm text-[#7a6957] hover:text-brand-500"
-          >
-            ← All families
-          </button>
-          <h1 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
-            {detail?.name ?? 'Family'}
-          </h1>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={backToList}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#7a6957] hover:text-brand-500"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              All families
+            </button>
+            <Link
+              href="/dashboard/people"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-[#7a6957] hover:bg-black/5 hover:text-[#17130F]"
+            >
+              <X className="h-4 w-4" />
+              Exit
+            </Link>
+          </div>
+          <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              {renamingId === selectedId ? (
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && void saveRename(selectedId)}
+                    className="min-w-0 flex-1 rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-sm font-semibold text-[var(--text-primary)]"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    disabled={savingRename || !renameValue.trim()}
+                    onClick={() => void saveRename(selectedId)}
+                    className="rounded-xl bg-brand-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRenamingId(null)}
+                    className="rounded-xl border border-surface-border px-3 py-2 text-sm font-semibold text-[#7a6957]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <h1 className="text-xl font-bold text-[var(--text-primary)]">
+                  {detail?.name ?? 'Family'}
+                </h1>
+              )}
+            </div>
+            {isOwner && renamingId !== selectedId ? (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRenamingId(selectedId);
+                    setRenameValue(detail?.name ?? '');
+                  }}
+                  className="inline-flex items-center gap-1 rounded-lg border border-surface-border px-2.5 py-1.5 text-xs font-bold text-[#5C5245] hover:bg-black/5"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Rename
+                </button>
+                <button
+                  type="button"
+                  disabled={deletingId === selectedId}
+                  onClick={() => void deleteFamily(selectedId, detail?.name ?? 'this family')}
+                  className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-600 disabled:opacity-40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {deletingId === selectedId ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="mx-auto max-w-2xl space-y-5 p-4">
@@ -282,6 +422,10 @@ export default function FamilyPage() {
                         typeof qr.customFields?.relationship === 'string'
                           ? qr.customFields.relationship
                           : null;
+                      const categoryLabel =
+                        qr.category === 'person' || qr.category === 'pet'
+                          ? FAMILY_PROFILE_LABELS[qr.category]
+                          : qr.category;
                       return (
                         <div
                           key={qr.id}
@@ -305,9 +449,7 @@ export default function FamilyPage() {
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-[var(--text-primary)]">{qr.name}</p>
                               <p className="text-xs capitalize text-[#7a6957]">
-                                {relationship ||
-                                  FAMILY_PROFILE_LABELS[qr.category as 'person' | 'pet'] ||
-                                  qr.category}
+                                {relationship || categoryLabel}
                               </p>
                             </div>
                             {qr.isLost && (
@@ -386,6 +528,23 @@ export default function FamilyPage() {
   return (
     <div className="min-h-screen bg-[#F1E7D8] pb-8">
       <div className="border-b border-[#E3D8C6] bg-white px-4 py-5 lg:px-10">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <Link
+            href="/dashboard/people"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#7a6957] hover:text-brand-500"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Your people
+          </Link>
+          <Link
+            href="/dashboard/people"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-[#7a6957] hover:bg-black/5 hover:text-[#17130F]"
+            aria-label="Exit family management"
+          >
+            <X className="h-4 w-4" />
+            Exit
+          </Link>
+        </div>
         <p className="text-[11px] font-extrabold tracking-[0.12em] text-[#8A7B67]">SAFETY NETWORK</p>
         <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-[#17130F]">Your family group</h1>
         <p className="mt-1 max-w-[66ch] text-sm text-[#5C5245]">
@@ -395,24 +554,37 @@ export default function FamilyPage() {
 
       <div className="mx-auto max-w-2xl space-y-4 p-4">
         <div className="space-y-3 rounded-2xl border border-surface-border bg-surface-card p-4">
-          <p className="text-sm text-[#7a6957]">
-            Share QR tags with people you trust. Kids and pets are added by name, not email.
-          </p>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && createFamily()}
-            placeholder="New family name"
-            className="w-full rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[#9d8c7a]"
-          />
-          <button
-            type="button"
-            onClick={createFamily}
-            disabled={creating || !name.trim()}
-            className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {creating ? 'Creating…' : 'Create family'}
-          </button>
+          <p className="text-sm font-bold text-[#17130F]">Create family</p>
+          {atFamilyLimit ? (
+            <p className="text-sm text-[#7a6957]">
+              Free plan includes 1 family group. Edit or delete your existing group below, or{' '}
+              <Link href="/dashboard/subscription" className="font-bold text-brand-600">
+                upgrade
+              </Link>{' '}
+              for more.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-[#7a6957]">
+                Share QR tags with people you trust. Kids and pets are added by name, not email.
+              </p>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && createFamily()}
+                placeholder="New family name"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[#9d8c7a]"
+              />
+              <button
+                type="button"
+                onClick={createFamily}
+                disabled={creating || !name.trim()}
+                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {creating ? 'Creating…' : 'Create family'}
+              </button>
+            </>
+          )}
         </div>
 
         {loading ? (
@@ -427,17 +599,81 @@ export default function FamilyPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {items.map((f) => (
-              <button
-                key={f.familyId}
-                type="button"
-                onClick={() => openFamily(f.familyId)}
-                className="w-full rounded-xl border border-surface-border bg-surface-card p-4 text-left hover:border-brand-500/40"
-              >
-                <p className="font-semibold text-[var(--text-primary)]">{f.familyName}</p>
-                <p className="mt-0.5 text-xs capitalize text-[#7a6957]">{f.role}</p>
-              </button>
-            ))}
+            {items.map((f) => {
+              const canManage =
+                f.role?.toLowerCase() === 'owner' ||
+                (!!user?.id && f.ownerId === user.id);
+              return (
+                <div
+                  key={f.familyId}
+                  className="rounded-xl border border-surface-border bg-surface-card p-4"
+                >
+                  {renamingId === f.familyId ? (
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && void saveRename(f.familyId)}
+                        className="min-w-0 flex-1 rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm font-semibold text-[var(--text-primary)]"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        disabled={savingRename || !renameValue.trim()}
+                        onClick={() => void saveRename(f.familyId)}
+                        className="rounded-xl bg-brand-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRenamingId(null)}
+                        className="rounded-xl border border-surface-border px-3 py-2 text-sm font-semibold text-[#7a6957]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openFamily(f.familyId)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p className="font-semibold text-[var(--text-primary)]">{f.familyName}</p>
+                        <p className="mt-0.5 text-xs capitalize text-[#7a6957]">{f.role}</p>
+                      </button>
+                      {canManage ? (
+                        <div className="flex flex-shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRenamingId(f.familyId);
+                              setRenameValue(f.familyName);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-[#5C5245] hover:bg-black/5"
+                            aria-label={`Rename ${f.familyName}`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingId === f.familyId}
+                            onClick={() => void deleteFamily(f.familyId, f.familyName)}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-40"
+                            aria-label={`Delete ${f.familyName}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            {deletingId === f.familyId ? '…' : 'Delete'}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

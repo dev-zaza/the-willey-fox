@@ -9,9 +9,26 @@ class ApiError extends Error {
     public readonly code: string,
     message: string,
   ) {
-    super(getFriendlyErrorMessage(message, message));
+    super(getFriendlyErrorMessage(code !== 'UNKNOWN_ERROR' ? code : message, message));
     this.name = 'ApiError';
   }
+}
+
+function resolveApiErrorCode(body: Record<string, unknown>): string {
+  if (typeof body.code === 'string' && body.code.length > 0) return body.code;
+  const msg = body.message;
+  if (typeof msg === 'string' && /^[A-Z][A-Z0-9_]+$/.test(msg)) return msg;
+  if (Array.isArray(msg) && typeof msg[0] === 'string' && /^[A-Z][A-Z0-9_]+$/.test(msg[0])) {
+    return msg[0];
+  }
+  return 'UNKNOWN_ERROR';
+}
+
+function resolveApiErrorMessage(body: Record<string, unknown>, code: string): string {
+  const msg = body.message;
+  if (typeof msg === 'string') return msg;
+  if (Array.isArray(msg) && typeof msg[0] === 'string') return msg[0];
+  return code !== 'UNKNOWN_ERROR' ? code : 'Something went wrong';
 }
 
 // Prevents multiple concurrent refresh attempts
@@ -75,7 +92,12 @@ async function request<T>(
 
       const retryBody = await retryRes.json().catch(() => ({}));
       if (!retryRes.ok) {
-        throw new ApiError(retryRes.status, retryBody.code ?? 'UNKNOWN_ERROR', retryBody.message ?? 'Something went wrong');
+        const code = resolveApiErrorCode(retryBody as Record<string, unknown>);
+        throw new ApiError(
+          retryRes.status,
+          code,
+          resolveApiErrorMessage(retryBody as Record<string, unknown>, code),
+        );
       }
       return retryBody as T;
     } catch (err) {
@@ -89,10 +111,11 @@ async function request<T>(
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    const code = resolveApiErrorCode(body as Record<string, unknown>);
     throw new ApiError(
       res.status,
-      body.code ?? 'UNKNOWN_ERROR',
-      body.message ?? 'Something went wrong',
+      code,
+      resolveApiErrorMessage(body as Record<string, unknown>, code),
     );
   }
 
@@ -325,6 +348,7 @@ export interface ActivateQrPayload {
   ownerContactEmail?: string;
   ownerContactPhone?: string;
   rewardMessage?: string;
+  familyId?: string;
 }
 
 export const qrCodes = {
@@ -1524,6 +1548,8 @@ export const families = {
   list: () => request<FamilyMembership[]>('/families'),
   get: (id: string) => request<FamilyDetail>(`/families/${id}`),
   create: (name: string) => request<FamilyGroup>('/families', { method: 'POST', body: JSON.stringify({ name }) }),
+  rename: (familyId: string, name: string) =>
+    request<FamilyGroup>(`/families/${familyId}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
   addMember: (familyId: string, payload: { userId?: string; email?: string }) =>
     request<{ invited?: boolean; added?: boolean; email?: string } & Partial<FamilyMember>>(
       `/families/${familyId}/members`,

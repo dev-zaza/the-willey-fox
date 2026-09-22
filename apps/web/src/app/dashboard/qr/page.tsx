@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Layers, Plus, ShoppingBag, X } from 'lucide-react';
+import { Camera, ImagePlus, Layers, Plus, ShoppingBag, X } from 'lucide-react';
+import jsQR from 'jsqr';
 import { publicQr, qrCodes, type QrCode } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
 import { getShopifyShopUrl } from '@/lib/shopify-shop';
 import { cn } from '@/lib/utils';
+import { extractQrCode } from '@/lib/qr-utils';
+import { QrCameraScanner } from '@/components/qr/qr-camera-scanner';
+import { isProTier } from '@safetag/shared';
 
 const QR_CATEGORIES = ['pet', 'bag', 'key', 'person', 'vehicle', 'other', 'medical', 'place'] as const;
 
@@ -53,9 +57,17 @@ export default function QrPage() {
     note: true,
   });
   const [linkOpen, setLinkOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [createCategory, setCreateCategory] = useState<(typeof QR_CATEGORIES)[number]>('other');
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
 
-  const isPremium = user?.subscriptionTier === 'premium' || user?.subscriptionTier === 'enterprise';
+  const isPro = isProTier(user?.subscriptionTier);
   const shopUrl = getShopifyShopUrl();
+  const freeLimit = 5;
+  const digitalCount = tags.filter((t) => t.customFields?.acquisition !== 'claimed').length;
+  const atDigitalLimit = !isPro && digitalCount >= freeLimit;
 
   useEffect(() => {
     qrCodes
@@ -117,10 +129,32 @@ export default function QrPage() {
       const created = await qrCodes.bulkCreate({ count: bulkCount, category: bulkCategory });
       setTags((prev) => [...prev, ...created]);
       setShowBulkForm(false);
-    } catch {
-      setBulkError('Failed to generate tags. Check your plan limits and try again.');
+    } catch (err: unknown) {
+      setBulkError(err instanceof Error ? err.message : 'Failed to generate tags. Check your plan limits and try again.');
     } finally {
       setBulkLoading(false);
+    }
+  }
+
+  async function handleCreateDigital(e: React.FormEvent) {
+    e.preventDefault();
+    if (!createName.trim() || creating) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      const created = await qrCodes.create({
+        name: createName.trim(),
+        label: createName.trim(),
+        category: createCategory,
+      });
+      setTags((prev) => [created, ...prev]);
+      setCreateOpen(false);
+      setCreateName('');
+      router.push(`/dashboard/qr/${created.id}`);
+    } catch (err: unknown) {
+      setCreateError(err instanceof Error ? err.message : 'Could not create tag');
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -151,14 +185,45 @@ export default function QrPage() {
             </Link>
             <button
               type="button"
+              onClick={() => {
+                setCreateError('');
+                setCreateOpen(true);
+              }}
+              disabled={atDigitalLimit}
+              title={
+                atDigitalLimit
+                  ? 'Free plan digital tag limit reached — upgrade or unlink a digital tag'
+                  : 'Create a digital QR profile'
+              }
+              className="rounded-xl border border-brand-500 bg-white px-3 py-2 text-sm font-bold text-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Plus className="mr-1 inline h-4 w-4" />
+              Create digital tag
+            </button>
+            <button
+              type="button"
               onClick={() => setLinkOpen(true)}
               className="rounded-xl bg-brand-500 px-3 py-2 text-sm font-bold text-white"
             >
-              <Plus className="mr-1 inline h-4 w-4" />
-              Link a new tag
+              Link physical tag
             </button>
           </div>
         </div>
+
+        {atDigitalLimit ? (
+          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            Free plan allows {freeLimit} digital tags ({digitalCount}/{freeLimit}). Bought physical tags can still be
+            linked anytime. Unlink a digital tag or{' '}
+            <Link href="/dashboard/subscription" className="underline">
+              upgrade
+            </Link>{' '}
+            to create more.
+          </p>
+        ) : !isPro ? (
+          <p className="mt-3 text-xs text-[#8A7B67]">
+            Digital tags {digitalCount}/{freeLimit} · physical claims unlimited
+          </p>
+        ) : null}
 
         {shopUrl ? (
           <a
@@ -172,7 +237,7 @@ export default function QrPage() {
           </a>
         ) : null}
 
-        {isPremium ? (
+        {isPro ? (
           <button
             type="button"
             onClick={() => setShowBulkForm((v) => !v)}
@@ -183,7 +248,7 @@ export default function QrPage() {
           </button>
         ) : null}
 
-        {isPremium && showBulkForm ? (
+        {isPro && showBulkForm ? (
           <form onSubmit={handleBulkCreate} className="mt-4 space-y-3 rounded-2xl border border-[#E3D8C6] bg-white p-4">
             <div className="flex gap-3">
               <input
@@ -273,10 +338,13 @@ export default function QrPage() {
         </div>
 
         <p className="mt-3 text-xs text-[#8A7B67]">
-          Free plan: {tags.length} active tags.{' '}
-          <Link href="/dashboard/subscription" className="font-extrabold text-brand-600">
-            Premium removes the limit →
-          </Link>
+          {isPro ? 'Pro plan' : 'Free plan'}: {tags.length}
+          {!isPro ? ` / ${freeLimit}` : ''} active tags.{' '}
+          {!isPro ? (
+            <Link href="/dashboard/subscription" className="font-extrabold text-brand-600">
+              Pro removes the limit →
+            </Link>
+          ) : null}
         </p>
 
         {iceTag ? (
@@ -380,6 +448,65 @@ export default function QrPage() {
       </div>
 
       {linkOpen ? <LinkTagSheet onClose={() => setLinkOpen(false)} onLinked={(t) => setTags((prev) => [t, ...prev])} /> : null}
+
+      {createOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <form
+            onSubmit={(e) => void handleCreateDigital(e)}
+            className="w-full max-w-lg rounded-2xl border border-[#E3D8C6] bg-white p-5 shadow-xl"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-extrabold tracking-wider text-[#8A7B67]">NEW TAG</p>
+                <h3 className="mt-1 text-lg font-extrabold text-[#17130F]">Create a digital QR profile</h3>
+                <p className="mt-1 text-sm text-[#5C5245]">
+                  No physical sticker needed. You can print or buy a matching tag later.
+                </p>
+              </div>
+              <button type="button" onClick={() => setCreateOpen(false)} aria-label="Close">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-3">
+              <input
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="e.g. Zoe, School bag, Max"
+                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                autoFocus
+              />
+              <select
+                value={createCategory}
+                onChange={(e) => setCreateCategory(e.target.value as (typeof QR_CATEGORIES)[number])}
+                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm capitalize"
+              >
+                {QR_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {createError ? <p className="text-xs font-semibold text-red-600">{createError}</p> : null}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={creating || !createName.trim()}
+                  className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+                >
+                  {creating ? 'Creating…' : 'Create tag'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="rounded-xl border border-[#E3D8C6] px-4 py-2 text-sm font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -391,15 +518,59 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
   const [category, setCategory] = useState('other');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [decoding, setDecoding] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function applyScannedCode(raw: string) {
+    const parsed = extractQrCode(raw) ?? raw.trim().toUpperCase();
+    if (!parsed) {
+      setError('Could not read a Wiley Fox code from that QR.');
+      return;
+    }
+    setCode(parsed);
+    setError('');
+    setScanning(false);
+    setStep(2);
+  }
 
   async function continueFromCode() {
     const parsed = code.trim().toUpperCase();
     if (!parsed) {
-      setError('Enter the code printed under the QR.');
+      setError('Enter the code printed under the QR, or scan / upload the tag image.');
       return;
     }
     setError('');
     setStep(2);
+  }
+
+  async function handleImageUpload(file: File | null) {
+    if (!file) return;
+    setDecoding(true);
+    setError('');
+    try {
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not read image');
+      ctx.drawImage(bitmap, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const result = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'attemptBoth',
+      });
+      if (!result?.data) {
+        setError('No QR found in that image. Try a clearer photo or enter the code.');
+        return;
+      }
+      applyScannedCode(result.data);
+    } catch {
+      setError('Could not read that image. Try another photo or enter the code.');
+    } finally {
+      setDecoding(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   async function linkTag() {
@@ -421,75 +592,129 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-[#E3D8C6] bg-white p-5 shadow-xl">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-extrabold tracking-wider text-[#8A7B67]">
-              {step} · {step === 1 ? 'SCAN' : step === 2 ? 'ASSIGN' : 'DONE'}
-            </p>
-            <h3 className="mt-1 text-lg font-extrabold">Link a new tag to your profile</h3>
-          </div>
-          <button type="button" onClick={onClose} aria-label="Close">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {step === 1 ? (
-          <div className="mt-4 space-y-3">
-            <p className="text-sm text-[#5C5245]">
-              Every Wiley Fox tag has a unique QR. Scanning it once, signed in, ties it to your account.
-            </p>
-            <label className="block text-xs font-bold">Tag code</label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. WF-7K2-QRB"
-              className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
-            />
-            {error ? <p className="text-xs text-red-600">{error}</p> : null}
-            <button type="button" onClick={() => void continueFromCode()} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white">
-              Continue
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-[#E3D8C6] bg-white p-5 shadow-xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-extrabold tracking-wider text-[#8A7B67]">
+                {step} · {step === 1 ? 'SCAN' : step === 2 ? 'ASSIGN' : 'DONE'}
+              </p>
+              <h3 className="mt-1 text-lg font-extrabold">Link a new tag to your profile</h3>
+            </div>
+            <button type="button" onClick={onClose} aria-label="Close">
+              <X className="h-5 w-5" />
             </button>
           </div>
-        ) : null}
 
-        {step === 2 ? (
-          <div className="mt-4 space-y-3">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. School bag"
-              className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
-            />
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm">
-              {QR_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            {error ? <p className="text-xs text-red-600">{error}</p> : null}
-            <div className="flex gap-2">
-              <button type="button" onClick={() => void linkTag()} disabled={saving} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white">
-                {saving ? 'Linking…' : 'Link tag'}
-              </button>
-              <button type="button" onClick={() => setStep(1)} className="rounded-xl border px-4 py-2 text-sm">
-                Back
+          {step === 1 ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-[#5C5245]">
+                Scan the sticker with your camera, upload a photo of the QR, or type the code under the tag.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScanning(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm font-bold text-[#17130F]"
+                >
+                  <Camera className="h-4 w-4" />
+                  Scan with camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={decoding}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#E3D8C6] bg-[#FBF7F1] px-3 py-2 text-sm font-bold text-[#17130F] disabled:opacity-50"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  {decoding ? 'Reading…' : 'Upload QR image'}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => void handleImageUpload(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <label className="block text-xs font-bold">Tag code</label>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="e.g. WF-7K2-QRB"
+                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
+              />
+              {error ? <p className="text-xs text-red-600">{error}</p> : null}
+              <button
+                type="button"
+                onClick={() => void continueFromCode()}
+                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white"
+              >
+                Continue
               </button>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {step === 3 ? (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-[#5C5245]">Linked. Anyone who scans it reaches your profile.</p>
-            <button type="button" onClick={onClose} className="rounded-xl bg-[#17130F] px-4 py-2 text-sm font-bold text-white">
-              Done
-            </button>
-          </div>
-        ) : null}
+          {step === 2 ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-[#8A7B67]">Code {code}</p>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. School bag"
+                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+              />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+              >
+                {QR_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {error ? <p className="text-xs text-red-600">{error}</p> : null}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void linkTag()}
+                  disabled={saving}
+                  className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white"
+                >
+                  {saving ? 'Linking…' : 'Link tag'}
+                </button>
+                <button type="button" onClick={() => setStep(1)} className="rounded-xl border px-4 py-2 text-sm">
+                  Back
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 3 ? (
+            <div className="mt-6 space-y-3">
+              <p className="text-sm text-[#5C5245]">Linked. Anyone who scans it reaches your profile.</p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl bg-[#17130F] px-4 py-2 text-sm font-bold text-white"
+              >
+                Done
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
-    </div>
+
+      {scanning ? (
+        <QrCameraScanner
+          onScan={(scanned) => applyScannedCode(scanned)}
+          onClose={() => setScanning(false)}
+        />
+      ) : null}
+    </>
   );
 }

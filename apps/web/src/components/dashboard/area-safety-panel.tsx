@@ -19,6 +19,8 @@ import {
 import { directions, safetyEngine, type AreaSummary } from '@/lib/api';
 import { GLOBAL_CITIES, UK_CITIES } from '@/lib/mockup-cities';
 import { SaveSpotForm } from '@/components/dashboard/save-spot-form';
+import { useAuth } from '@/context/auth-context';
+import { isProTier } from '@safetag/shared';
 
 const BAND_META: Record<string, { label: string; color: string; bg: string; num: number }> = {
   band5: { label: 'Safe', color: '#3FA34D', bg: '#F0FDF4', num: 5 },
@@ -106,6 +108,8 @@ export function AreaSafetyPanel({
   onFlyTo,
 }: AreaSafetyPanelProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const isPro = isProTier(user?.subscriptionTier);
   const isPanel = variant === 'panel';
   const placeLabel = seedName.trim();
 
@@ -262,6 +266,10 @@ export function AreaSafetyPanel({
   }
 
   function downloadTravelGuide() {
+    if (!isPro) {
+      router.push('/dashboard/subscription');
+      return;
+    }
     if (!guideHtml) return;
     const city = summary?.cityName || selectedArea?.name || 'area';
     const blob = new Blob([guideHtml], { type: 'text/html;charset=utf-8' });
@@ -318,7 +326,7 @@ export function AreaSafetyPanel({
               type="button"
               onClick={downloadTravelGuide}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFE9D6] text-[#FF7B14]"
-              title="Download travel guide"
+              title={isPro ? 'Download travel guide' : 'Travel guide — upgrade'}
             >
               <Download className="h-4 w-4" />
             </button>
@@ -506,32 +514,45 @@ export function AreaSafetyPanel({
             {summary.crimeBreakdown.length > 0 && (
               <section className="rounded-2xl border border-[#ECECEC] bg-white p-5">
                 <h3 className="mb-4 text-sm font-bold">Crime Breakdown</h3>
-                <div className="space-y-3">
-                  {summary.crimeBreakdown.slice(0, 8).map((item, i) => {
-                    const topTotal = summary.crimeBreakdown.slice(0, 8).reduce((s, x) => s + x.count, 0);
-                    const pct = topTotal > 0 ? (item.count / topTotal) * 100 : 0;
-                    return (
-                      <div key={item.type}>
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span
-                              className="h-2 w-2 flex-shrink-0 rounded-full"
-                              style={{ backgroundColor: DOT_COLORS[i % DOT_COLORS.length] }}
-                            />
-                            <span className="truncate text-sm">{formatCrimeType(item.type)}</span>
+                {isPro ? (
+                  <div className="space-y-3">
+                    {summary.crimeBreakdown.slice(0, 8).map((item, i) => {
+                      const topTotal = summary.crimeBreakdown.slice(0, 8).reduce((s, x) => s + x.count, 0);
+                      const pct = topTotal > 0 ? (item.count / topTotal) * 100 : 0;
+                      return (
+                        <div key={item.type}>
+                          <div className="mb-1 flex items-center justify-between gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span
+                                className="h-2 w-2 flex-shrink-0 rounded-full"
+                                style={{ backgroundColor: DOT_COLORS[i % DOT_COLORS.length] }}
+                              />
+                              <span className="truncate text-sm">{formatCrimeType(item.type)}</span>
+                            </div>
+                            <span className="text-sm font-bold text-[#8a8a8a]">{item.count.toLocaleString()}</span>
                           </div>
-                          <span className="text-sm font-bold text-[#8a8a8a]">{item.count.toLocaleString()}</span>
+                          <div className="h-1 rounded bg-[#ECECEC]">
+                            <div
+                              className="h-1 rounded"
+                              style={{ width: `${Math.round(pct)}%`, backgroundColor: DOT_COLORS[i % DOT_COLORS.length] }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-1 rounded bg-[#ECECEC]">
-                          <div
-                            className="h-1 rounded"
-                            style={{ width: `${Math.round(pct)}%`, backgroundColor: DOT_COLORS[i % DOT_COLORS.length] }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-xl bg-[#F2F4E5] px-4 py-4 text-center">
+                    <p className="text-sm font-semibold text-[#232323]">Detailed crime breakdown is on paid plans</p>
+                    <p className="mt-1 text-xs text-[#8a8a8a]">Area score and totals stay free.</p>
+                    <Link
+                      href="/dashboard/subscription"
+                      className="mt-3 inline-block text-sm font-bold text-[#FF7B14]"
+                    >
+                      Upgrade to unlock →
+                    </Link>
+                  </div>
+                )}
               </section>
             )}
 
@@ -592,35 +613,46 @@ export function AreaSafetyPanel({
             )}
 
             <section className="space-y-3 pb-2">
-              {guideLoading && (
+              {guideLoading && isPro && (
                 <p className="text-center text-xs text-[#8a8a8a]">Checking travel guide…</p>
               )}
-              {guideAvailable && (
-                <button
-                  type="button"
-                  onClick={downloadTravelGuide}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#232323] py-3.5 text-sm font-semibold text-white"
-                >
-                  <Download className="h-4 w-4" />
-                  Download travel guide
-                </button>
-              )}
-              {guideHref && (
+              {!isPro ? (
                 <Link
-                  href={guideHref}
+                  href="/dashboard/subscription"
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#FF7B14] bg-[#FFE9D6] py-3.5 text-sm font-semibold text-[#E2620A]"
                 >
-                  <BarChart3 className="h-4 w-4" />
-                  Open full travel guide
+                  Unlock travel guide &amp; crime PDF
                 </Link>
-              )}
-              {guideCity && (
-                <Link
-                  href={`/dashboard/area/${encodeURIComponent(citySlug(guideCity))}?lat=${summary.lat}&lng=${summary.lng}&name=${encodeURIComponent(guideCity)}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ECECEC] bg-white py-3.5 text-sm font-semibold"
-                >
-                  See detailed safety report
-                </Link>
+              ) : (
+                <>
+                  {guideAvailable && (
+                    <button
+                      type="button"
+                      onClick={downloadTravelGuide}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#232323] py-3.5 text-sm font-semibold text-white"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download travel guide
+                    </button>
+                  )}
+                  {guideHref && (
+                    <Link
+                      href={guideHref}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#FF7B14] bg-[#FFE9D6] py-3.5 text-sm font-semibold text-[#E2620A]"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      Open full travel guide
+                    </Link>
+                  )}
+                  {guideCity && (
+                    <Link
+                      href={`/dashboard/area/${encodeURIComponent(citySlug(guideCity))}?lat=${summary.lat}&lng=${summary.lng}&name=${encodeURIComponent(guideCity)}`}
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ECECEC] bg-white py-3.5 text-sm font-semibold"
+                    >
+                      See detailed safety report
+                    </Link>
+                  )}
+                </>
               )}
             </section>
           </>

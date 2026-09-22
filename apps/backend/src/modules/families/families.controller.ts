@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -13,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { FamiliesService } from './families.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
+import { UpdateFamilyDto } from './dto/update-family.dto';
 import { AddMemberDto } from './dto/add-member.dto';
 import { AddQrToFamilyDto } from './dto/add-qr-to-family.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -32,8 +34,8 @@ export class FamiliesController {
   constructor(private readonly familiesService: FamiliesService) {}
 
   @Post()
-  async create(@CurrentUser('id') userId: string, @Body() dto: CreateFamilyDto) {
-    return this.familiesService.create(userId, dto.name);
+  async create(@CurrentUser() user: { id: string; tier?: string }, @Body() dto: CreateFamilyDto) {
+    return this.familiesService.create(user.id, dto.name, user.tier ?? 'free');
   }
 
   @Get()
@@ -55,6 +57,15 @@ export class FamiliesController {
     @Param('id', ParseUUIDPipe) familyId: string,
   ) {
     return this.familiesService.getById(familyId, userId);
+  }
+
+  @Patch(':id')
+  async rename(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) familyId: string,
+    @Body() dto: UpdateFamilyDto,
+  ) {
+    return this.familiesService.rename(familyId, userId, dto.name);
   }
 
   @Post(':id/members')

@@ -304,7 +304,6 @@ describe('QrService', () => {
       const claimedQr = { ...baseQr, status: 'active', userId: 'user-2', isActive: true };
 
       enqueueLimit([unclaimedQr]);              // 1. QR lookup by uniqueCode
-      enqueueDirect([{ activeCount: 0 }]);       // 2. count query; update where() falls through
       db.returning.mockResolvedValueOnce([claimedQr]);
 
       const result = await service.claimQrCode('ABC12345', 'user-2', 'free', {
@@ -332,13 +331,17 @@ describe('QrService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('throws ForbiddenException when tier limit reached', async () => {
-      enqueueLimit([{ ...baseQr, status: 'unclaimed' }]); // QR found
-      enqueueDirect([{ activeCount: 5 }]);                  // at free limit (TIER_LIMITS.free.maxQrCodes = 5)
+    it('allows claiming physical tags even when digital limit is reached', async () => {
+      enqueueLimit([{ ...baseQr, status: 'unclaimed', userId: null, isActive: false }]);
+      const claimedQr = { ...baseQr, status: 'active', userId: 'user-1', isActive: true };
+      db.returning.mockResolvedValueOnce([claimedQr]);
 
-      await expect(
-        service.claimQrCode('ABC12345', 'user-1', 'free', { category: 'pets' as any, name: 'X' }),
-      ).rejects.toThrow(ForbiddenException);
+      const result = await service.claimQrCode('ABC12345', 'user-1', 'free', {
+        category: 'pets' as any,
+        name: 'Bought tag',
+      });
+
+      expect(result).toHaveProperty('status', 'active');
     });
   });
 

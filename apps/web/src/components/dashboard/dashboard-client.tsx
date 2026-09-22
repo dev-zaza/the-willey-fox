@@ -12,6 +12,7 @@ import { SearchBar } from '@/components/ui/search-bar';
 import { AreaSafetyPanel } from '@/components/dashboard/area-safety-panel';
 import { MobileMenuButton } from '@/components/dashboard/mobile-menu-button';
 import { useAuth } from '@/context/auth-context';
+import { isProTier } from '@safetag/shared';
 import { useUserLocation } from '@/hooks/use-user-location';
 import { useIsDesktop } from '@/hooks/use-is-desktop';
 import { pins as pinsApi, notifications as notificationsApi, reports, safetyEngine, users as usersApi, emergency, broadcasts, type SafetyZoneOverlay, type H3TileCollection, type AreaSummary, type Report, type BroadcastListItem, type SosAlert } from '@/lib/api';
@@ -92,6 +93,7 @@ function AreaReportUrlSync({ onOpen }: { onOpen: (seed: AreaPanelSeed) => void }
 
 export function DashboardClient() {
   const { user } = useAuth();
+  const isPro = isProTier(user?.subscriptionTier);
   const router = useRouter();
   const isDesktop = useIsDesktop();
   const reduceMotion = useReducedMotion();
@@ -905,6 +907,10 @@ export function DashboardClient() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (!isPro) {
+                      router.push('/dashboard/subscription');
+                      return;
+                    }
                     void openAreaReport({
                       lat: areaSummary.lat,
                       lng: areaSummary.lng,
@@ -913,7 +919,7 @@ export function DashboardClient() {
                   }}
                   className="w-full cursor-pointer rounded-lg border border-green-600/30 bg-green-500/10 py-2.5 text-xs font-semibold text-green-700 hover:bg-green-500/20"
                 >
-                  Full report & travel guide →
+                  {isPro ? 'Full report & travel guide →' : 'Unlock report & travel guide →'}
                 </button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -930,29 +936,44 @@ export function DashboardClient() {
                 {areaSummary.crimeBreakdown.length > 0 && (
                   <div className="rounded-xl bg-surface-elevated p-4">
                     <div className="mb-3 text-xs font-bold text-[var(--text-primary)]">Crime Breakdown</div>
-                    <div className="flex flex-col gap-2">
-                      {areaSummary.crimeBreakdown.slice(0, 6).map((item, i) => {
-                        const colors = ['#D7263D', '#F46036', '#FFC857', '#A4C957', '#3FA34D', '#2196F3'];
-                        const topTotal = areaSummary.crimeBreakdown.slice(0, 6).reduce((s, x) => s + x.count, 0);
-                        const pct = topTotal > 0 ? (item.count / topTotal) * 100 : 0;
-                        return (
-                          <div key={item.type}>
-                            <div className="mb-1 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[i] }} />
-                                <span className="max-w-[140px] truncate text-[11px] text-[#5a4a3d]">
-                                  {item.type.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                                </span>
+                    {isPro ? (
+                      <div className="flex flex-col gap-2">
+                        {areaSummary.crimeBreakdown.slice(0, 6).map((item, i) => {
+                          const colors = ['#D7263D', '#F46036', '#FFC857', '#A4C957', '#3FA34D', '#2196F3'];
+                          const topTotal = areaSummary.crimeBreakdown.slice(0, 6).reduce((s, x) => s + x.count, 0);
+                          const pct = topTotal > 0 ? (item.count / topTotal) * 100 : 0;
+                          return (
+                            <div key={item.type}>
+                              <div className="mb-1 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[i] }} />
+                                  <span className="max-w-[140px] truncate text-[11px] text-[#5a4a3d]">
+                                    {item.type.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                                  </span>
+                                </div>
+                                <span className="text-[11px] font-semibold text-[#7a6957]">{item.count.toLocaleString()}</span>
                               </div>
-                              <span className="text-[11px] font-semibold text-[#7a6957]">{item.count.toLocaleString()}</span>
+                              <div className="h-1 rounded bg-surface-border">
+                                <div className="h-1 rounded" style={{ backgroundColor: colors[i], width: `${Math.round(pct)}%` }} />
+                              </div>
                             </div>
-                            <div className="h-1 rounded bg-surface-border">
-                              <div className="h-1 rounded" style={{ backgroundColor: colors[i], width: `${Math.round(pct)}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-surface-card px-3 py-3 text-center">
+                        <p className="text-[11px] font-semibold text-[var(--text-primary)]">
+                          Detailed crime types are on paid plans
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => router.push('/dashboard/subscription')}
+                          className="mt-2 text-[11px] font-bold text-green-700"
+                        >
+                          Upgrade to unlock →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
@@ -987,6 +1008,10 @@ export function DashboardClient() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (!isPro) {
+                      router.push('/dashboard/subscription');
+                      return;
+                    }
                     void openAreaReport({
                       lat: selectedH3.lat,
                       lng: selectedH3.lng,
@@ -994,7 +1019,7 @@ export function DashboardClient() {
                   }}
                   className="mt-3 w-full cursor-pointer rounded-lg bg-brand-500/15 py-2 text-xs font-semibold text-brand-600 hover:bg-brand-500/25"
                 >
-                  View area report & travel guide
+                  {isPro ? 'View area report & travel guide' : 'Unlock report & travel guide'}
                 </button>
               </div>
             )}

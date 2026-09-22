@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { guardianMappings, guardianInvites, users, qrCodes } from '../../database/schema';
-import { TIER_LIMITS } from '@safetag/shared';
+import { TIER_LIMITS, isProTier } from '@safetag/shared';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../users/users.service';
@@ -132,24 +132,27 @@ export class GuardiansService {
       .where(eq(users.id, qrCode.userId!))
       .limit(1);
 
-    const tierKey = (owner?.subscriptionTier || 'free') as keyof typeof TIER_LIMITS;
-    const staticLimits = TIER_LIMITS[tierKey];
-    const pricing = await this.settingsService.getPricingConfig();
-    const liveTierLimit = (pricing.tierLimits as Record<string, { maxGuardians: number }>)[tierKey];
-    const maxGuardians = liveTierLimit?.maxGuardians ?? staticLimits.maxGuardians;
+    const ownerTier = owner?.subscriptionTier || 'free';
+    if (!isProTier(ownerTier)) {
+      const tierKey = ownerTier as keyof typeof TIER_LIMITS;
+      const staticLimits = TIER_LIMITS[tierKey] ?? TIER_LIMITS.free;
+      const pricing = await this.settingsService.getPricingConfig();
+      const liveTierLimit = (pricing.tierLimits as Record<string, { maxGuardians: number }>)[tierKey];
+      const maxGuardians = liveTierLimit?.maxGuardians ?? staticLimits.maxGuardians;
 
-    const activeGuardians = await this.db
-      .select({ id: guardianMappings.id })
-      .from(guardianMappings)
-      .where(
-        and(
-          eq(guardianMappings.qrCodeId, qrCodeId),
-          eq(guardianMappings.status, 'active'),
-        ),
-      );
+      const activeGuardians = await this.db
+        .select({ id: guardianMappings.id })
+        .from(guardianMappings)
+        .where(
+          and(
+            eq(guardianMappings.qrCodeId, qrCodeId),
+            eq(guardianMappings.status, 'active'),
+          ),
+        );
 
-    if (activeGuardians.length >= maxGuardians) {
-      throw new ForbiddenException('GUARDIAN_LIMIT_REACHED');
+      if (activeGuardians.length >= maxGuardians) {
+        throw new ForbiddenException('GUARDIAN_LIMIT_REACHED');
+      }
     }
 
     const [mapping] = await this.db
@@ -252,24 +255,27 @@ export class GuardiansService {
       .where(eq(users.id, invitedByUserId))
       .limit(1);
 
-    const tierKey = (owner?.subscriptionTier || 'free') as keyof typeof TIER_LIMITS;
-    const staticLimits = TIER_LIMITS[tierKey];
-    const pricing = await this.settingsService.getPricingConfig();
-    const liveTierLimit = (pricing.tierLimits as Record<string, { maxGuardians: number }>)[tierKey];
-    const maxGuardians = liveTierLimit?.maxGuardians ?? staticLimits.maxGuardians;
+    const ownerTier = owner?.subscriptionTier || 'free';
+    if (!isProTier(ownerTier)) {
+      const tierKey = ownerTier as keyof typeof TIER_LIMITS;
+      const staticLimits = TIER_LIMITS[tierKey] ?? TIER_LIMITS.free;
+      const pricing = await this.settingsService.getPricingConfig();
+      const liveTierLimit = (pricing.tierLimits as Record<string, { maxGuardians: number }>)[tierKey];
+      const maxGuardians = liveTierLimit?.maxGuardians ?? staticLimits.maxGuardians;
 
-    const activeGuardians = await this.db
-      .select({ id: guardianMappings.id })
-      .from(guardianMappings)
-      .where(
-        and(
-          eq(guardianMappings.qrCodeId, qrCodeId),
-          eq(guardianMappings.status, 'active'),
-        ),
-      );
+      const activeGuardians = await this.db
+        .select({ id: guardianMappings.id })
+        .from(guardianMappings)
+        .where(
+          and(
+            eq(guardianMappings.qrCodeId, qrCodeId),
+            eq(guardianMappings.status, 'active'),
+          ),
+        );
 
-    if (activeGuardians.length >= maxGuardians) {
-      throw new ForbiddenException('GUARDIAN_LIMIT_REACHED');
+      if (activeGuardians.length >= maxGuardians) {
+        throw new ForbiddenException('GUARDIAN_LIMIT_REACHED');
+      }
     }
 
     // Check if invited email belongs to existing user → auto-approve
