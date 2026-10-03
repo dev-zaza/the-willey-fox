@@ -863,7 +863,7 @@ export interface Invoice {
 }
 
 export const payments = {
-  createCheckout: (interval: 'month' | 'year') =>
+  createCheckout: (interval: 'monthly' | 'annual') =>
     request<{ url: string }>('/payments/checkout', { method: 'POST', body: JSON.stringify({ interval }) }),
   getSubscription: () => request<SubscriptionStatus>('/payments/subscription'),
   cancelSubscription: () => request<void>('/payments/subscription', { method: 'DELETE' }),

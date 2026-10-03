@@ -427,7 +427,7 @@ export default function QrDetailPage() {
                 type={type}
                 value={value}
                 onChange={(e) => set(e.target.value)}
-                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
+                className="w-full bg-white border border-[#E3D8C6] text-[#17130F] text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
               />
             </div>
           ))}
@@ -474,7 +474,7 @@ export default function QrDetailPage() {
                 type="text"
                 value={value}
                 onChange={(e) => set(e.target.value)}
-                className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
+                className="w-full bg-white border border-[#E3D8C6] text-[#17130F] text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
               />
             </div>
           ))}

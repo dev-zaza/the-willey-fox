@@ -193,7 +193,7 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="e.g. DNYL4XZ6"
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm uppercase text-[#17130F] placeholder:text-[#8A7B67]"
               />
               {error ? <p className="text-xs text-red-600">{error}</p> : null}
               <button
@@ -214,12 +214,12 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. School bag"
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67]"
               />
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as (typeof CATEGORIES)[number])}
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F]"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>

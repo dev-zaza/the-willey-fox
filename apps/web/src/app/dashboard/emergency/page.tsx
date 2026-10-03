@@ -100,7 +100,7 @@ export default function EmergencyPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && search()}
                 placeholder="Name or email…"
-                className="flex-1 bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[var(--text-muted)]"
+                className="flex-1 bg-white border border-[#E3D8C6] text-[#17130F] text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500 placeholder:text-[#8A7B67]"
               />
               <button
                 onClick={search}
@@ -172,7 +172,7 @@ export default function EmergencyPage() {
             placeholder="Optional message to include…"
             rows={2}
             maxLength={500}
-            className="w-full bg-surface border border-surface-border text-white text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-red-500/60 placeholder:text-[var(--text-muted)]"
+            className="w-full bg-white border border-[#E3D8C6] text-[#17130F] text-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-red-500/60 placeholder:text-[#8A7B67]"
           />
           <button
             onClick={triggerSos}

@@ -261,12 +261,12 @@ export default function QrPage() {
                 max={50}
                 value={bulkCount}
                 onChange={(e) => setBulkCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1)))}
-                className="w-28 rounded-lg border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-28 rounded-lg border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F]"
               />
               <select
                 value={bulkCategory}
                 onChange={(e) => setBulkCategory(e.target.value)}
-                className="rounded-lg border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="rounded-lg border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F]"
               >
                 {QR_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -475,13 +475,13 @@ export default function QrPage() {
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
                 placeholder="e.g. Zoe, School bag, Max"
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67]"
                 autoFocus
               />
               <select
                 value={createCategory}
                 onChange={(e) => setCreateCategory(e.target.value as (typeof QR_CATEGORIES)[number])}
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm capitalize"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm capitalize text-[#17130F]"
               >
                 {QR_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
@@ -676,7 +676,7 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="e.g. DNYL4XZ6"
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm uppercase text-[#17130F] placeholder:text-[#8A7B67]"
               />
               {error ? <p className="text-xs text-red-600">{error}</p> : null}
               <button
@@ -697,12 +697,12 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. School bag"
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67]"
               />
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F]"
               >
                 {QR_CATEGORIES.map((c) => (
                   <option key={c} value={c}>

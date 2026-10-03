@@ -6,6 +6,9 @@
    CSS Custom Properties — Wileyfox brand (cream default)
 ────────────────────────────────────────────── */
 :root {
+  /* Keep native controls (input/select) on the cream light UI even when the OS is in dark mode */
+  color-scheme: light;
+
   /* Desktop shell — used only at lg+; mobile layout is unchanged */
   --desktop-rail: 5.25rem;     /* slim floating icon rail + inset */
   --desktop-rail-expanded: 16.75rem;
@@ -94,6 +97,7 @@
    Admin dark mode (when .admin-dark class is set)
 ────────────────────────────────────────────── */
 html.admin-dark {
+  color-scheme: dark;
   --admin-bg: #09090b;
   --admin-surface: #18181b;
   --admin-surface-raised: #27272a;
@@ -102,6 +106,24 @@ html.admin-dark {
   --admin-text-muted: #a1a1aa;
   --admin-text-subtle: #71717a;
   --admin-hover: rgba(255,255,255,0.05);
+}
+
+/* Dashboard forms: light fields on cream UI (avoids OS dark-mode native controls).
+   !important beats leftover Tailwind bg-surface / text-white utilities on inputs. */
+.dashboard input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']):not([type='submit']):not([type='button']),
+.dashboard select,
+.dashboard textarea {
+  background-color: #ffffff !important;
+  color: #17130f !important;
+  color-scheme: light;
+}
+.dashboard input::placeholder,
+.dashboard textarea::placeholder {
+  color: #8a7b67 !important;
+}
+.dashboard select option {
+  background-color: #ffffff !important;
+  color: #17130f !important;
 }
 
 /* (Light mode is the default; old prefers-color-scheme block removed.) */

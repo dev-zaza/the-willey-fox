@@ -71,7 +71,7 @@ export default function AlertDetailPage() {
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 rows={3}
-                className="w-full rounded-xl border border-surface-border bg-surface-elevated px-3 py-2 text-sm text-white"
+                className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2 text-sm text-[#17130F]"
                 placeholder="Thank them or ask for more details…"
               />
               <button

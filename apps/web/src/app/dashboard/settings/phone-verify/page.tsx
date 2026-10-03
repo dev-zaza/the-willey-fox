@@ -57,7 +57,7 @@ export default function PhoneVerifyPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+44 7700 900000"
-              className="w-full rounded-xl border border-surface-border bg-surface-elevated px-3 py-2.5 text-sm text-white"
+              className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2.5 text-sm text-[#17130F]"
             />
             <button
               type="button"
@@ -75,7 +75,7 @@ export default function PhoneVerifyPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="6-digit code"
-              className="w-full rounded-xl border border-surface-border bg-surface-elevated px-3 py-2.5 text-sm text-white"
+              className="w-full rounded-xl border border-[#E3D8C6] bg-white px-3 py-2.5 text-sm text-[#17130F]"
             />
             <button
               type="button"

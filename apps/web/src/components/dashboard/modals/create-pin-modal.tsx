@@ -90,7 +90,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
           required
           maxLength={80}
           placeholder="Brief, descriptive title…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-white border border-[#E3D8C6] rounded-lg px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67] focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
@@ -102,7 +102,7 @@ export function CreatePinModal({ location, onClose, onCreated }: CreatePinModalP
           rows={3}
           maxLength={300}
           placeholder="Add more context…"
-          className="w-full bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors resize-none"
+          className="w-full bg-white border border-[#E3D8C6] rounded-lg px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67] focus:outline-none focus:border-brand-500 transition-colors resize-none"
         />
       </div>
 

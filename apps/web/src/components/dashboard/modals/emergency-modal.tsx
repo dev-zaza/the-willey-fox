@@ -249,7 +249,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
               placeholder="Email or name…"
-              className="flex-1 bg-surface-elevated border border-surface-border rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500"
+              className="flex-1 bg-white border border-[#E3D8C6] rounded-lg px-3 py-2 text-sm text-[#17130F] placeholder:text-[#8A7B67] focus:outline-none focus:border-brand-500"
             />
             <button
               onClick={search}

@@ -152,7 +152,7 @@ export default function SecuritySettingsPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="w-full bg-surface border border-surface-border text-white text-center text-lg font-mono tracking-widest rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white border border-[#E3D8C6] text-[#17130F] text-center text-lg font-mono tracking-widest rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
                 />
               </div>
               {error && (
@@ -202,7 +202,7 @@ export default function SecuritySettingsPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="w-full bg-surface border border-surface-border text-white text-center text-lg font-mono tracking-widest rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white border border-[#E3D8C6] text-[#17130F] text-center text-lg font-mono tracking-widest rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand-500"
                 />
               </div>
               {error && (

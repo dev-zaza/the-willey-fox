@@ -21,15 +21,23 @@ const PRICING_FALLBACK: PricingConfig = {
   },
 };
 
+type BillingInterval = 'monthly' | 'annual';
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export default function SubscriptionPage() {
   const [sub, setSub] = useState<SubscriptionStatus | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [pricing, setPricing] = useState<PricingConfig>(PRICING_FALLBACK);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<'month' | 'year' | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<BillingInterval | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [switchingInterval, setSwitchingInterval] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [notice, setNotice] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<'cancel' | 'switch' | null>(null);
 
   useEffect(() => {
     Promise.all([payments.getSubscription(), payments.getInvoices(), settings.getPricing()])
@@ -38,25 +46,28 @@ export default function SubscriptionPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function checkout(interval: 'month' | 'year') {
+  async function checkout(interval: BillingInterval) {
+    setNotice(null);
     setCheckoutLoading(interval);
     try {
       const { url } = await payments.createCheckout(interval);
       window.location.href = url;
-    } catch (e: any) {
-      alert(e?.message ?? 'Failed to create checkout session');
+    } catch (e: unknown) {
+      setNotice({ tone: 'error', text: errorMessage(e, 'Failed to start checkout. Please try again.') });
       setCheckoutLoading(null);
     }
   }
 
   async function cancel() {
-    if (!confirm('Cancel subscription at period end?')) return;
+    setNotice(null);
+    setPendingAction(null);
     setCancelling(true);
     try {
       await payments.cancelSubscription();
       setSub((prev) => prev ? { ...prev, cancelAtPeriodEnd: true } : prev);
-    } catch (e: any) {
-      alert(e?.message ?? 'Failed to cancel');
+      setNotice({ tone: 'success', text: 'Your subscription will end at the close of the current period.' });
+    } catch (e: unknown) {
+      setNotice({ tone: 'error', text: errorMessage(e, 'Failed to cancel subscription.') });
     } finally {
       setCancelling(false);
     }
@@ -69,27 +80,30 @@ export default function SubscriptionPage() {
     ? sub?.subscription?.stripePriceId === annualPriceId
     : false;
 
-  async function switchInterval(interval: 'monthly' | 'annual') {
-    if (!confirm(`Switch to ${interval} billing? Proration will apply.`)) return;
+  async function switchInterval(interval: BillingInterval) {
+    setNotice(null);
+    setPendingAction(null);
     setSwitchingInterval(true);
     try {
       await payments.changeSubscription(interval);
       const updated = await payments.getSubscription();
       setSub(updated);
-    } catch (e: any) {
-      alert(e?.message ?? 'Failed to switch plan');
+      setNotice({ tone: 'success', text: `Switched to ${interval} billing.` });
+    } catch (e: unknown) {
+      setNotice({ tone: 'error', text: errorMessage(e, 'Failed to switch plan.') });
     } finally {
       setSwitchingInterval(false);
     }
   }
 
   async function openBillingPortal() {
+    setNotice(null);
     setPortalLoading(true);
     try {
       const { url } = await payments.getBillingPortal();
       window.location.href = url;
-    } catch (e: any) {
-      alert(e?.message ?? 'Failed to open billing portal');
+    } catch (e: unknown) {
+      setNotice({ tone: 'error', text: errorMessage(e, 'Failed to open billing portal.') });
       setPortalLoading(false);
     }
   }
@@ -103,6 +117,19 @@ export default function SubscriptionPage() {
           <h1 className="text-2xl font-bold text-white">Subscription</h1>
           <p className="text-[#7a6957] text-sm mt-1">Manage your TheWileyfox plan</p>
         </div>
+
+        {notice && (
+          <div
+            role={notice.tone === 'error' ? 'alert' : 'status'}
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              notice.tone === 'error'
+                ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                : 'border-green-500/30 bg-green-500/10 text-green-300'
+            }`}
+          >
+            {notice.text}
+          </div>
+        )}
 
         {/* Current status */}
         {sub && (
@@ -123,35 +150,85 @@ export default function SubscriptionPage() {
               </p>
             )}
             {isPro && isActive && !sub.cancelAtPeriodEnd && (
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  onClick={() => switchInterval(isAnnual ? 'monthly' : 'annual')}
-                  disabled={switchingInterval}
-                  className="flex items-center gap-1.5 text-brand-400 hover:text-brand-300 text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {switchingInterval
-                    ? 'Switching…'
-                    : isAnnual
-                    ? 'Switch to Monthly'
-                    : `Switch to Annual (save ${pricing.annualSavePercent}%)`}
-                </button>
-                <button
-                  onClick={openBillingPortal}
-                  disabled={portalLoading}
-                  className="flex items-center gap-1.5 text-[#7a6957] hover:text-[#5a4a3d] text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  {portalLoading ? 'Opening…' : 'Manage billing & payment'}
-                </button>
-                <button
-                  onClick={cancel}
-                  disabled={cancelling}
-                  className="flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
-                >
-                  <XCircle className="w-4 h-4" />
-                  {cancelling ? 'Cancelling…' : 'Cancel subscription'}
-                </button>
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => { setNotice(null); setPendingAction('switch'); }}
+                    disabled={switchingInterval || pendingAction !== null}
+                    className="flex items-center gap-1.5 text-brand-400 hover:text-brand-300 text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {switchingInterval
+                      ? 'Switching…'
+                      : isAnnual
+                      ? 'Switch to Monthly'
+                      : `Switch to Annual (save ${pricing.annualSavePercent}%)`}
+                  </button>
+                  <button
+                    onClick={openBillingPortal}
+                    disabled={portalLoading}
+                    className="flex items-center gap-1.5 text-[#7a6957] hover:text-[#5a4a3d] text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {portalLoading ? 'Opening…' : 'Manage billing & payment'}
+                  </button>
+                  <button
+                    onClick={() => { setNotice(null); setPendingAction('cancel'); }}
+                    disabled={cancelling || pendingAction !== null}
+                    className="flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    {cancelling ? 'Cancelling…' : 'Cancel subscription'}
+                  </button>
+                </div>
+                {pendingAction === 'switch' && (
+                  <div className="rounded-xl border border-surface-border bg-surface px-4 py-3">
+                    <p className="text-sm text-[#5a4a3d]">
+                      Switch to {isAnnual ? 'monthly' : 'annual'} billing? Proration will apply.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => switchInterval(isAnnual ? 'monthly' : 'annual')}
+                        disabled={switchingInterval}
+                        className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        Switch plan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingAction(null)}
+                        className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#7a6957]"
+                      >
+                        Keep current plan
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {pendingAction === 'cancel' && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                    <p className="text-sm text-red-300">
+                      Cancel at the end of the current billing period? You keep Pro until then.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={cancel}
+                        disabled={cancelling}
+                        className="rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+                      >
+                        Cancel subscription
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPendingAction(null)}
+                        className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#7a6957]"
+                      >
+                        Keep plan
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -175,11 +252,11 @@ export default function SubscriptionPage() {
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications &amp; SOS</li>
               </ul>
               <button
-                onClick={() => checkout('month')}
+                onClick={() => checkout('monthly')}
                 disabled={checkoutLoading !== null}
                 className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
               >
-                {checkoutLoading === 'month' ? 'Redirecting…' : `Start ${pricing.trialDays}-day trial`}
+                {checkoutLoading === 'monthly' ? 'Redirecting…' : `Start ${pricing.trialDays}-day trial`}
               </button>
             </div>
 
@@ -199,11 +276,11 @@ export default function SubscriptionPage() {
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Priority notifications &amp; SOS</li>
               </ul>
               <button
-                onClick={() => checkout('year')}
+                onClick={() => checkout('annual')}
                 disabled={checkoutLoading !== null}
                 className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
               >
-                {checkoutLoading === 'year' ? 'Redirecting…' : `Start ${pricing.trialDays}-day trial`}
+                {checkoutLoading === 'annual' ? 'Redirecting…' : `Start ${pricing.trialDays}-day trial`}
               </button>
             </div>
           </div>

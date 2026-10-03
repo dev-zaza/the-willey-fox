@@ -89,7 +89,7 @@ function LocationInput({
           value={query}
           onChange={handleChange}
           placeholder={placeholder}
-          className="w-full bg-surface border border-surface-border rounded-xl pl-9 pr-8 py-2.5 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-white border border-[#E3D8C6] rounded-xl pl-9 pr-8 py-2.5 text-sm text-[#17130F] placeholder:text-[#8A7B67] focus:outline-none focus:border-brand-500 transition-colors"
         />
         {query && (
           <button
@@ -107,7 +107,7 @@ function LocationInput({
             <button
               key={i}
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-2.5 text-xs text-[#5a4a3d] hover:bg-surface-elevated hover:text-white transition-colors border-b border-surface-border last:border-0 truncate"
+              className="w-full text-left px-4 py-2.5 text-xs text-[#5a4a3d] hover:bg-[#FBF7F1] hover:text-[#17130F] transition-colors border-b border-surface-border last:border-0 truncate"
             >
               {r.label}
             </button>
