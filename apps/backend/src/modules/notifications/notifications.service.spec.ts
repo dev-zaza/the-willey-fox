@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsService } from './notifications.service';
+import { WebPushService } from './web-push.service';
 import { DRIZZLE } from '../../database/database.module';
 
 /**
@@ -59,6 +60,10 @@ const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: 'job-1' }),
 };
 
+const mockWebPush = {
+  queueForUser: jest.fn().mockResolvedValue(undefined),
+};
+
 async function buildService(db: ReturnType<typeof makeDb>) {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
@@ -66,6 +71,7 @@ async function buildService(db: ReturnType<typeof makeDb>) {
       { provide: DRIZZLE, useValue: db },
       { provide: getQueueToken('notifications'), useValue: mockQueue },
       { provide: ConfigService, useValue: mockConfig },
+      { provide: WebPushService, useValue: mockWebPush },
     ],
   }).compile();
   return module.get<NotificationsService>(NotificationsService);
@@ -144,8 +150,14 @@ describe('NotificationsService', () => {
         notificationPreferences: { email: true, sms: false, push: false },
       };
 
-      // Queries in call order: QR .limit(1), owner .limit(1), guardians direct-await .where()
-      const db = makeDb([[mockQr], [mockOwner], []]);
+      const mockReport = {
+        id: 'report-1',
+        createdAt: new Date('2026-01-01T12:00:00Z'),
+        locationAddress: 'Alton Rd',
+        finderNotes: 'Found near café',
+      };
+      // Queries: QR, report, owner, guardians
+      const db = makeDb([[mockQr], [mockReport], [mockOwner], []]);
       const service = await buildService(db);
 
       await service.notifyGuardiansOfReport('report-1', 'qr-1');
@@ -165,7 +177,7 @@ describe('NotificationsService', () => {
         phone: null,
         notificationPreferences: { email: false, sms: false, push: false },
       };
-      const db = makeDb([[mockQr], [mockOwner], []]);
+      const db = makeDb([[mockQr], [{}], [mockOwner], []]);
       const service = await buildService(db);
 
       await service.notifyGuardiansOfReport('report-1', 'qr-1');
@@ -181,7 +193,7 @@ describe('NotificationsService', () => {
         phone: null,
         notificationPreferences: null,
       };
-      const db = makeDb([[mockQr], [mockOwner], []]);
+      const db = makeDb([[mockQr], [{}], [mockOwner], []]);
       const service = await buildService(db);
 
       await service.notifyGuardiansOfReport('report-1', 'qr-1');

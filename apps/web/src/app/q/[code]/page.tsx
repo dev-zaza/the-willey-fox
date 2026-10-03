@@ -109,20 +109,25 @@ const emptyPet: PetInfo = {
   breed: '', color: '', vetName: '', vetPhone: '', microchipId: '',
 };
 
-async function fetchQrInfo(code: string): Promise<QrPublicInfo | null> {
+type FetchQrResult =
+  | { ok: true; info: QrPublicInfo }
+  | { ok: false; reason: 'not_found' | 'server_error' };
+
+async function fetchQrInfo(code: string): Promise<FetchQrResult> {
   try {
     const res = await fetch(`${API_BASE}/public/q/${code}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return res.json();
+    if (res.status === 404) return { ok: false, reason: 'not_found' };
+    if (!res.ok) return { ok: false, reason: 'server_error' };
+    return { ok: true, info: await res.json() };
   } catch {
-    return null;
+    return { ok: false, reason: 'server_error' };
   }
 }
 
-async function activateQr(code: string, form: ClaimForm): Promise<boolean> {
+async function activateQr(code: string, form: ClaimForm): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('safetag_access_token') : null;
-    if (!token) return false;
+    if (!token) return { ok: false, error: 'Please sign in to register this tag.' };
 
     const isMedical = MEDICAL_CATS.includes(form.category);
     const isPet = PET_CATS.includes(form.category);
@@ -161,9 +166,26 @@ async function activateQr(code: string, form: ClaimForm): Promise<boolean> {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
     });
-    return res.ok;
+    if (res.ok) return { ok: true };
+    let message = 'Could not register this tag.';
+    try {
+      const err = (await res.json()) as { message?: string | string[]; code?: string };
+      const raw = Array.isArray(err.message) ? err.message[0] : err.message || err.code || '';
+      if (raw.includes('QR_ALREADY_CLAIMED') || raw.toLowerCase().includes('already')) {
+        message = 'This code is already linked to a profile.';
+      } else if (raw.includes('QR_NOT_FOUND') || raw.toLowerCase().includes('not found')) {
+        message = 'Tag code not found.';
+      } else if (raw.includes('QR_LIMIT_REACHED')) {
+        message = 'You have reached your free digital tag limit. This physical tag should still link — try Link physical tag from My Tags.';
+      } else if (raw) {
+        message = raw;
+      }
+    } catch {
+      /* ignore */
+    }
+    return { ok: false, error: message };
   } catch {
-    return false;
+    return { ok: false, error: 'Could not reach the server. Try again in a moment.' };
   }
 }
 
@@ -173,6 +195,7 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
   const [qrInfo, setQrInfo] = useState<QrPublicInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [serverError, setServerError] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activating, setActivating] = useState(false);
   const [activationError, setActivationError] = useState('');
@@ -191,9 +214,23 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
 
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('safetag_access_token'));
-    fetchQrInfo(code).then((info) => {
-      if (!info) setNotFound(true);
-      else setQrInfo(info);
+    fetchQrInfo(code).then((result) => {
+      if (!result.ok) {
+        if (result.reason === 'server_error') setServerError(true);
+        else setNotFound(true);
+      } else {
+        setQrInfo(result.info);
+        // Notify owner of a scan on claimed tags (debounced server-side)
+        if (result.info.status !== 'unclaimed' && result.info.uniqueCode) {
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          const token = localStorage.getItem('safetag_access_token');
+          if (token) headers.Authorization = `Bearer ${token}`;
+          void fetch(`${API_BASE}/public/q/${encodeURIComponent(result.info.uniqueCode)}/scan`, {
+            method: 'POST',
+            headers,
+          }).catch(() => {});
+        }
+      }
       setLoading(false);
     });
   }, [code]);
@@ -223,13 +260,14 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
     setActivating(true);
     setActivationError('');
 
-    const ok = await activateQr(code, form);
-    if (ok) {
+    const result = await activateQr(code, form);
+    if (result.ok) {
       const updated = await fetchQrInfo(code);
-      setQrInfo(updated);
+      if (updated.ok) setQrInfo(updated.info);
+      else setQrInfo(null);
       setStep('category');
     } else {
-      setActivationError('Failed to register tag. It may already be claimed, or your account has reached its tag limit.');
+      setActivationError(result.error);
     }
     setActivating(false);
   }
@@ -240,6 +278,21 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
         <div style={styles.header}><img src="/logo.png" alt="TheWileyfox" style={styles.logoImg} /></div>
         <main style={styles.main}>
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}>Loading…</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (serverError) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}><img src="/logo.png" alt="TheWileyfox" style={styles.logoImg} /></div>
+        <main style={styles.main}>
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <p style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</p>
+            <h2 style={{ color: '#1a1a1a', marginBottom: '8px' }}>Could not reach the server</h2>
+            <p style={{ color: '#666' }}>Check your connection and try again. The tag may still be valid.</p>
+          </div>
         </main>
       </div>
     );
@@ -591,6 +644,9 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
         )}
 
         <div style={{ ...styles.card, backgroundColor: isDark ? '#1a1a2e' : '#fff', color: isDark ? '#f1f1f1' : undefined }}>
+          <p style={{ fontSize: '13px', color: isDark ? '#a0a0b0' : '#5C5245', lineHeight: 1.45, marginBottom: '16px' }}>
+            You scanned a Wiley Fox safety tag. The owner can be told you found this — your phone and email stay private unless you choose to share them in a report.
+          </p>
           <div style={{ ...styles.categoryBadge, backgroundColor: accentColor + '22', color: accentColor }}>
             {categoryEmojis[qrInfo.category] || ''} {categoryLabels[qrInfo.category] || qrInfo.category}
           </div>

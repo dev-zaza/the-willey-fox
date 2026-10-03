@@ -12,6 +12,7 @@ export interface QrCode {
   rewardMessage?: string;
   themeId?: string | null;
   createdAt: string;
+  customFields?: Record<string, unknown> | null;
 }
 
 export interface CreateQrCodePayload {
@@ -20,6 +21,31 @@ export interface CreateQrCodePayload {
   ownerContactEmail?: string;
   ownerContactPhone?: string;
   rewardMessage?: string;
+}
+
+export interface QrPublicLookup {
+  id?: string;
+  uniqueCode: string;
+  status?: string;
+  category?: string;
+  name?: string;
+  isLost?: boolean;
+}
+
+export interface ActivateQrPayload {
+  code: string;
+  name: string;
+  category: string;
+  ownerContactEmail?: string;
+  ownerContactPhone?: string;
+  rewardMessage?: string;
+}
+
+function extractCode(raw: string): string | null {
+  const match = raw.match(/\/q\/([A-Z0-9-]+)/i);
+  if (match) return match[1].toUpperCase();
+  const trimmed = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return trimmed.length >= 6 ? trimmed : null;
 }
 
 export const qrService = {
@@ -56,4 +82,16 @@ export const qrService = {
     const { data } = await apiClient.post<QrCode>(`/qr-codes/${id}/mark-found`);
     return data;
   },
+
+  lookupPublic: async (code: string): Promise<QrPublicLookup> => {
+    const { data } = await apiClient.get<QrPublicLookup>(`/public/q/${code}`);
+    return data;
+  },
+
+  activate: async (payload: ActivateQrPayload): Promise<QrCode> => {
+    const { data } = await apiClient.post<QrCode>('/public/qr/activate', payload);
+    return data;
+  },
+
+  extractCode,
 };

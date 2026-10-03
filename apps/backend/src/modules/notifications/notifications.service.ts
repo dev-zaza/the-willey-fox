@@ -225,6 +225,12 @@ export class NotificationsService {
       return;
     }
 
+    const [report] = await this.db
+      .select()
+      .from(reports)
+      .where(eq(reports.id, reportId))
+      .limit(1);
+
     const [owner] = await this.db
       .select()
       .from(users)
@@ -267,9 +273,11 @@ export class NotificationsService {
       const reportData = {
         itemName: qrCode.name,
         itemCategory: qrCode.category,
-        reportTime: new Date(),
+        reportTime: report?.createdAt ? new Date(report.createdAt) : new Date(),
         portalUrl,
         unsubscribeUrl,
+        locationAddress: report?.locationAddress ?? undefined,
+        finderNotes: report?.finderNotes ?? undefined,
       };
 
       // Default to email and SMS when no preferences are set (null/empty object)
@@ -296,6 +304,72 @@ export class NotificationsService {
     }
 
     this.logger.log(`Queued notifications for report ${reportId} to ${allRecipients.length} recipients`);
+  }
+
+  /**
+   * Notify owner/guardians that someone opened the public tag page.
+   * Debounced to once per tag per hour via customFields.lastScanNotifyAt.
+   * Skips when the viewer is the tag owner.
+   */
+  async notifyOwnerOfScan(qrCodeId: string, viewerUserId?: string): Promise<boolean> {
+    const [qrCode] = await this.db
+      .select()
+      .from(qrCodes)
+      .where(eq(qrCodes.id, qrCodeId))
+      .limit(1);
+
+    if (!qrCode?.userId || qrCode.status === 'unclaimed') {
+      return false;
+    }
+
+    if (viewerUserId && viewerUserId === qrCode.userId) {
+      return false;
+    }
+
+    const fields = (qrCode.customFields || {}) as Record<string, unknown>;
+    const lastRaw = typeof fields.lastScanNotifyAt === 'string' ? fields.lastScanNotifyAt : null;
+    if (lastRaw) {
+      const elapsed = Date.now() - new Date(lastRaw).getTime();
+      if (elapsed < 60 * 60 * 1000) {
+        return false;
+      }
+    }
+
+    await this.db
+      .update(qrCodes)
+      .set({
+        customFields: { ...fields, lastScanNotifyAt: new Date().toISOString() },
+        updatedAt: new Date(),
+      })
+      .where(eq(qrCodes.id, qrCodeId));
+
+    const [owner] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, qrCode.userId))
+      .limit(1);
+
+    if (!owner) return false;
+
+    const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3001');
+    const portalUrl = `${baseUrl}/q/${qrCode.uniqueCode}`;
+    const itemLabel = qrCode.label || qrCode.name;
+    const subject = `TheWileyfox: Someone scanned "${itemLabel}"`;
+    const body = `Someone scanned your ${qrCode.category} tag "${itemLabel}". Open ${portalUrl} to check alerts or mark it missing.`;
+
+    const prefs = (owner.notificationPreferences || {}) as NotificationPreferences;
+    const emailEnabled = prefs.email !== false;
+    const smsEnabled = prefs.sms !== false;
+
+    if (emailEnabled && owner.email) {
+      await this.sendAuthEmail(owner.email, owner.id, subject, `<p>${body}</p><p><a href="${portalUrl}">View tag</a></p>`);
+    }
+    if (smsEnabled && owner.phone) {
+      await this.sendSmsRaw(owner.phone, body.substring(0, 160));
+    }
+
+    this.logger.log(`Queued scan notification for QR ${qrCode.uniqueCode}`);
+    return true;
   }
 
   async notifyOwnerOfGuardianRequest(

@@ -81,6 +81,8 @@ export default function QrScreen() {
       } else {
         setTagResult(info);
         setModalOpen(true);
+        // Debounced owner scan notification (server-side once/hour)
+        void apiClient.post(`/public/q/${encodeURIComponent(code)}/scan`).catch(() => {});
       }
     } catch {
       Alert.alert(

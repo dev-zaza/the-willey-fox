@@ -1,5 +1,5 @@
 import { Ionicons } from '@/components/Icon';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,8 +20,10 @@ import {
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
 import { Asset } from 'expo-asset';
-import { QRCode } from '@/components/shims';
+import { useCameraPermissions, scanFromURLAsync } from 'expo-camera';
+import { CameraView, QRCode } from '@/components/shims';
 import { isQrLimitReached, extractApiErrorMessage } from '@/lib/api-error';
 import { qrService, type QrCode } from '@/services/qr.service';
 import { guardiansService, type GuardianMapping } from '@/services/guardians.service';
@@ -32,9 +34,11 @@ import { useModal } from '@/context/ModalContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { describeDigitalUsage, TIER_LIMITS } from '@safetag/shared';
 
 const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'];
 function tierIndex(t: string) { return TIER_ORDER.indexOf(t === 'pro' ? 'premium' : t); }
+const FREE_DIGITAL_LIMIT = TIER_LIMITS.free.maxQrCodes;
 
 const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, '') ?? 'https://safetag.app';
 
@@ -58,7 +62,7 @@ const CATEGORY_CONFIG: Record<TagCategory, { label: string; icon: string; color:
   other:   { label: 'Other',           icon: 'pricetag',      color: '#6B7280', namePlaceholder: 'Item name',                     descPlaceholder: 'Description, reward info...' },
 };
 
-type Step = 'list' | 'register-form' | 'register-success' | 'detail';
+type Step = 'list' | 'register-form' | 'register-success' | 'detail' | 'link-physical';
 
 export default function TagsScreen() {
   const insets = useSafeAreaInsets();
@@ -77,6 +81,16 @@ export default function TagsScreen() {
   const [nameError, setNameError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+
+  // Link physical tag state
+  const [linkCode, setLinkCode] = useState('');
+  const [linkName, setLinkName] = useState('');
+  const [linkCategory, setLinkCategory] = useState<TagCategory>('other');
+  const [linkStep, setLinkStep] = useState<1 | 2 | 3>(1);
+  const [linkError, setLinkError] = useState('');
+  const [linkSaving, setLinkSaving] = useState(false);
+  const [linkScanning, setLinkScanning] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   // Guardian state
   const [guardians, setGuardians] = useState<GuardianMapping[]>([]);
@@ -117,6 +131,114 @@ export default function TagsScreen() {
   const dark = colorScheme === 'dark';
   const qrSvgRef = useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
   const shopUrl = getShopifyShopUrl();
+  const usage = useMemo(() => describeDigitalUsage(tags, user?.subscriptionTier), [tags, user?.subscriptionTier]);
+  const atDigitalLimit = !usage.isPro && usage.digitalUsed >= usage.digitalLimit;
+
+  function resetLinkFlow() {
+    setLinkCode('');
+    setLinkName('');
+    setLinkCategory('other');
+    setLinkStep(1);
+    setLinkError('');
+    setLinkSaving(false);
+    setLinkScanning(false);
+  }
+
+  async function continueLinkFromCode(raw?: string) {
+    const parsed = qrService.extractCode(raw ?? linkCode);
+    if (!parsed) {
+      setLinkError('Enter the 8-character code under the QR, or scan / upload the tag.');
+      return;
+    }
+    setLinkSaving(true);
+    setLinkError('');
+    try {
+      const info = await qrService.lookupPublic(parsed);
+      if (info.status !== 'unclaimed') {
+        setLinkError('This code is already linked to a profile.');
+        return;
+      }
+      setLinkCode(parsed);
+      setLinkStep(2);
+    } catch (e: unknown) {
+      const msg = extractApiErrorMessage(e, 'QR code not found.');
+      if (msg.toLowerCase().includes('not found') || msg.includes('QR_NOT_FOUND')) {
+        setLinkError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setLinkError(msg);
+      }
+    } finally {
+      setLinkSaving(false);
+      setLinkScanning(false);
+    }
+  }
+
+  async function handleLinkPhysical() {
+    if (!linkName.trim()) {
+      setLinkError('Name is required');
+      return;
+    }
+    setLinkSaving(true);
+    setLinkError('');
+    try {
+      const created = await qrService.activate({
+        code: linkCode.trim(),
+        name: linkName.trim(),
+        category: linkCategory,
+      });
+      setTags((prev) => [created, ...prev]);
+      setLinkStep(3);
+    } catch (e: unknown) {
+      const msg = extractApiErrorMessage(e, 'Could not link this tag');
+      if (msg.includes('QR_ALREADY_CLAIMED') || msg.toLowerCase().includes('already been claimed')) {
+        setLinkError('This code is already linked to a profile.');
+      } else if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+        setLinkError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setLinkError(msg);
+      }
+    } finally {
+      setLinkSaving(false);
+    }
+  }
+
+  async function handleLinkScanFromGallery() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Allow photo library access to scan a QR image.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setLinkSaving(true);
+    try {
+      const scanned = await scanFromURLAsync(result.assets[0].uri, ['qr']);
+      if (!scanned.length) {
+        setLinkError('No QR found in that image. Try a clearer photo or type the code.');
+        return;
+      }
+      await continueLinkFromCode(scanned[0].data);
+    } catch {
+      setLinkError('Could not read that image. Try another photo or enter the code.');
+    } finally {
+      setLinkSaving(false);
+    }
+  }
+
+  async function openLinkCamera() {
+    if (!cameraPermission?.granted) {
+      const result = await requestCameraPermission();
+      if (!result.granted) {
+        Alert.alert('Permission required', 'Allow camera access to scan a physical tag.');
+        return;
+      }
+    }
+    setLinkScanning(true);
+    setLinkError('');
+  }
 
   async function loadTags() {
     try {
@@ -365,11 +487,13 @@ export default function TagsScreen() {
                 Tag limit reached
               </Text>
               <Text className="text-gray-600 dark:text-slate-400 text-sm leading-5">
-                You've reached your free plan limit of 2 tags. Upgrade your plan to register more tags for your valuables.
+                You've reached your free plan limit of {FREE_DIGITAL_LIMIT} digital tags. Link bought physical tags anytime, or upgrade for unlimited digital tags.
               </Text>
-              <Text className="text-brand-500 text-xs font-medium mt-1">
-                Upgrade coming soon
-              </Text>
+              <TouchableOpacity onPress={() => router.push('/(app)/subscription' as any)}>
+                <Text className="text-brand-500 text-xs font-medium mt-1">
+                  Upgrade to Pro →
+                </Text>
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               onPress={() => setLimitReached(false)}
@@ -971,6 +1095,168 @@ export default function TagsScreen() {
     );
   }
 
+  if (step === 'link-physical') {
+    return (
+      <KeyboardAvoidingView
+        className="flex-1 bg-gray-50 dark:bg-surface"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View className="bg-white dark:bg-surface-card border-b border-gray-200 dark:border-surface-border px-6 pt-14 pb-4 flex-row items-center gap-3">
+          <TouchableOpacity onPress={() => { resetLinkFlow(); setStep('list'); }}>
+            <Text className="text-brand-500 font-semibold text-sm">← Back</Text>
+          </TouchableOpacity>
+          <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1 text-center mr-10">
+            Link physical tag
+          </Text>
+        </View>
+
+        {linkScanning ? (
+          <View className="flex-1">
+            <CameraView
+              style={{ flex: 1 }}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+              onBarcodeScanned={({ data }: { data: string }) => {
+                if (linkSaving) return;
+                void continueLinkFromCode(data);
+              }}
+            />
+            <View className="absolute bottom-10 left-0 right-0 items-center">
+              <TouchableOpacity
+                className="bg-white rounded-2xl px-6 py-3"
+                onPress={() => setLinkScanning(false)}
+              >
+                <Text className="font-semibold text-gray-900">Cancel scan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }} showsVerticalScrollIndicator={false}>
+            {linkStep === 1 ? (
+              <>
+                <Text className="text-sm text-gray-600 dark:text-slate-400 leading-5">
+                  Scan the sticker with your camera, upload a photo of the QR, or type the code under the tag.
+                </Text>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    className="flex-1 bg-white dark:bg-surface-card border border-gray-200 dark:border-surface-border rounded-xl py-3 items-center"
+                    onPress={() => void openLinkCamera()}
+                  >
+                    <Text className="text-gray-900 dark:text-white font-semibold text-sm">Scan camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 bg-white dark:bg-surface-card border border-gray-200 dark:border-surface-border rounded-xl py-3 items-center"
+                    onPress={() => void handleLinkScanFromGallery()}
+                    disabled={linkSaving}
+                  >
+                    <Text className="text-gray-900 dark:text-white font-semibold text-sm">
+                      {linkSaving ? 'Reading…' : 'Upload QR'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ gap: 8 }}>
+                  <Text className="text-sm font-medium text-gray-700 dark:text-slate-300">Tag code</Text>
+                  <TextInput
+                    className="bg-white dark:bg-surface-card border border-gray-200 dark:border-surface-border rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm uppercase"
+                    placeholder="e.g. DNYL4XZ6"
+                    placeholderTextColor="#9ca3af"
+                    autoCapitalize="characters"
+                    value={linkCode}
+                    onChangeText={setLinkCode}
+                  />
+                </View>
+                {linkError ? <Text className="text-xs text-red-500">{linkError}</Text> : null}
+                <TouchableOpacity
+                  className="bg-brand-500 rounded-2xl py-4 items-center"
+                  onPress={() => void continueLinkFromCode()}
+                  disabled={linkSaving}
+                  style={{ opacity: linkSaving ? 0.6 : 1 }}
+                >
+                  {linkSaving
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text className="text-white font-bold text-base">Continue</Text>}
+                </TouchableOpacity>
+              </>
+            ) : null}
+
+            {linkStep === 2 ? (
+              <>
+                <Text className="text-xs font-semibold text-gray-500">Code {linkCode}</Text>
+                <View style={{ gap: 8 }}>
+                  <Text className="text-sm font-medium text-gray-700 dark:text-slate-300">Name *</Text>
+                  <TextInput
+                    className="bg-white dark:bg-surface-card border border-gray-200 dark:border-surface-border rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm"
+                    placeholder="e.g. School bag"
+                    placeholderTextColor="#9ca3af"
+                    value={linkName}
+                    onChangeText={(v) => { setLinkName(v); setLinkError(''); }}
+                  />
+                </View>
+                <View style={{ gap: 10 }}>
+                  <Text className="text-xs font-semibold text-gray-500 dark:text-slate-300 uppercase tracking-wide">Category</Text>
+                  <View className="flex-row flex-wrap gap-3">
+                    {(Object.keys(CATEGORY_CONFIG) as TagCategory[]).map((cat) => {
+                      const c = CATEGORY_CONFIG[cat];
+                      const selected = linkCategory === cat;
+                      return (
+                        <TouchableOpacity
+                          key={cat}
+                          onPress={() => setLinkCategory(cat)}
+                          className="flex-col items-center gap-1 px-4 py-3 rounded-2xl border"
+                          style={
+                            selected
+                              ? { backgroundColor: c.color + '14', borderColor: c.color, minWidth: '44%', flex: 1 }
+                              : { backgroundColor: '#fff', borderColor: '#e5e7eb', minWidth: '44%', flex: 1 }
+                          }
+                        >
+                          <Ionicons name={c.icon as any} size={22} color={c.color} />
+                          <Text style={{ color: selected ? c.color : '#6b7280', fontSize: 12, fontWeight: '600' }}>{c.label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+                {linkError ? <Text className="text-xs text-red-500">{linkError}</Text> : null}
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    className="flex-1 border border-gray-200 dark:border-surface-border rounded-2xl py-4 items-center"
+                    onPress={() => setLinkStep(1)}
+                  >
+                    <Text className="font-semibold text-gray-700 dark:text-slate-300">Back</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 bg-brand-500 rounded-2xl py-4 items-center"
+                    onPress={() => void handleLinkPhysical()}
+                    disabled={linkSaving}
+                    style={{ opacity: linkSaving ? 0.6 : 1 }}
+                  >
+                    {linkSaving
+                      ? <ActivityIndicator color="#fff" />
+                      : <Text className="text-white font-bold text-base">Link tag</Text>}
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : null}
+
+            {linkStep === 3 ? (
+              <View className="items-center" style={{ gap: 16, paddingTop: 40 }}>
+                <Text style={{ fontSize: 48 }}>✓</Text>
+                <Text className="text-xl font-bold text-gray-900 dark:text-white">Tag linked</Text>
+                <Text className="text-sm text-gray-500 text-center">Anyone who scans it reaches your profile.</Text>
+                <TouchableOpacity
+                  className="bg-brand-500 rounded-2xl py-4 px-10 items-center w-full"
+                  onPress={() => { resetLinkFlow(); setStep('list'); }}
+                >
+                  <Text className="text-white font-bold text-base">Done</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
+    );
+  }
+
   return (
     <View className="flex-1 bg-gray-50 dark:bg-surface">
       <View className="bg-white dark:bg-surface-card border-b border-gray-200 dark:border-surface-border px-6 pt-14 pb-4 flex-row items-center gap-3">
@@ -985,12 +1271,37 @@ export default function TagsScreen() {
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          onPress={() => setStep('register-form')}
+          onPress={() => { if (!atDigitalLimit) setStep('register-form'); else setLimitReached(true); }}
           className="bg-brand-500/10 border border-brand-500/30 rounded-lg px-3 py-1.5"
+          style={{ opacity: atDigitalLimit ? 0.45 : 1 }}
         >
           <Text className="text-brand-500 font-semibold text-xs">+ Register</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => { resetLinkFlow(); setStep('link-physical'); }}
+          className="bg-brand-500 rounded-lg px-3 py-1.5"
+        >
+          <Text className="text-white font-semibold text-xs">Link</Text>
+        </TouchableOpacity>
       </View>
+
+      {!loading ? (
+        <View className="px-4 pt-3" style={{ gap: 6 }}>
+          <Text className="text-xs text-gray-600 dark:text-slate-400">{usage.summaryLine}</Text>
+          {usage.categories.length > 0 ? (
+            <Text className="text-xs text-gray-500 dark:text-slate-500">
+              {usage.categories.map((c) => `${c.label} ${c.count}`).join(' · ')}
+            </Text>
+          ) : null}
+          {atDigitalLimit ? (
+            <TouchableOpacity onPress={() => router.push('/(app)/subscription' as any)}>
+              <Text className="text-xs font-semibold text-brand-500">
+                Digital limit reached — link physical tags anytime, or upgrade →
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : null}
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -1000,19 +1311,29 @@ export default function TagsScreen() {
         <View className="flex-1 items-center justify-center px-8" style={{ gap: 16 }}>
           <Text style={{ fontSize: 36 }}>🏷️</Text>
           <Text className="text-xl font-bold text-gray-900 dark:text-white">No Tags Yet</Text>
-          <Text className="text-gray-500 dark:text-slate-400 text-sm text-center leading-6">Register a tag for your pet, bag, keys, or valuables.</Text>
+          <Text className="text-gray-500 dark:text-slate-400 text-sm text-center leading-6">
+            Link a bought sticker, or register a digital tag for your pet, bag, keys, or valuables.
+          </Text>
           <TouchableOpacity
             className="bg-brand-500 rounded-2xl py-3.5 px-8 items-center w-full"
-            onPress={() => setStep('register-form')}
+            onPress={() => { resetLinkFlow(); setStep('link-physical'); }}
           >
-            <Text className="text-white font-semibold text-sm">Register Your First Tag</Text>
+            <Text className="text-white font-semibold text-sm">Link physical tag</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="border border-brand-500/40 rounded-2xl py-3.5 px-8 items-center w-full"
+            onPress={() => setStep('register-form')}
+            disabled={atDigitalLimit}
+            style={{ opacity: atDigitalLimit ? 0.45 : 1 }}
+          >
+            <Text className="text-brand-500 font-semibold text-sm">Register digital tag</Text>
           </TouchableOpacity>
           {shopUrl && (
             <TouchableOpacity
-              className="border border-brand-500/40 rounded-2xl py-3.5 px-8 items-center w-full"
+              className="border border-gray-200 dark:border-surface-border rounded-2xl py-3.5 px-8 items-center w-full"
               onPress={() => Linking.openURL(shopUrl)}
             >
-              <Text className="text-brand-500 font-semibold text-sm">Shop physical tags</Text>
+              <Text className="text-gray-700 dark:text-slate-300 font-semibold text-sm">Shop physical tags</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1020,7 +1341,24 @@ export default function TagsScreen() {
         <FlatList
           data={tags}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: insets.bottom + 100 }}
+          ListHeaderComponent={
+            limitReached ? (
+              <View
+                className="mb-2 rounded-xl p-4"
+                style={{
+                  backgroundColor: dark ? 'rgba(249, 115, 22, 0.12)' : 'rgba(249, 115, 22, 0.08)',
+                  borderWidth: 1,
+                  borderColor: dark ? 'rgba(249, 115, 22, 0.3)' : 'rgba(249, 115, 22, 0.25)',
+                }}
+              >
+                <Text className="text-gray-900 dark:text-white font-semibold text-sm">Digital tag limit reached</Text>
+                <Text className="text-gray-600 dark:text-slate-400 text-sm leading-5 mt-1">
+                  Free plan allows {FREE_DIGITAL_LIMIT} digital tags. Link bought physical tags anytime.
+                </Text>
+              </View>
+            ) : null
+          }
           renderItem={({ item }) => {
             const cat = item.category as TagCategory;
             const cfg = CATEGORY_CONFIG[cat] ?? CATEGORY_CONFIG.other;

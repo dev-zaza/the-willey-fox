@@ -48,6 +48,17 @@ export class PublicController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @Post('q/:code/scan')
+  @HttpCode(HttpStatus.OK)
+  recordScan(
+    @Param('code') code: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    return this.publicService.recordPublicScan(code, user?.id);
+  }
+
+  @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('q/:code/report')
   submitReport(

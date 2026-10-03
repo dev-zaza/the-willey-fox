@@ -124,6 +124,7 @@ export function AreaSafetyPanel({
   const [guideAvailable, setGuideAvailable] = useState<boolean | null>(null);
   const [guideHtml, setGuideHtml] = useState<string | null>(null);
   const [guideLoading, setGuideLoading] = useState(false);
+  const [proHighlights, setProHighlights] = useState<string[]>([]);
   const [error, setError] = useState('');
 
   const userTypingRef = useRef(false);
@@ -148,11 +149,30 @@ export function AreaSafetyPanel({
     if (!city.trim()) {
       setGuideAvailable(false);
       setGuideHtml(null);
+      setProHighlights([]);
       return;
     }
     setGuideLoading(true);
     setGuideAvailable(null);
     setGuideHtml(null);
+    const slug = citySlug(city.includes(',') ? city.split(',').pop()!.trim() : city);
+    try {
+      const knowledge = await safetyEngine.getTravelGuide(slug).catch(() => null);
+      if (knowledge) {
+        const cleaned = [
+          ...(knowledge.safetyTips ?? []),
+          ...(knowledge.recommendations ?? []),
+        ]
+          .map((t) => t.trim())
+          .filter((t) => t.length > 12 && t.length < 220)
+          .slice(0, 6);
+        setProHighlights(cleaned);
+      } else {
+        setProHighlights([]);
+      }
+    } catch {
+      setProHighlights([]);
+    }
     try {
       const result = await safetyEngine.renderTravelGuide(city);
       setGuideAvailable(result.available);
@@ -294,7 +314,10 @@ export function AreaSafetyPanel({
   const displayCity = summary?.cityName || selectedArea?.name || placeLabel;
   const tips = getTips(displayCity);
   const guideCity = displayCity;
-  const guideHref = guideCity ? `/guides/${citySlug(guideCity)}` : null;
+  const guideCitySlug = guideCity
+    ? citySlug(guideCity.includes(',') ? guideCity.split(',').pop()!.trim() : guideCity)
+    : '';
+  const guideHref = guideCitySlug ? `/guides/${guideCitySlug}` : null;
 
   return (
     <div
@@ -584,6 +607,35 @@ export function AreaSafetyPanel({
                 ))}
               </ul>
             </section>
+
+            {isPro && proHighlights.length > 0 ? (
+              <section className="rounded-2xl border border-[#FF7B14]/30 bg-[#FFF8F1] p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-[#FF7B14]" />
+                  <h3 className="text-sm font-bold">Pro area highlights</h3>
+                </div>
+                <ul className="space-y-3">
+                  {proHighlights.map((tip, i) => (
+                    <li key={`${tip.slice(0, 24)}-${i}`} className="flex gap-3 text-sm leading-5">
+                      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#FFE9D6] text-[11px] font-extrabold text-[#FF7B14]">
+                        {i + 1}
+                      </span>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : !isPro ? (
+              <section className="rounded-2xl border border-[#ECECEC] bg-white p-5">
+                <p className="text-sm font-semibold text-[#232323]">Pro area highlights</p>
+                <p className="mt-1 text-xs text-[#8a8a8a]">
+                  Upgrade for neighbourhood tips and recommendations without opening the full guide.
+                </p>
+                <Link href="/dashboard/subscription" className="mt-3 inline-block text-sm font-bold text-[#FF7B14]">
+                  Unlock Pro tips →
+                </Link>
+              </section>
+            ) : null}
 
             {guideCity && (
               <section className="space-y-3 rounded-2xl border border-[#ECECEC] bg-white p-5">

@@ -1,0 +1,1598 @@
+{
+ "city": "London",
+ "slug": "london",
+ "country": "United Kingdom",
+ "edition": "2026 · Issue 01",
+ "updated": "2026-09-24",
+ "status": "DRAFT - for Barry's review",
+ "audience": "Families and solo travellers",
+ "tagline": "The Wiley Fox guide to London for families and solo travellers",
+ "cover_blurb": "What 13 travel creators actually say about London, checked against the latest police data - where to stay, where to take care, how to get around and what it costs.",
+ "safety": {
+  "wf_rating": 3,
+  "wf_label": "Moderate",
+  "wf_summary": "London is a well-policed city and most visits pass without trouble. The main risk for visitors is theft: pickpocketing and phone snatching in the busiest central areas. Violence against tourists is rare and concentrated late at night around nightlife and some outer town centres.",
+  "creator_feeling": 4,
+  "creator_feeling_label": "Relaxed, with big-city awareness",
+  "creator_summary": "Every creator we reviewed describes London as comfortable for visitors, including families. The repeated warnings are practical ones: watch your phone near the kerb, keep bags zipped in crowds, never leave a phone on a pub table, and look right before you cross.",
+  "data_note": "Recorded crimes are the monthly average for May to July 2026 within roughly one mile of each area centre (data.police.uk). Busy tourist areas record more crime partly because far more people pass through them; the circles for Soho, Covent Garden, Leicester Square and Oxford Street overlap.",
+  "data_months": [
+   "2026-07",
+   "2026-06",
+   "2026-05"
+  ]
+ },
+ "app_ctas": [
+  {
+   "where": "before_booking",
+   "text": "Check any hotel street on the Wiley Fox map before you book - tap it for the latest month of recorded crime nearby.",
+   "url": "https://www.thewileyfox.com"
+  },
+  {
+   "where": "families",
+   "text": "Clip a Wiley Fox QR wristband on each child. If you get separated in a crowd, anyone who scans it can contact you straight away - no app needed on their side.",
+   "url": "https://www.thewileyfox.com"
+  },
+  {
+   "where": "night",
+   "text": "Heading back late? Use Safest Route on thewileyfox.com to pick a better-lit, lower-crime walk to your hotel, and keep SOS one tap away.",
+   "url": "https://www.thewileyfox.com"
+  },
+  {
+   "where": "community",
+   "text": "Seen something other travellers should know? Drop a community report on the map - it helps rate the area for the next family.",
+   "url": "https://www.thewileyfox.com"
+  }
+ ],
+ "stats": [
+  {
+   "number": "£8.90",
+   "label": "Daily Tube cap, zones 1-2",
+   "desc": "Contactless or phone. Caps are frozen until March 2027 (TfL)."
+  },
+  {
+   "number": "4,600",
+   "label": "Crimes a month near Covent Garden",
+   "desc": "Almost half are thefts - bag and phone awareness matters most here."
+  },
+  {
+   "number": "13",
+   "label": "Creators · 27 videos & posts",
+   "desc": "Paraphrased and credited, cross-checked with police data."
+  }
+ ],
+ "overview": [
+  "London is huge - more a region than a city - so the single best decision you make is where you stay. Creators agree on one rule above all others: book within a ten-minute walk of a Tube station, and group each day by neighbourhood rather than criss-crossing town.",
+  "For families it is one of the easiest capitals in the world. The big museums are free, the parks are enormous, and the Tube, buses and river boats reach almost everything. Children under 11 travel free on the Tube and buses with a paying adult.",
+  "For solo travellers it is lively every night of the week. The risks are ordinary big-city ones, and they cluster in predictable places. This guide shows you where, using the same police data that powers the Wiley Fox map."
+ ],
+ "facts": {
+  "Currency": "Pound sterling (GBP) - almost everywhere is contactless",
+  "Language": "English",
+  "Time zone": "GMT / BST (UTC+1 in summer)",
+  "Plug": "Type G (three square pins)",
+  "Emergency": "999 · non-emergency police 101",
+  "Entry": "Many visitors now need a UK ETA - £20 since April 2026",
+  "Tipping": "12.5% service is usually already on the bill",
+  "Best time": "May, or September to October"
+ },
+ "stay": [
+  {
+   "area": "South Kensington",
+   "for": [
+    "Families"
+   ],
+   "why": "Walk to the Natural History Museum, Science Museum and V&A - all free. Leafy, residential and well connected on three Tube lines.",
+   "crime": {
+    "avg_month": 1166,
+    "theft_share": 23,
+    "violence_share": 21,
+    "top_categories": [
+     "anti social behaviour",
+     "violent crime",
+     "other theft"
+    ],
+    "tier": 4,
+    "lat": 51.4941,
+    "lng": -0.1738
+   },
+   "creators": [
+    "happy",
+    "sophie"
+   ]
+  },
+  {
+   "area": "Kensington (High Street)",
+   "for": [
+    "Families"
+   ],
+   "why": "Next to Kensington Gardens and the Diana Memorial Playground. Calmer than the West End, still zone 1.",
+   "crime": {
+    "avg_month": 1123,
+    "theft_share": 22,
+    "violence_share": 21,
+    "top_categories": [
+     "anti social behaviour",
+     "violent crime",
+     "other theft"
+    ],
+    "tier": 4,
+    "lat": 51.5009,
+    "lng": -0.1925
+   },
+   "creators": [
+    "tourguy"
+   ]
+  },
+  {
+   "area": "Westminster & South Bank",
+   "for": [
+    "Families",
+    "First-timers"
+   ],
+   "why": "Big Ben, the London Eye and the river walk to Tower Bridge on foot. Busy by day, so recorded theft is high - keep bags zipped on Westminster Bridge.",
+   "crime": {
+    "avg_month": 3266,
+    "theft_share": 40,
+    "violence_share": 22,
+    "top_categories": [
+     "theft from the person",
+     "other theft",
+     "violent crime"
+    ],
+    "tier": 2,
+    "lat": 51.5033,
+    "lng": -0.1145
+   },
+   "creators": [
+    "suitcase",
+    "loveandlondon"
+   ]
+  },
+  {
+   "area": "Marylebone",
+   "for": [
+    "Families",
+    "Solo"
+   ],
+   "why": "Village feel on Marylebone High Street, minutes from Oxford Street without its crowds. The data circle includes Oxford Street, which inflates the count.",
+   "crime": {
+    "avg_month": 4019,
+    "theft_share": 39,
+    "violence_share": 17,
+    "top_categories": [
+     "theft from the person",
+     "other theft",
+     "shoplifting"
+    ],
+    "tier": 1,
+    "lat": 51.5189,
+    "lng": -0.15
+   },
+   "creators": [
+    "loveandlondon"
+   ]
+  },
+  {
+   "area": "Greenwich",
+   "for": [
+    "Families"
+   ],
+   "why": "Royal Observatory, a free view over the whole city and a riverboat commute into town.",
+   "crime": {
+    "avg_month": 780,
+    "theft_share": 13,
+    "violence_share": 31,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "shoplifting"
+    ],
+    "tier": 4,
+    "lat": 51.4826,
+    "lng": -0.0077
+   },
+   "creators": [
+    "topjaw",
+    "dwk"
+   ]
+  },
+  {
+   "area": "Richmond or Wimbledon",
+   "for": [
+    "Families",
+    "Calm base"
+   ],
+   "why": "The lowest recorded crime of every area we checked. Richmond has the river and Petersham Meadows; both are 20-45 minutes from central London by train.",
+   "crime": {
+    "avg_month": 292,
+    "theft_share": 12,
+    "violence_share": 28,
+    "top_categories": [
+     "anti social behaviour",
+     "violent crime",
+     "vehicle crime"
+    ],
+    "tier": 5,
+    "lat": 51.4613,
+    "lng": -0.3037
+   },
+   "creators": [
+    "camden"
+   ]
+  },
+  {
+   "area": "King's Cross",
+   "for": [
+    "Solo",
+    "Rail travellers"
+   ],
+   "why": "London's best-connected hub, with six Tube lines and Eurostar. Busy around the station at night; the canal-side Granary Square area is calmer.",
+   "crime": {
+    "avg_month": 2786,
+    "theft_share": 31,
+    "violence_share": 22,
+    "top_categories": [
+     "anti social behaviour",
+     "violent crime",
+     "other theft"
+    ],
+    "tier": 2,
+    "lat": 51.5308,
+    "lng": -0.1238
+   },
+   "creators": [
+    "loveandlondon"
+   ]
+  },
+  {
+   "area": "Borough & London Bridge",
+   "for": [
+    "Solo"
+   ],
+   "why": "Borough Market, riverside pubs and quick links everywhere. Bermondsey next door has a quieter, village feel.",
+   "crime": {
+    "avg_month": 2368,
+    "theft_share": 38,
+    "violence_share": 21,
+    "top_categories": [
+     "theft from the person",
+     "other theft",
+     "violent crime"
+    ],
+    "tier": 3,
+    "lat": 51.5055,
+    "lng": -0.091
+   },
+   "creators": [
+    "loveandlondon",
+    "dwk"
+   ]
+  },
+  {
+   "area": "Shoreditch",
+   "for": [
+    "Solo"
+   ],
+   "why": "Street art, food and nightlife. Great for a younger solo trip - plan your late-night route home.",
+   "crime": {
+    "avg_month": 2493,
+    "theft_share": 22,
+    "violence_share": 24,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "shoplifting"
+    ],
+    "tier": 3,
+    "lat": 51.5265,
+    "lng": -0.0786
+   },
+   "creators": [
+    "loveandlondon"
+   ]
+  }
+ ],
+ "caution": [
+  {
+   "area": "Leicester Square, Soho, Covent Garden & Oxford Street",
+   "when": "All day, busiest evenings and weekends",
+   "crime": {
+    "avg_month": 4587,
+    "theft_share": 42,
+    "violence_share": 18,
+    "top_categories": [
+     "other theft",
+     "theft from the person",
+     "violent crime"
+    ],
+    "tier": 1,
+    "lat": 51.5103,
+    "lng": -0.1301
+   },
+   "note": "The highest recorded crime in our sample, and nearly half of it is theft. Phone snatching by riders on e-bikes is the number-one warning from creators. Pedicab (rickshaw) drivers are unregulated - agree the price before you get in, or better, don't.",
+   "creators": [
+    "loveandlondon",
+    "evan",
+    "wolters",
+    "sophie",
+    "suitcase"
+   ]
+  },
+  {
+   "area": "Westminster Bridge & the South Bank by the London Eye",
+   "when": "Daytime crowds",
+   "crime": {
+    "avg_month": 3266,
+    "theft_share": 40,
+    "violence_share": 22,
+    "top_categories": [
+     "theft from the person",
+     "other theft",
+     "violent crime"
+    ],
+    "tier": 2,
+    "lat": 51.5033,
+    "lng": -0.1145
+   },
+   "note": "Prime pickpocket territory and the spot for the shell-and-cup street game. You will never win it - the 'winners' are part of the act.",
+   "creators": [
+    "loveandlondon",
+    "wolters"
+   ]
+  },
+  {
+   "area": "Whitechapel",
+   "when": "Late evening, around the station and main road",
+   "crime": {
+    "avg_month": 2435,
+    "theft_share": 18,
+    "violence_share": 27,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "shoplifting"
+    ],
+    "tier": 3,
+    "lat": 51.5194,
+    "lng": -0.0612
+   },
+   "note": "Brick Lane and the markets are worth a daytime visit. Recorded crime is lower than the West End, but violence and anti-social behaviour make up a larger share. Some creators suggest it as a budget base; with children or a late arrival, we'd stay further west.",
+   "creators": [
+    "tourguy",
+    "loveandlondon"
+   ]
+  },
+  {
+   "area": "Croydon town centre",
+   "when": "Evenings, around West Croydon",
+   "crime": {
+    "avg_month": 1354,
+    "theft_share": 8,
+    "violence_share": 31,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "shoplifting"
+    ],
+    "tier": 3,
+    "lat": 51.3762,
+    "lng": -0.0982
+   },
+   "note": "Violence is the top recorded category here. Cheap 'central London' hotel deals are often in Croydon - a long commute and not where we'd base a family trip.",
+   "creators": [
+    "dwk"
+   ]
+  },
+  {
+   "area": "Lewisham town centre",
+   "when": "Evenings",
+   "crime": {
+    "avg_month": 1104,
+    "theft_share": 9,
+    "violence_share": 34,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "shoplifting"
+    ],
+    "tier": 4,
+    "lat": 51.4615,
+    "lng": -0.0138
+   },
+   "note": "Not a visitor area. A third of recorded crime is violence or robbery, the highest share in our sample. There's no reason to base a trip here.",
+   "creators": []
+  },
+  {
+   "area": "Camden Market",
+   "when": "Weekends and summer crowds",
+   "crime": {
+    "avg_month": 1644,
+    "theft_share": 23,
+    "violence_share": 27,
+    "top_categories": [
+     "violent crime",
+     "anti social behaviour",
+     "theft from the person"
+    ],
+    "tier": 3,
+    "lat": 51.539,
+    "lng": -0.1426
+   },
+   "note": "Very crowded at weekends, with theft and anti-social behaviour on the high street. For independent shops without the crush, locals point to Camden Passage by Angel instead.",
+   "creators": [
+    "loveandlondon",
+    "camden"
+   ]
+  }
+ ],
+ "scams": [
+  {
+   "title": "Phone snatching",
+   "text": "Riders on e-bikes grab phones from people walking near the kerb. Step into a shop doorway to check maps, and keep your phone on the building side.",
+   "creators": [
+    "sophie",
+    "happy",
+    "dwk",
+    "suitcase",
+    "dutch"
+   ]
+  },
+  {
+   "title": "Pub table theft",
+   "text": "Phones and wallets left on tables vanish in seconds. Keep bags in front of you or under the table, never on the back of your chair.",
+   "creators": [
+    "wolters",
+    "happy"
+   ]
+  },
+  {
+   "title": "Pedicab overcharging",
+   "text": "Rickshaws in the West End have charged tourists hundreds of pounds for short rides. There is no regulated fare.",
+   "creators": [
+    "evan",
+    "sophie"
+   ]
+  },
+  {
+   "title": "Street games & 'free' gifts",
+   "text": "The shell game, a 'found' ring or a free bracelet always ends with someone wanting money.",
+   "creators": [
+    "wolters",
+    "loveandlondon"
+   ]
+  },
+  {
+   "title": "Fake petitions & charity collectors",
+   "text": "Clipboard petitions around the sights are often a set-up for a donation or a distraction. A polite 'no thanks' and keep walking.",
+   "creators": [
+    "wolters"
+   ]
+  },
+  {
+   "title": "Currency conversion at ATMs and card machines",
+   "text": "Always choose to pay in pounds. Letting the machine convert to your home currency can cost far more.",
+   "creators": [
+    "wolters",
+    "loveandlondon"
+   ]
+  },
+  {
+   "title": "Unofficial theatre tickets",
+   "text": "Buy from the theatre box office, TodayTix or the official TKTS booth in Leicester Square - not from people on the street.",
+   "creators": [
+    "wolters",
+    "happy"
+   ]
+  }
+ ],
+ "transport": [
+  {
+   "title": "From the airport",
+   "text": "Heathrow is on the Piccadilly and Elizabeth lines - tap your card and go. Creators rate the Heathrow Express as quick but poor value unless you are staying at Paddington. Check late-night options before booking a cheap arrival into Stansted or Luton; the last trains can leave you with an expensive taxi.",
+   "creators": [
+    "happy",
+    "loveandlondon",
+    "wolters",
+    "evan"
+   ]
+  },
+  {
+   "title": "Pay with contactless",
+   "text": "Tap the same card or phone in and out. Daily caps are applied automatically: £8.90 a day for zones 1-2 on Tube and rail, frozen until March 2027. Paper tickets and paper day Travelcards cost more.",
+   "creators": [
+    "loveandlondon",
+    "evan",
+    "tourguy"
+   ]
+  },
+  {
+   "title": "Buses",
+   "text": "£1.75 a ride with unlimited changes within an hour (the Hopper fare). Routes 11 and 24 pass many of the big sights and make a cheap sightseeing tour from the top deck.",
+   "creators": [
+    "loveandlondon",
+    "sophie",
+    "happy"
+   ]
+  },
+  {
+   "title": "Children",
+   "text": "Under-11s travel free on the Tube and buses with a paying adult. Avoid the Tube at 7:30-9am and 5-7pm with small children and pushchairs.",
+   "creators": [
+    "happy"
+   ]
+  },
+  {
+   "title": "Taxis",
+   "text": "Black cabs are licensed and heavily regulated - if the orange light is on, it's free. Free Now books licensed cabs by app and shows the fare estimate. Ignore unlicensed minicabs that approach you in the street.",
+   "creators": [
+    "loveandlondon",
+    "happy",
+    "wolters"
+   ]
+  },
+  {
+   "title": "By river",
+   "text": "The Uber Boat (Thames Clippers) is part of the public network - tap in and ride to Greenwich or the Tower. A relaxing option when little legs are tired.",
+   "creators": [
+    "dwk",
+    "wolters"
+   ]
+  },
+  {
+   "title": "Walk more",
+   "text": "Many central Tube stops are only 5-15 minutes apart on foot. Victoria to Buckingham Palace, for example, is faster walking. Stand on the right on escalators.",
+   "creators": [
+    "wolters",
+    "evan"
+   ]
+  },
+  {
+   "title": "Late at night",
+   "text": "If you're on your own late, a licensed cab is worth the money over a long walk. Plan the route home before you head out - Wiley Fox's Safest Route helps.",
+   "creators": [
+    "loveandlondon"
+   ]
+  }
+ ],
+ "costs": [
+  {
+   "item": "Tube, zones 1-2, full day",
+   "price": "£8.90 cap",
+   "date": "2026",
+   "source": "TfL"
+  },
+  {
+   "item": "Bus ride (Hopper)",
+   "price": "£1.75",
+   "date": "2026",
+   "source": "TfL"
+  },
+  {
+   "item": "UK ETA (many visitors)",
+   "price": "£20",
+   "date": "Apr 2026",
+   "source": "Home Office"
+  },
+  {
+   "item": "Supermarket meal deal (sandwich, snack, drink)",
+   "price": "about £5",
+   "date": "Nov 2024",
+   "source": "dwk"
+  },
+  {
+   "item": "Central 4-star hotel, no breakfast",
+   "price": "about £270 a night",
+   "date": "Jan 2025",
+   "source": "dwk"
+  },
+  {
+   "item": "Pint in a central pub",
+   "price": "about £7.50",
+   "date": "May 2023 - check current price",
+   "source": "evan"
+  },
+  {
+   "item": "Espresso at Algerian Coffee Stores, Soho",
+   "price": "about £1.20",
+   "date": "Apr 2024",
+   "source": "topjaw"
+  },
+  {
+   "item": "Restaurant service charge",
+   "price": "12.5% usually added",
+   "date": "2025",
+   "source": "sophie"
+  }
+ ],
+ "top": [
+  {
+   "name": "The free museums",
+   "area": "South Kensington & Bloomsbury",
+   "why": "The Natural History Museum, Science Museum, V&A and British Museum are free. Book a free time slot online to skip the queue.",
+   "family": true,
+   "price": "Free",
+   "url": "https://www.nhm.ac.uk",
+   "creators": [
+    "sophie",
+    "happy",
+    "dwk",
+    "wolters"
+   ]
+  },
+  {
+   "name": "Tower of London",
+   "area": "Tower Hill",
+   "why": "Crown Jewels and Beefeater stories. The evening Ceremony of the Keys is a few pounds but sells out a month ahead.",
+   "family": true,
+   "price": "Paid",
+   "url": "https://www.getyourguide.com/s/?q=Tower+of+London&partner_id=WXZGXR9",
+   "creators": [
+    "tourguy",
+    "happy"
+   ]
+  },
+  {
+   "name": "Free sky-high views",
+   "area": "The City",
+   "why": "Sky Garden and Horizon 22 are free but need booking in advance. Sky Garden is higher than the London Eye.",
+   "family": true,
+   "price": "Free, book ahead",
+   "url": "https://skygarden.london",
+   "creators": [
+    "loveandlondon",
+    "happy",
+    "dwk",
+    "lens"
+   ]
+  },
+  {
+   "name": "Changing the Guard",
+   "area": "Buckingham Palace",
+   "why": "Not every day - check the official schedule the week before. Arrive early and watch your bag in the crowd.",
+   "family": true,
+   "price": "Free",
+   "url": "https://www.householddivision.org.uk/changing-the-guard",
+   "creators": [
+    "wolters",
+    "tourguy"
+   ]
+  },
+  {
+   "name": "Thames path: London Eye to Tower Bridge",
+   "area": "South Bank",
+   "why": "The classic riverside walk past Tate Modern, Shakespeare's Globe and Borough Market.",
+   "family": true,
+   "price": "Free",
+   "url": "https://www.getyourguide.com/s/?q=Thames+river+cruise&partner_id=WXZGXR9",
+   "creators": [
+    "suitcase",
+    "wolters"
+   ]
+  },
+  {
+   "name": "Greenwich & the Royal Observatory",
+   "area": "Greenwich",
+   "why": "One of the best free city views, stand on the Prime Meridian, and arrive by river boat.",
+   "family": true,
+   "price": "Free view",
+   "url": "https://www.getyourguide.com/s/?q=Greenwich&partner_id=WXZGXR9",
+   "creators": [
+    "topjaw",
+    "dwk"
+   ]
+  },
+  {
+   "name": "Diana Memorial Playground",
+   "area": "Kensington Gardens",
+   "why": "A pirate-ship playground next to Kensington Palace - a favourite for under-12s.",
+   "family": true,
+   "price": "Free",
+   "url": "https://www.royalparks.org.uk",
+   "creators": [
+    "tourguy"
+   ]
+  },
+  {
+   "name": "Regent's Canal walk",
+   "area": "Little Venice to King's Cross",
+   "why": "A traffic-free towpath through Camden. The Paddington to King's Cross stretch suits families.",
+   "family": true,
+   "price": "Free",
+   "url": "https://www.thewileyfox.com",
+   "creators": [
+    "suitcase",
+    "loveandlondon"
+   ]
+  },
+  {
+   "name": "A West End show",
+   "area": "Covent Garden & Soho",
+   "why": "Enter ticket lotteries and check TodayTix for same-day deals. Skip the street touts.",
+   "family": true,
+   "price": "From about £25",
+   "url": "https://www.getyourguide.com/s/?q=West+End+show&partner_id=WXZGXR9",
+   "creators": [
+    "happy",
+    "loveandlondon"
+   ]
+  },
+  {
+   "name": "Harry Potter Studio Tour",
+   "area": "Leavesden, outside London",
+   "why": "About an hour north of London - book weeks ahead, it sells out.",
+   "family": true,
+   "price": "Paid",
+   "url": "https://www.getyourguide.com/s/?q=Harry+Potter+Studio+Tour+London&partner_id=WXZGXR9",
+   "creators": [
+    "dwk",
+    "tourguy",
+    "happy"
+   ]
+  }
+ ],
+ "eat": [
+  {
+   "name": "Regency Café",
+   "area": "Westminster",
+   "type": "Classic London café",
+   "price": "£",
+   "family": true,
+   "why": "A time-warp caff that has starred in films. A full breakfast for about the price of a sourdough loaf elsewhere - have your order ready.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://regencycafe.co.uk"
+  },
+  {
+   "name": "Bun House",
+   "area": "Chinatown",
+   "type": "Cantonese buns",
+   "price": "£",
+   "family": true,
+   "why": "Filled steamed buns - pork, veggie and a custard one that children love.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://bun.house"
+  },
+  {
+   "name": "Four Seasons (Wardour Street)",
+   "area": "Chinatown",
+   "type": "Cantonese roast meats",
+   "price": "££",
+   "family": true,
+   "why": "The place for roast duck and roast pork over rice.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.fs-restaurants.co.uk"
+  },
+  {
+   "name": "Arcade Food Hall",
+   "area": "Tottenham Court Road",
+   "type": "Food hall",
+   "price": "££",
+   "family": true,
+   "why": "Eight kitchens under one roof - easy when everyone wants something different. Upstairs, Plaza Khao Gaeng (Michelin-listed southern Thai) does one of London's best beef massaman curries.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.arcadefoodhall.com"
+  },
+  {
+   "name": "Seashell of Lisson Grove",
+   "area": "Marylebone",
+   "type": "Fish & chips",
+   "price": "££",
+   "family": true,
+   "why": "A long-running chippy on TOPJAW's fish and chips list - near Regent's Park and Baker Street.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.seashellrestaurant.co.uk"
+  },
+  {
+   "name": "Dishoom",
+   "area": "Several sites incl. Covent Garden & King's Cross",
+   "type": "Bombay café",
+   "price": "££",
+   "family": true,
+   "why": "The London Indian restaurant creators send everyone to. Expect a queue at peak times.",
+   "creators": [
+    "evan",
+    "tourguy"
+   ],
+   "url": "https://www.dishoom.com"
+  },
+  {
+   "name": "Homeslice",
+   "area": "Neal's Yard, Seven Dials",
+   "type": "Pizza",
+   "price": "££",
+   "family": true,
+   "why": "Giant shareable pizzas a few steps from Covent Garden - a better bet than Leicester Square chains.",
+   "creators": [
+    "evan"
+   ],
+   "url": "https://www.homeslicepizza.co.uk"
+  },
+  {
+   "name": "Beigel Bake",
+   "area": "Brick Lane",
+   "type": "Bakery, open 24 hours",
+   "price": "£",
+   "family": true,
+   "why": "The salt beef bagel is a London rite of passage. A good daytime stop on a Brick Lane visit.",
+   "creators": [
+    "camden"
+   ],
+   "url": "https://www.google.com/maps/search/Beigel+Bake+Brick+Lane"
+  },
+  {
+   "name": "Crisp Pizza",
+   "area": "Hammersmith (W6)",
+   "type": "Pizza in a pub",
+   "price": "££",
+   "family": false,
+   "why": "TOPJAW's pick for London's best pizza. Book a couple of weeks ahead; they suggest the Picante and the hot-honey Vecna.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.google.com/maps/search/Crisp+Pizza+Hammersmith"
+  },
+  {
+   "name": "Wingmans",
+   "area": "Soho & Kilburn",
+   "type": "Chicken wings",
+   "price": "££",
+   "family": true,
+   "why": "Award-winning wings, casual and quick.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.google.com/maps/search/Wingmans+London"
+  },
+  {
+   "name": "Pophams",
+   "area": "London Fields & Islington",
+   "type": "Bakery",
+   "price": "£",
+   "family": true,
+   "why": "Pastries baked on site all day. The order: a cardamom bun and a black americano.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.pophamsbakery.com"
+  },
+  {
+   "name": "Donia",
+   "area": "Kingly Court, Carnaby",
+   "type": "Filipino",
+   "price": "££",
+   "family": false,
+   "why": "Upstairs in Kingly Court. Try the ube choux for dessert.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.google.com/maps/search/Donia+Kingly+Court"
+  },
+  {
+   "name": "The Harwood Arms",
+   "area": "Fulham",
+   "type": "Sunday roast",
+   "price": "£££",
+   "family": true,
+   "why": "Chefs' choice for a Sunday roast. Book well ahead.",
+   "creators": [
+    "topjaw"
+   ],
+   "url": "https://www.harwoodarms.com"
+  }
+ ],
+ "grown_ups": "For a grown-ups' night out, TOPJAW's chef interviews point to The Devonshire in Soho for a pint of Guinness and the Connaught Bar in Mayfair for a martini.",
+ "hotels": [
+  {
+   "name": "The Rubens at the Palace",
+   "area": "Victoria",
+   "for": "Families",
+   "band": "££££",
+   "why": "Opposite the Royal Mews, walking distance to Buckingham Palace and St James's Park.",
+   "url": "https://www.booking.com/searchresults.html?ss=The+Rubens+at+the+Palace+London&aid=YOUR_AID_HERE",
+   "source": "Wiley Fox pick"
+  },
+  {
+   "name": "Park Plaza County Hall",
+   "area": "South Bank",
+   "for": "Families",
+   "band": "£££",
+   "why": "Family rooms beside the London Eye and the river path.",
+   "url": "https://www.booking.com/searchresults.html?ss=Park+Plaza+County+Hall+London&aid=YOUR_AID_HERE",
+   "source": "Wiley Fox pick"
+  },
+  {
+   "name": "The Ampersand Hotel",
+   "area": "South Kensington",
+   "for": "Families",
+   "band": "££££",
+   "why": "A short walk to three free museums in the calmest of the central areas we checked.",
+   "url": "https://www.booking.com/searchresults.html?ss=The+Ampersand+Hotel+London&aid=YOUR_AID_HERE",
+   "source": "Wiley Fox pick"
+  },
+  {
+   "name": "St James' Court, A Taj Hotel",
+   "area": "Westminster",
+   "for": "Families & solo",
+   "band": "£££",
+   "why": "Quiet courtyard hotel near Buckingham Palace - used as a base by Curly Tales.",
+   "url": "https://www.booking.com/searchresults.html?ss=St+James+Court+A+Taj+Hotel+London&aid=YOUR_AID_HERE",
+   "source": "curly"
+  },
+  {
+   "name": "The Hoxton, Holborn",
+   "area": "Holborn",
+   "for": "Solo",
+   "band": "££",
+   "why": "A buzzy lobby with good wifi, walkable to Covent Garden and the British Museum. Camden David rates the Hoxton brand.",
+   "url": "https://www.booking.com/searchresults.html?ss=The+Hoxton+Holborn+London&aid=YOUR_AID_HERE",
+   "source": "camden"
+  },
+  {
+   "name": "citizenM Tower of London",
+   "area": "Tower Hill",
+   "for": "Solo",
+   "band": "££",
+   "why": "Compact rooms beside the Tower and the river, on the District and Circle lines.",
+   "url": "https://www.booking.com/searchresults.html?ss=citizenM+Tower+of+London&aid=YOUR_AID_HERE",
+   "source": "Wiley Fox pick"
+  }
+ ],
+ "itinerary": {
+  "1day": [
+   [
+    "09:00",
+    "Westminster",
+    "Big Ben and Westminster Abbey, then walk to Buckingham Palace for Changing the Guard (check it's on)."
+   ],
+   [
+    "12:30",
+    "Lunch",
+    "Regency Café for a proper fry-up, or pick up a meal deal for a picnic in St James's Park."
+   ],
+   [
+    "14:00",
+    "South Bank",
+    "Cross the river and walk the Thames path past Tate Modern to Borough Market."
+   ],
+   [
+    "17:30",
+    "Tower Bridge",
+    "Walk over Tower Bridge and on to the Tower of London at golden hour."
+   ],
+   [
+    "19:30",
+    "Dinner",
+    "Chinatown: Four Seasons for roast duck and Bun House for dessert. Keep phones away on the busy streets."
+   ]
+  ],
+  "3day": [
+   [
+    "Day 1 · Royal London",
+    "Westminster, Buckingham Palace, St James's Park, then the Thames path to Borough Market.",
+    "Tower of London and Tower Bridge.",
+    "Chinatown and a West End show."
+   ],
+   [
+    "Day 2 · Museums & parks",
+    "Natural History Museum and V&A (free, book a slot).",
+    "Kensington Gardens and the Diana Memorial Playground.",
+    "Dinner at Dishoom or Homeslice in Covent Garden."
+   ],
+   [
+    "Day 3 · River & views",
+    "Uber Boat to Greenwich and the Royal Observatory.",
+    "Sky Garden or Horizon 22 (pre-booked) and a Leadenhall Market wander.",
+    "Shoreditch for food; plan a cab or Safest Route home."
+   ]
+  ]
+ },
+ "tips": [
+  {
+   "title": "Look right",
+   "text": "Traffic drives on the left. Wolters World has seen tourists hit stepping out the wrong way - follow the 'look right' markings."
+  },
+  {
+   "title": "Book the free stuff",
+   "text": "Sky Garden, Horizon 22 and museum time slots are free but go fast. Book as soon as your dates are set."
+  },
+  {
+   "title": "Don't overload days",
+   "text": "One or two paid sights a day, grouped by area. London rewards wandering."
+  },
+  {
+   "title": "Skip the 'awful four' combo",
+   "text": "Love and London's name for pricey ticket bundles (Dungeon, Shrek, Aquarium, Madame Tussauds). Fine for small kids; poor value otherwise."
+  },
+  {
+   "title": "Keep kids out of phone boxes",
+   "text": "The famous red boxes are often used as toilets. Photo outside, not in."
+  },
+  {
+   "title": "Tag the kids",
+   "text": "A Wiley Fox QR wristband on each child means anyone who finds them can reach you in seconds."
+  }
+ ],
+ "creators": {
+  "loveandlondon": {
+   "name": "Love and London",
+   "url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw"
+  },
+  "wolters": {
+   "name": "Wolters World",
+   "url": "https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ"
+  },
+  "topjaw": {
+   "name": "TOPJAW",
+   "url": "https://www.youtube.com/@topjaw",
+   "instagram": "https://www.instagram.com/topjaw/"
+  },
+  "evan": {
+   "name": "Evan Edinger",
+   "url": "https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA"
+  },
+  "sophie": {
+   "name": "Sophie Nadeau",
+   "url": "https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw"
+  },
+  "happy": {
+   "name": "Happy to Wander",
+   "url": "https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ"
+  },
+  "dwk": {
+   "name": "Destination Well Known",
+   "url": "https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ"
+  },
+  "camden": {
+   "name": "Camden David",
+   "url": "https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w"
+  },
+  "tourguy": {
+   "name": "The Tour Guy",
+   "url": "https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw"
+  },
+  "suitcase": {
+   "name": "Suitcase Monkey",
+   "url": "https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA"
+  },
+  "dutch": {
+   "name": "Dutch Travel Maniac",
+   "url": "https://www.youtube.com/@DutchTravelManiac"
+  },
+  "lens": {
+   "name": "Through My Lens",
+   "url": "https://www.youtube.com/channel/UCWyPjY3I86JQt1u3mV8OyUw"
+  },
+  "curly": {
+   "name": "Curly Tales",
+   "url": "https://www.youtube.com/channel/UCDnq05Q89oYq-Tz5boL73Tw"
+  }
+ },
+ "sources": [
+  {
+   "creator": "Love and London",
+   "creator_url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw",
+   "title": "Areas in London tourists should AVOID (+where to go instead)",
+   "url": "https://www.youtube.com/watch?v=8SMrIT_cBwI",
+   "date": "2024-03"
+  },
+  {
+   "creator": "Love and London",
+   "creator_url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw",
+   "title": "Important things you MUST know before visiting London (2025)",
+   "url": "https://www.youtube.com/watch?v=oDyOUAsYWQg",
+   "date": "2024-11"
+  },
+  {
+   "creator": "Love and London",
+   "creator_url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw",
+   "title": "15 biggest mistakes London tourists always make",
+   "url": "https://www.youtube.com/watch?v=yWhRNGnV_XQ",
+   "date": "2022-08"
+  },
+  {
+   "creator": "Love and London",
+   "creator_url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw",
+   "title": "5 things to avoid in London (and what to do instead)",
+   "url": "https://www.youtube.com/watch?v=xVOESWNHa0A",
+   "date": "2022-10"
+  },
+  {
+   "creator": "Love and London",
+   "creator_url": "https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw",
+   "title": "Which is London's best area?",
+   "url": "https://www.youtube.com/watch?v=QBpRYapgXUM",
+   "date": "2022-06"
+  },
+  {
+   "creator": "Wolters World",
+   "creator_url": "https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ",
+   "title": "Tourist Scams of London",
+   "url": "https://www.youtube.com/watch?v=nwSsCnS8f0c",
+   "date": "2023-12"
+  },
+  {
+   "creator": "Wolters World",
+   "creator_url": "https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ",
+   "title": "London Tourist Mistakes All 1st Time Visitors Make",
+   "url": "https://www.youtube.com/watch?v=tyjgi0mN2Co",
+   "date": "2023-10"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "London's Best Restaurants: Where Chefs Eat",
+   "url": "https://www.youtube.com/watch?v=AMj51nd4Oeg",
+   "date": "2024-04"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "The 3 Best Spots in London's Chinatown ft. Big John",
+   "url": "https://www.youtube.com/watch?v=vw8Pb8VbQu8",
+   "date": "2024-12"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "London's Best Thai Restaurant with Niall Horan",
+   "url": "https://www.youtube.com/watch?v=5qBWFUxFtqY",
+   "date": "2026-06"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "Best Chicken Wings in London?",
+   "url": "https://www.youtube.com/watch?v=mqrhoS8KgkE",
+   "date": "2025-07"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "We Think These Are The 12 Best Free Views In London",
+   "url": "https://www.youtube.com/watch?v=z-MU-su97DQ",
+   "date": "2020-11"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "Chet Sharma (BiBi) Best of London",
+   "url": "https://www.youtube.com/watch?v=_7Gqs5GQvTU",
+   "date": "2023-07"
+  },
+  {
+   "creator": "TOPJAW",
+   "creator_url": "https://www.youtube.com/@topjaw",
+   "title": "Our favourite fish & chips spots in London (Instagram)",
+   "url": "https://www.instagram.com/topjaw/p/Ddn4woGjNFa/",
+   "date": "2026-09"
+  },
+  {
+   "creator": "Evan Edinger",
+   "creator_url": "https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA",
+   "title": "10 mistakes tourists ALWAYS make in London",
+   "url": "https://www.youtube.com/watch?v=oS_dSDU4skg",
+   "date": "2023-05"
+  },
+  {
+   "creator": "Sophie Nadeau",
+   "creator_url": "https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw",
+   "title": "55 essential London travel tips",
+   "url": "https://www.youtube.com/watch?v=jmH8ijFeKoo",
+   "date": "2025-02"
+  },
+  {
+   "creator": "Happy to Wander",
+   "creator_url": "https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ",
+   "title": "London travel tips for first timers",
+   "url": "https://www.youtube.com/watch?v=vpCYaDgX65w",
+   "date": "2023-08"
+  },
+  {
+   "creator": "Destination Well Known",
+   "creator_url": "https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ",
+   "title": "21 Things I Wish I Knew Before Visiting London",
+   "url": "https://www.youtube.com/watch?v=xGxYepW3bRE",
+   "date": "2024-11"
+  },
+  {
+   "creator": "Destination Well Known",
+   "creator_url": "https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ",
+   "title": "First Time in London? 14 Things You Need to Do",
+   "url": "https://www.youtube.com/watch?v=62qQNho-cL4",
+   "date": "2025-01"
+  },
+  {
+   "creator": "Destination Well Known",
+   "creator_url": "https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ",
+   "title": "The 14 Best Things to Do in London",
+   "url": "https://www.youtube.com/watch?v=iwdCKxz9s7w",
+   "date": "2024-06"
+  },
+  {
+   "creator": "Camden David",
+   "creator_url": "https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w",
+   "title": "22 Tips I Wish I Knew Before Visiting London",
+   "url": "https://www.youtube.com/watch?v=iQHMf8JK4FI",
+   "date": "2024-01"
+  },
+  {
+   "creator": "The Tour Guy",
+   "creator_url": "https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw",
+   "title": "London 2026 Travel Tips: Complete Planning Guide",
+   "url": "https://www.youtube.com/watch?v=mWCavIiDLug",
+   "date": "2025-10"
+  },
+  {
+   "creator": "The Tour Guy",
+   "creator_url": "https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw",
+   "title": "The Best Things to See in London in 2026",
+   "url": "https://www.youtube.com/watch?v=8qsGOMdhY-s",
+   "date": "2025-03"
+  },
+  {
+   "creator": "Suitcase Monkey",
+   "creator_url": "https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA",
+   "title": "London's Best Neighbourhoods: Streets for Cafes, Walks, Shopping, Food",
+   "url": "https://www.youtube.com/watch?v=alQBbuhK0Ng",
+   "date": "2024-08"
+  },
+  {
+   "creator": "Dutch Travel Maniac",
+   "creator_url": "https://www.youtube.com/@DutchTravelManiac",
+   "title": "I Went to Brixton",
+   "url": "https://www.youtube.com/watch?v=JO06MOZW19s",
+   "date": "2025-07"
+  },
+  {
+   "creator": "Through My Lens",
+   "creator_url": "https://www.youtube.com/channel/UCWyPjY3I86JQt1u3mV8OyUw",
+   "title": "60+ Things to do in London in 2025",
+   "url": "https://www.youtube.com/watch?v=GVBAjp1BdHw",
+   "date": "2025-07"
+  },
+  {
+   "creator": "Curly Tales",
+   "creator_url": "https://www.youtube.com/channel/UCDnq05Q89oYq-Tz5boL73Tw",
+   "title": "First Time Travel Guide To London",
+   "url": "https://www.youtube.com/watch?v=zDxuIbquEo0",
+   "date": "2023-07"
+  }
+ ],
+ "crime_table": {
+  "Westminster": {
+   "avg_month": 3354,
+   "theft_share": 37,
+   "violence_share": 22,
+   "top_categories": [
+    "other theft",
+    "violent crime",
+    "theft from the person"
+   ],
+   "tier": 2,
+   "lat": 51.4995,
+   "lng": -0.1248
+  },
+  "South Kensington": {
+   "avg_month": 1166,
+   "theft_share": 23,
+   "violence_share": 21,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "other theft"
+   ],
+   "tier": 4,
+   "lat": 51.4941,
+   "lng": -0.1738
+  },
+  "Covent Garden": {
+   "avg_month": 4626,
+   "theft_share": 42,
+   "violence_share": 18,
+   "top_categories": [
+    "other theft",
+    "theft from the person",
+    "violent crime"
+   ],
+   "tier": 1,
+   "lat": 51.5117,
+   "lng": -0.124
+  },
+  "Leicester Square": {
+   "avg_month": 4587,
+   "theft_share": 42,
+   "violence_share": 18,
+   "top_categories": [
+    "other theft",
+    "theft from the person",
+    "violent crime"
+   ],
+   "tier": 1,
+   "lat": 51.5103,
+   "lng": -0.1301
+  },
+  "Soho": {
+   "avg_month": 4828,
+   "theft_share": 42,
+   "violence_share": 18,
+   "top_categories": [
+    "other theft",
+    "theft from the person",
+    "violent crime"
+   ],
+   "tier": 1,
+   "lat": 51.5136,
+   "lng": -0.1365
+  },
+  "Bloomsbury": {
+   "avg_month": 4879,
+   "theft_share": 41,
+   "violence_share": 19,
+   "top_categories": [
+    "other theft",
+    "theft from the person",
+    "violent crime"
+   ],
+   "tier": 1,
+   "lat": 51.5205,
+   "lng": -0.1256
+  },
+  "King's Cross": {
+   "avg_month": 2786,
+   "theft_share": 31,
+   "violence_share": 22,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "other theft"
+   ],
+   "tier": 2,
+   "lat": 51.5308,
+   "lng": -0.1238
+  },
+  "Shoreditch": {
+   "avg_month": 2493,
+   "theft_share": 22,
+   "violence_share": 24,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.5265,
+   "lng": -0.0786
+  },
+  "Whitechapel": {
+   "avg_month": 2435,
+   "theft_share": 18,
+   "violence_share": 27,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.5194,
+   "lng": -0.0612
+  },
+  "Camden Town": {
+   "avg_month": 1644,
+   "theft_share": 23,
+   "violence_share": 27,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "theft from the person"
+   ],
+   "tier": 3,
+   "lat": 51.539,
+   "lng": -0.1426
+  },
+  "Greenwich": {
+   "avg_month": 780,
+   "theft_share": 13,
+   "violence_share": 31,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 4,
+   "lat": 51.4826,
+   "lng": -0.0077
+  },
+  "Richmond": {
+   "avg_month": 292,
+   "theft_share": 12,
+   "violence_share": 28,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "vehicle crime"
+   ],
+   "tier": 5,
+   "lat": 51.4613,
+   "lng": -0.3037
+  },
+  "Wimbledon": {
+   "avg_month": 351,
+   "theft_share": 12,
+   "violence_share": 27,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 5,
+   "lat": 51.4214,
+   "lng": -0.2064
+  },
+  "Lewisham": {
+   "avg_month": 1104,
+   "theft_share": 9,
+   "violence_share": 34,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 4,
+   "lat": 51.4615,
+   "lng": -0.0138
+  },
+  "Croydon": {
+   "avg_month": 1354,
+   "theft_share": 8,
+   "violence_share": 31,
+   "top_categories": [
+    "violent crime",
+    "anti social behaviour",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.3762,
+   "lng": -0.0982
+  },
+  "South Bank / Waterloo": {
+   "avg_month": 3266,
+   "theft_share": 40,
+   "violence_share": 22,
+   "top_categories": [
+    "theft from the person",
+    "other theft",
+    "violent crime"
+   ],
+   "tier": 2,
+   "lat": 51.5033,
+   "lng": -0.1145
+  },
+  "Canary Wharf": {
+   "avg_month": 1429,
+   "theft_share": 11,
+   "violence_share": 29,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.5054,
+   "lng": -0.0235
+  },
+  "Notting Hill": {
+   "avg_month": 1523,
+   "theft_share": 17,
+   "violence_share": 22,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.5094,
+   "lng": -0.1968
+  },
+  "Marylebone": {
+   "avg_month": 4019,
+   "theft_share": 39,
+   "violence_share": 17,
+   "top_categories": [
+    "theft from the person",
+    "other theft",
+    "shoplifting"
+   ],
+   "tier": 1,
+   "lat": 51.5189,
+   "lng": -0.15
+  },
+  "Paddington": {
+   "avg_month": 2051,
+   "theft_share": 26,
+   "violence_share": 21,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "other theft"
+   ],
+   "tier": 3,
+   "lat": 51.5154,
+   "lng": -0.1755
+  },
+  "Stratford": {
+   "avg_month": 1421,
+   "theft_share": 19,
+   "violence_share": 24,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "shoplifting"
+   ],
+   "tier": 3,
+   "lat": 51.5416,
+   "lng": -0.0034
+  },
+  "Hampstead": {
+   "avg_month": 637,
+   "theft_share": 19,
+   "violence_share": 23,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "other theft"
+   ],
+   "tier": 4,
+   "lat": 51.5557,
+   "lng": -0.178
+  },
+  "London Bridge / Borough": {
+   "avg_month": 2368,
+   "theft_share": 38,
+   "violence_share": 21,
+   "top_categories": [
+    "theft from the person",
+    "other theft",
+    "violent crime"
+   ],
+   "tier": 3,
+   "lat": 51.5055,
+   "lng": -0.091
+  },
+  "Oxford Street": {
+   "avg_month": 4863,
+   "theft_share": 42,
+   "violence_share": 17,
+   "top_categories": [
+    "other theft",
+    "theft from the person",
+    "violent crime"
+   ],
+   "tier": 1,
+   "lat": 51.5152,
+   "lng": -0.1419
+  },
+  "Kensington (High St)": {
+   "avg_month": 1123,
+   "theft_share": 22,
+   "violence_share": 21,
+   "top_categories": [
+    "anti social behaviour",
+    "violent crime",
+    "other theft"
+   ],
+   "tier": 4,
+   "lat": 51.5009,
+   "lng": -0.1925
+  }
+ }
+}

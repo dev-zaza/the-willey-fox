@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>London Travel Guide | Wiley Fox</title>
+<meta name="description" content="What 13 travel creators actually say about London, checked against the latest police data - where to stay, where to take care, how to get around and what it costs.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"><style>:root{--sage:#9DBDB8;--cream:#F0E7D6;--cream-soft:#F7F1E3;--orange:#EA2E00;--orange-dark:#C12500;--ink:#1a1a1a;--muted:#6a6a64;--rule:rgba(26,26,26,.12);
+--safety-1:#D7263D;--safety-2:#F46036;--safety-3:#FFC857;--safety-4:#A4C957;--safety-5:#3FA34D;--radius:4px;--shadow:0 2px 16px rgba(26,26,26,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:Inter,-apple-system,sans-serif;background:var(--cream-soft);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}h1,h2,h3,h4{font-family:'Playfair Display',Georgia,serif;font-weight:700;line-height:1.15}
+h2{font-size:clamp(1.8rem,3.2vw,2.6rem);font-style:italic}h3{font-size:1.2rem}
+.container{max-width:1100px;margin:0 auto;padding:0 20px}section{padding:80px 0}section.alt{background:var(--cream)}
+.section-rule{display:flex;align-items:center;gap:16px;margin-bottom:22px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+.section-rule::before,.section-rule::after{content:"";flex:1;height:1px;background:var(--rule)}
+.section-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--orange);margin-bottom:10px}
+.section-title{margin-bottom:14px}.section-sub{color:var(--muted);max-width:720px;margin-bottom:32px}
+.sub-h{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;margin:48px 0 14px}
+.topbar{background:var(--ink);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Playfair Display',serif;font-style:italic;color:var(--cream);font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.mark{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:.7rem;background:var(--orange);color:var(--cream);padding:3px 6px;border-radius:2px}
+.topbar-logo .sep{color:var(--orange)}.topbar-logo .city{font-weight:400;opacity:.8}
+.topbar-nav{display:flex;gap:22px}.topbar-nav a,.topbar-back{color:rgba(240,231,214,.7);font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;text-decoration:none}
+.topbar-nav a:hover,.topbar-back:hover{color:var(--orange)}.topbar-actions{display:flex;gap:16px}
+.cover-hero{position:relative;min-height:88vh;background:radial-gradient(ellipse at 30% 20%,#3a4a48 0%,#1a1a1a 60%);color:var(--cream);overflow:hidden}
+.cover-top{position:absolute;top:28px;left:28px;right:28px;display:flex;justify-content:space-between}
+.cover-logo-box{width:52px;height:52px;background:var(--cream);color:var(--orange);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:500}
+.cover-edition{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;text-align:right;line-height:1.7}
+.ed-badge{display:inline-block;background:var(--orange);padding:3px 8px;border-radius:2px;font-size:9px;margin-bottom:6px}
+.cover-tagline{position:absolute;left:0;right:0;top:calc(50% - 170px);text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.45em;text-transform:uppercase}
+.wordmark-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.city-wordmark{font-family:'Playfair Display',serif;font-style:italic;font-weight:900;font-size:clamp(76px,17vw,220px);letter-spacing:-.04em;color:var(--cream);line-height:.85}
+.cover-subtitle{position:absolute;left:0;right:0;top:calc(50% + 105px);text-align:center;font-family:'Playfair Display',serif;font-style:italic;font-size:1.35rem}
+.cover-blurb{position:absolute;left:50%;transform:translateX(-50%);top:calc(50% + 155px);width:90%;max-width:560px;text-align:center;font-weight:300;font-size:.95rem;opacity:.9}
+.cover-safety{position:absolute;bottom:32px;left:28px}
+.safety-score-pill{background:rgba(20,20,20,.6);border:1px solid rgba(240,231,214,.2);border-radius:var(--radius);padding:12px 18px;display:flex;align-items:center;gap:14px}
+.score-num{font-family:'Playfair Display',serif;font-style:italic;font-size:2.6rem;font-weight:700;line-height:1}
+.score-meta{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;line-height:1.7}
+.score-headline{font-size:10px;font-weight:500}.score-label,.score-source{color:rgba(240,231,214,.6)}
+.stat-strip{background:var(--ink)}.stat-strip .container{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat-item{padding:34px 26px;border-right:1px solid rgba(240,231,214,.08)}.stat-item:last-child{border:none}
+.stat-number{font-family:'Playfair Display',serif;font-style:italic;font-size:2.6rem;font-weight:700;color:var(--orange);line-height:1}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--sage);margin-top:10px}
+.stat-desc{font-size:.82rem;color:rgba(240,231,214,.6);margin-top:6px}
+.overview{background:var(--cream)}.overview-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:48px}
+.overview-lede{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;line-height:1.45;margin-bottom:22px}
+.overview p{margin-bottom:14px;color:#3a3a3a}
+.overview-sidebar{background:var(--ink);color:var(--cream);padding:28px;border-radius:var(--radius)}
+.overview-sidebar h4{font-family:'Playfair Display',serif;font-style:italic;font-size:1.2rem;margin-bottom:14px}
+.fact-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(240,231,214,.1);font-size:.84rem}
+.fact-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(240,231,214,.55);white-space:nowrap}
+.fact-value{text-align:right}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}.panel{background:#fff;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.panel h3{font-style:italic;margin-bottom:8px}
+.bars{background:#fff;border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow)}
+.bar-row{display:grid;grid-template-columns:190px 1fr 60px;gap:12px;align-items:center;padding:4px 0;font-size:.84rem}
+.bar-track{height:10px;background:var(--cream-soft);border-radius:2px;overflow:hidden}.bar-fill{display:block;height:100%}
+.bar-val{font-family:'JetBrains Mono',monospace;font-size:.75rem;text-align:right;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:.78rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.ranking-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+.caution-row{display:flex;gap:14px;padding:20px 22px;border-bottom:1px solid var(--cream-soft)}.caution-row:last-child{border:none}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:8px;flex-shrink:0}.borough-name{font-weight:600}
+.caution-when{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin:2px 0 6px}
+.caution-note{font-size:.9rem;color:#3a3a3a;margin-bottom:6px}
+.hood-data{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin:6px 0}
+.credit{display:inline-block;font-size:.72rem;color:var(--muted)}.credit a{color:var(--orange);text-decoration:none}
+.hood-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.hood-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.hood-head{background:var(--sage);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hood-name{font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;font-weight:700}
+.tier-pill{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:2px;background:#fff;white-space:nowrap}
+.tier-pill.t1{color:var(--safety-1)}.tier-pill.t2{color:#c24a22}.tier-pill.t3{color:#9a7400}.tier-pill.t4{color:#5f7f24}.tier-pill.t5{color:var(--safety-5)}
+.hood-body{padding:18px 20px}.hood-tagline{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+.hood-desc{font-size:.9rem;color:#444}
+.hotel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px}
+.hotel-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}.hotel-body{padding:22px}
+.hotel-meta{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);margin-bottom:6px}
+.hotel-name{font-family:'Playfair Display',serif;font-style:italic;font-size:1.25rem;margin-bottom:8px}.hotel-desc{font-size:.88rem;color:#3a3a3a;margin-bottom:14px}
+.hotel-footer{display:flex;justify-content:space-between;align-items:center}.hotel-price{font-family:'Playfair Display',serif;font-style:italic}
+.hotel-price small{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:9px;color:var(--muted);text-transform:uppercase}
+.search-card{border:1.5px dashed var(--sage);box-shadow:none;background:transparent;padding:26px;text-align:center}
+.affiliate-note{background:rgba(157,189,184,.2);border-left:3px solid var(--sage);padding:12px 18px;font-size:.82rem;margin-bottom:24px}
+.top-row{display:grid;grid-template-columns:80px 1fr 150px;gap:24px;padding:24px 0;border-bottom:1px solid var(--rule);align-items:center}
+.top-rank{font-family:'Playfair Display',serif;font-style:italic;font-weight:900;font-size:3.6rem;color:var(--orange);line-height:.9}
+.top-content h3{font-style:italic;font-size:1.4rem;margin-bottom:4px}
+.top-meta,.eat-meta{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sep{color:var(--orange);margin:0 6px}.top-desc,.eat-desc{font-size:.92rem;color:#3a3a3a}.top-cta{text-align:right}
+.top-cta .price{font-family:'Playfair Display',serif;font-style:italic;margin-bottom:8px}
+.eat-row{display:grid;grid-template-columns:56px 1fr auto;gap:20px;padding:22px 0;border-bottom:1px solid var(--rule);align-items:center}
+.eat-price{font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;color:var(--orange);text-align:center}
+.eat-info h3{font-style:italic;font-size:1.3rem}.eat-tags{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.eat-tag{font-family:'JetBrains Mono',monospace;font-size:.66rem;padding:2px 8px;border:1px solid var(--rule);border-radius:2px;color:var(--muted)}
+.eat-tag.safe{color:var(--safety-5);border-color:rgba(63,163,77,.3);background:rgba(63,163,77,.07)}
+.small-note{margin-top:20px;font-size:.8rem;color:var(--muted)}
+.itin-day{display:grid;grid-template-columns:100px 1fr;gap:28px;padding:24px 0;border-bottom:1px solid var(--rule)}
+.itin-day-num .label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--orange)}
+.itin-day-num .num{font-family:'Playfair Display',serif;font-style:italic;font-size:3.2rem;font-weight:900;line-height:.9}
+.itin-day-content h3{font-style:italic;font-size:1.4rem;margin-bottom:10px}
+.itin-block{display:flex;gap:14px;padding:6px 0}.itin-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);min-width:56px;padding-top:4px}
+.itin-action{font-size:.92rem;color:#3a3a3a}
+.practical-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-bottom:40px}.practical-grid.single{grid-template-columns:1fr 1fr}
+.practical-card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.practical-title{font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;font-weight:700;margin-bottom:6px}
+.practical-text{font-size:.88rem;color:#3a3a3a;margin-bottom:6px}
+.data-panel{background:var(--ink);color:var(--cream);border-radius:var(--radius);padding:26px}
+.data-panel h3{color:var(--orange);font-style:italic;margin-bottom:12px}
+.data-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(240,231,214,.08);font-size:.85rem}
+.data-label{color:rgba(240,231,214,.7)}.data-value{font-weight:600;text-align:right}.data-value small{display:block;font-weight:400;font-size:.68rem;color:rgba(240,231,214,.5)}
+.panel-foot{font-size:.75rem;color:rgba(240,231,214,.5);margin-top:10px}
+.wf-cta{display:flex;align-items:center;gap:16px;background:var(--ink);color:var(--cream);border-radius:var(--radius);padding:18px 22px;margin:32px 0}
+.wf-cta p{flex:1;font-size:.92rem}.wf-cta-mark{font-family:'JetBrains Mono',monospace;background:var(--orange);padding:8px 10px;border-radius:2px;font-size:.8rem}
+.btn{display:inline-block;padding:9px 16px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.btn-primary{background:var(--orange);color:var(--cream)}.btn-primary:hover{background:var(--orange-dark)}
+.btn-ghost{border-color:var(--rule)}.btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+.btn-on-dark{color:var(--cream);border-color:rgba(240,231,214,.3)}.btn-sm{padding:7px 12px;font-size:.64rem}
+.cta-banner{background:var(--ink);padding:64px 0}.cta-inner{display:flex;justify-content:space-between;align-items:center;gap:28px;flex-wrap:wrap}
+.cta-text h2{color:var(--cream);margin-bottom:10px}.cta-text p{color:rgba(240,231,214,.65);max-width:540px}.cta-buttons{display:flex;gap:12px;flex-wrap:wrap}
+.sources{padding-left:22px;columns:2;column-gap:40px;font-size:.86rem}.sources li{margin-bottom:8px;break-inside:avoid}
+.sources a{color:var(--ink)}.src-by{display:block;font-size:.74rem;color:var(--muted)}
+footer{background:#0f0f0f;padding:48px 20px 36px;color:rgba(240,231,214,.5);text-align:center;font-size:.82rem}
+footer a{color:var(--orange)}.footer-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.4rem;color:var(--cream);margin-bottom:10px}
+.footer-logo .accent{color:var(--orange)}.footer-small{max-width:640px;margin:10px auto;font-size:.76rem}
+.footer-meta{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;margin-top:14px}
+@media (max-width:900px){.overview-grid,.two-col{grid-template-columns:1fr}.stat-strip .container{grid-template-columns:1fr}.topbar-nav{display:none}
+.cover-blurb{display:none}.cover-safety{left:16px;right:16px;bottom:20px}.top-row{grid-template-columns:56px 1fr}.top-cta{grid-column:2;text-align:left}
+.eat-row{grid-template-columns:44px 1fr}.eat-row .btn{grid-column:2;justify-self:start}.bar-row{grid-template-columns:120px 1fr 48px;font-size:.76rem}
+.sources{columns:1}.practical-grid.single{grid-template-columns:1fr}.itin-day{grid-template-columns:1fr;gap:8px}.wf-cta{flex-direction:column;align-items:flex-start}
+section{padding:56px 0}.topbar-actions{gap:10px}}
+@media print{.topbar,.wf-cta .btn,.cta-buttons{display:none}.cover-hero{min-height:auto;height:560px}section{padding:32px 0;break-inside:avoid-page}}
+.overview .wf-cta p,.wf-cta p{color:var(--cream)}
+.cover-hero .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.05)}
+.cover-hero .photo-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.6) 0%,rgba(0,0,0,.45) 40%,rgba(0,0,0,.55) 65%,rgba(0,0,0,.8) 100%)}
+.cover-hero>*:not(.photo):not(.photo-overlay){z-index:2}
+.ph{margin:0;position:relative}.ph img{display:block;width:100%;height:180px;object-fit:cover}
+.ph figcaption{position:absolute;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:2px 6px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph figcaption a{color:#fff}
+.top-content .ph{margin-bottom:12px;border-radius:var(--radius);overflow:hidden}.top-content .ph img{height:220px}
+.map-wrap{position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:#e9ecdf}
+#gmap{width:100%;height:560px}
+.map-legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.94);border-radius:var(--radius);padding:10px 12px;font-size:.74rem;display:flex;flex-direction:column;gap:3px;z-index:2}
+.map-legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.map-foot{font-size:.78rem;color:var(--muted);margin-top:8px}.map-foot a{color:var(--orange)}
+@media (max-width:900px){#gmap{height:420px}.map-legend{position:static;flex-direction:row;flex-wrap:wrap;gap:4px 12px;border-radius:0;font-size:.7rem}.map-legend b{width:100%}}
+</style></head><body>
+<nav class="topbar"><div class="topbar-logo"><span class="mark">WF</span> Wiley Fox <span class="sep">/</span> <span class="city">London</span></div>
+  <div class="topbar-nav"><a href="#safety">Safety</a><a href="#stay">Stay</a><a href="#top">See</a><a href="#eat">Eat</a><a href="#practical">Getting around</a><a href="#local-tips">Local tips</a><a href="#sources">Sources</a></div>
+  <div class="topbar-actions"><a href="London_Guide.pdf" class="topbar-back">Download PDF</a><a href="https://www.thewileyfox.com" class="topbar-back">Open the map</a></div></nav>
+
+<header class="cover-hero"><img class="photo" src="img/cover.jpg" alt="The City of London from the Thames"><div class="photo-overlay"></div>
+  <div class="cover-top"><div class="cover-logo-box">WF</div><div class="cover-edition"><div class="ed-badge">2026 · Issue 01</div><div>Wiley Fox Travel</div><div>Families and solo travellers</div></div></div>
+  <div class="cover-tagline">The Wiley Fox guide to</div>
+  <div class="wordmark-wrap"><div class="city-wordmark">London</div></div>
+  <div class="cover-subtitle">For families &amp; solo travellers</div>
+  <p class="cover-blurb">What 13 travel creators actually say about London, checked against the latest police data - where to stay, where to take care, how to get around and what it costs.</p>
+  <div class="cover-safety"><div class="safety-score-pill"><div class="score-num" style="color:var(--safety-3)">3</div>
+    <div class="score-meta"><div class="score-headline">Wiley Fox rating · Moderate</div><div class="score-label">out of 5 · police data May 2026 to Jul 2026</div>
+    <div class="score-source">Creator feeling 4/5 · Relaxed, with big-city awareness</div></div></div></div>
+</header>
+
+<div class="stat-strip"><div class="container"><div class="stat-item"><div class="stat-number">£8.90</div><div class="stat-label">Daily Tube cap, zones 1-2</div><div class="stat-desc">Contactless or phone. Caps are frozen until March 2027 (TfL).</div></div><div class="stat-item"><div class="stat-number">4,600</div><div class="stat-label">Crimes a month near Covent Garden</div><div class="stat-desc">Almost half are thefts - bag and phone awareness matters most here.</div></div><div class="stat-item"><div class="stat-number">13</div><div class="stat-label">Creators · 27 videos &amp; posts</div><div class="stat-desc">Paraphrased and credited, cross-checked with police data.</div></div></div></div>
+
+<section id="overview" class="overview"><div class="container"><div class="section-rule">Chapter One · The City</div>
+<div class="overview-grid"><div><p class="overview-lede">London is huge - more a region than a city - so the single best decision you make is where you stay. Creators agree on one rule above all others: book within a ten-minute walk of a Tube station, and group each day by neighbourhood rather than criss-crossing town.</p><p>For families it is one of the easiest capitals in the world. The big museums are free, the parks are enormous, and the Tube, buses and river boats reach almost everything. Children under 11 travel free on the Tube and buses with a paying adult.</p><p>For solo travellers it is lively every night of the week. The risks are ordinary big-city ones, and they cluster in predictable places. This guide shows you where, using the same police data that powers the Wiley Fox map.</p><div class="wf-cta"><div class="wf-cta-mark">WF</div><p>Check any hotel street on the Wiley Fox map before you book - tap it for the latest month of recorded crime nearby.</p>
+      <a class="btn btn-primary btn-sm" href="https://www.thewileyfox.com" target="_blank" rel="noopener">Open Wiley Fox</a></div></div>
+<aside class="overview-sidebar"><h4>Fast facts</h4><div class="fact-row"><span class="fact-label">Currency</span><span class="fact-value">Pound sterling (GBP) - almost everywhere is contactless</span></div><div class="fact-row"><span class="fact-label">Language</span><span class="fact-value">English</span></div><div class="fact-row"><span class="fact-label">Time zone</span><span class="fact-value">GMT / BST (UTC+1 in summer)</span></div><div class="fact-row"><span class="fact-label">Plug</span><span class="fact-value">Type G (three square pins)</span></div><div class="fact-row"><span class="fact-label">Emergency</span><span class="fact-value">999 · non-emergency police 101</span></div><div class="fact-row"><span class="fact-label">Entry</span><span class="fact-value">Many visitors now need a UK ETA - £20 since April 2026</span></div><div class="fact-row"><span class="fact-label">Tipping</span><span class="fact-value">12.5% service is usually already on the bill</span></div><div class="fact-row"><span class="fact-label">Best time</span><span class="fact-value">May, or September to October</span></div></aside></div></div></section>
+
+<section id="safety"><div class="container"><div class="section-rule">Chapter Two · Safety</div>
+<div class="section-label">What the data and the creators say</div><h2 class="section-title">How it feels, and what the numbers show</h2>
+<div class="two-col"><div class="panel"><h3>The data</h3><p>London is a well-policed city and most visits pass without trouble. The main risk for visitors is theft: pickpocketing and phone snatching in the busiest central areas. Violence against tourists is rare and concentrated late at night around nightlife and some outer town centres.</p></div><div class="panel"><h3>The creators</h3><p>Every creator we reviewed describes London as comfortable for visitors, including families. The repeated warnings are practical ones: watch your phone near the kerb, keep bags zipped in crowds, never leave a phone on a pub table, and look right before you cross.</p></div></div>
+<h3 class="sub-h" id="map">The Wiley Fox crime map of London</h3>
+<p class="section-sub">Every recorded street crime in Jul 2026, weighted by seriousness the same way as the Wiley Fox app and grouped into 350-metre hexagons. Colours compare each hexagon with the rest of London: red marks the busiest 5% of the city. Blank areas had no recorded crime. Busy, well-policed places like the West End show up red because so many people pass through them. For a street-level score, open the Wiley Fox map.</p>
+<div class="map-wrap"><div id="gmap"></div>
+<div class="map-legend"><b>Recorded crime vs rest of London</b><span><i style="background:#D7263D"></i>Highest 5%</span><span><i style="background:#F46036"></i>Next 10%</span><span><i style="background:#FFC857"></i>Next 20%</span><span><i style="background:#A4C957"></i>Middle 30%</span><span><i style="background:#3FA34D"></i>Lowest 35%</span></div></div>
+<p class="map-foot">64,789 crimes · data.police.uk · <a href="https://www.thewileyfox.com" target="_blank" rel="noopener">Check any street live on the Wiley Fox map</a></p>
+<h3 class="sub-h">Recorded crime by area</h3><p class="section-sub">Recorded crimes are the monthly average for May to July 2026 within roughly one mile of each area centre (data.police.uk). Busy tourist areas record more crime partly because far more people pass through them; the circles for Soho, Covent Garden, Leicester Square and Oxford Street overlap.</p>
+<div class="bars"><div class="bar-row"><span class="bar-name">Richmond</span>
+  <span class="bar-track"><span class="bar-fill" style="width:6.0%;background:var(--safety-5)"></span></span>
+  <span class="bar-val">292</span></div><div class="bar-row"><span class="bar-name">Wimbledon</span>
+  <span class="bar-track"><span class="bar-fill" style="width:7.2%;background:var(--safety-5)"></span></span>
+  <span class="bar-val">351</span></div><div class="bar-row"><span class="bar-name">Hampstead</span>
+  <span class="bar-track"><span class="bar-fill" style="width:13.1%;background:var(--safety-4)"></span></span>
+  <span class="bar-val">637</span></div><div class="bar-row"><span class="bar-name">Greenwich</span>
+  <span class="bar-track"><span class="bar-fill" style="width:16.0%;background:var(--safety-4)"></span></span>
+  <span class="bar-val">780</span></div><div class="bar-row"><span class="bar-name">Lewisham</span>
+  <span class="bar-track"><span class="bar-fill" style="width:22.6%;background:var(--safety-4)"></span></span>
+  <span class="bar-val">1,104</span></div><div class="bar-row"><span class="bar-name">Kensington (High St)</span>
+  <span class="bar-track"><span class="bar-fill" style="width:23.0%;background:var(--safety-4)"></span></span>
+  <span class="bar-val">1,123</span></div><div class="bar-row"><span class="bar-name">South Kensington</span>
+  <span class="bar-track"><span class="bar-fill" style="width:23.9%;background:var(--safety-4)"></span></span>
+  <span class="bar-val">1,166</span></div><div class="bar-row"><span class="bar-name">Croydon</span>
+  <span class="bar-track"><span class="bar-fill" style="width:27.8%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">1,354</span></div><div class="bar-row"><span class="bar-name">Stratford</span>
+  <span class="bar-track"><span class="bar-fill" style="width:29.1%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">1,421</span></div><div class="bar-row"><span class="bar-name">Canary Wharf</span>
+  <span class="bar-track"><span class="bar-fill" style="width:29.3%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">1,429</span></div><div class="bar-row"><span class="bar-name">Notting Hill</span>
+  <span class="bar-track"><span class="bar-fill" style="width:31.2%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">1,523</span></div><div class="bar-row"><span class="bar-name">Camden Town</span>
+  <span class="bar-track"><span class="bar-fill" style="width:33.7%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">1,644</span></div><div class="bar-row"><span class="bar-name">Paddington</span>
+  <span class="bar-track"><span class="bar-fill" style="width:42.0%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">2,051</span></div><div class="bar-row"><span class="bar-name">London Bridge / Borough</span>
+  <span class="bar-track"><span class="bar-fill" style="width:48.5%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">2,368</span></div><div class="bar-row"><span class="bar-name">Whitechapel</span>
+  <span class="bar-track"><span class="bar-fill" style="width:49.9%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">2,435</span></div><div class="bar-row"><span class="bar-name">Shoreditch</span>
+  <span class="bar-track"><span class="bar-fill" style="width:51.1%;background:var(--safety-3)"></span></span>
+  <span class="bar-val">2,493</span></div><div class="bar-row"><span class="bar-name">King&#x27;s Cross</span>
+  <span class="bar-track"><span class="bar-fill" style="width:57.1%;background:var(--safety-2)"></span></span>
+  <span class="bar-val">2,786</span></div><div class="bar-row"><span class="bar-name">South Bank / Waterloo</span>
+  <span class="bar-track"><span class="bar-fill" style="width:66.9%;background:var(--safety-2)"></span></span>
+  <span class="bar-val">3,266</span></div><div class="bar-row"><span class="bar-name">Westminster</span>
+  <span class="bar-track"><span class="bar-fill" style="width:68.7%;background:var(--safety-2)"></span></span>
+  <span class="bar-val">3,354</span></div><div class="bar-row"><span class="bar-name">Marylebone</span>
+  <span class="bar-track"><span class="bar-fill" style="width:82.4%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,019</span></div><div class="bar-row"><span class="bar-name">Leicester Square</span>
+  <span class="bar-track"><span class="bar-fill" style="width:94.0%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,587</span></div><div class="bar-row"><span class="bar-name">Covent Garden</span>
+  <span class="bar-track"><span class="bar-fill" style="width:94.8%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,626</span></div><div class="bar-row"><span class="bar-name">Soho</span>
+  <span class="bar-track"><span class="bar-fill" style="width:99.0%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,828</span></div><div class="bar-row"><span class="bar-name">Oxford Street</span>
+  <span class="bar-track"><span class="bar-fill" style="width:99.7%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,863</span></div><div class="bar-row"><span class="bar-name">Bloomsbury</span>
+  <span class="bar-track"><span class="bar-fill" style="width:100.0%;background:var(--safety-1)"></span></span>
+  <span class="bar-val">4,879</span></div></div>
+<div class="legend"><span><i style="background:var(--safety-5)"></i>Lowest</span><span><i style="background:var(--safety-4)"></i>Lower</span><span><i style="background:var(--safety-3)"></i>Moderate</span><span><i style="background:var(--safety-2)"></i>High</span><span><i style="background:var(--safety-1)"></i>Highest</span></div>
+<h3 class="sub-h" id="caution">Areas to take extra care</h3><p class="section-sub">None of these are no-go areas. Know the pattern, and plan your timing and your route home.</p>
+<div class="ranking-card">
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-1)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Leicester Square, Soho, Covent Garden &amp; Oxford Street</div>
+    <div class="caution-when">Take most care: All day, busiest evenings and weekends</div>
+    <p class="caution-note">The highest recorded crime in our sample, and nearly half of it is theft. Phone snatching by riders on e-bikes is the number-one warning from creators. Pedicab (rickshaw) drivers are unregulated - agree the price before you get in, or better, don&#x27;t.</p>
+    <div class="hood-data">4,587 crimes a month nearby · top: other theft, theft from the person, violent crime</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a>, <a href="https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA" target="_blank" rel="noopener">Suitcase Monkey</a></span>
+  </div>
+</div>
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-2)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Westminster Bridge &amp; the South Bank by the London Eye</div>
+    <div class="caution-when">Take most care: Daytime crowds</div>
+    <p class="caution-note">Prime pickpocket territory and the spot for the shell-and-cup street game. You will never win it - the &#x27;winners&#x27; are part of the act.</p>
+    <div class="hood-data">3,266 crimes a month nearby · top: theft from the person, other theft, violent crime</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span>
+  </div>
+</div>
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-2)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Whitechapel</div>
+    <div class="caution-when">Take most care: Late evening, around the station and main road</div>
+    <p class="caution-note">Brick Lane and the markets are worth a daytime visit. Recorded crime is lower than the West End, but violence and anti-social behaviour make up a larger share. Some creators suggest it as a budget base; with children or a late arrival, we&#x27;d stay further west.</p>
+    <div class="hood-data">2,435 crimes a month nearby · top: violent crime, anti social behaviour, shoplifting</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span>
+  </div>
+</div>
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-2)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Croydon town centre</div>
+    <div class="caution-when">Take most care: Evenings, around West Croydon</div>
+    <p class="caution-note">Violence is the top recorded category here. Cheap &#x27;central London&#x27; hotel deals are often in Croydon - a long commute and not where we&#x27;d base a family trip.</p>
+    <div class="hood-data">1,354 crimes a month nearby · top: violent crime, anti social behaviour, shoplifting</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a></span>
+  </div>
+</div>
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-2)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Lewisham town centre</div>
+    <div class="caution-when">Take most care: Evenings</div>
+    <p class="caution-note">Not a visitor area. A third of recorded crime is violence or robbery, the highest share in our sample. There&#x27;s no reason to base a trip here.</p>
+    <div class="hood-data">1,104 crimes a month nearby · top: violent crime, anti social behaviour, shoplifting</div>
+    <span class="credit">Wiley Fox data</span>
+  </div>
+</div>
+<div class="caution-row">
+  <div class="dot" style="background:var(--safety-2)"></div>
+  <div style="flex:1">
+    <div class="borough-name">Camden Market</div>
+    <div class="caution-when">Take most care: Weekends and summer crowds</div>
+    <p class="caution-note">Very crowded at weekends, with theft and anti-social behaviour on the high street. For independent shops without the crush, locals point to Camden Passage by Angel instead.</p>
+    <div class="hood-data">1,644 crimes a month nearby · top: violent crime, anti social behaviour, theft from the person</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w" target="_blank" rel="noopener">Camden David</a></span>
+  </div>
+</div></div>
+<div class="wf-cta"><div class="wf-cta-mark">WF</div><p>Heading back late? Use Safest Route on thewileyfox.com to pick a better-lit, lower-crime walk to your hotel, and keep SOS one tap away.</p>
+      <a class="btn btn-primary btn-sm" href="https://www.thewileyfox.com" target="_blank" rel="noopener">Open Wiley Fox</a></div>
+<h3 class="sub-h">Scams and tricks creators keep seeing</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Phone snatching</div>
+  <div class="practical-text">Riders on e-bikes grab phones from people walking near the kerb. Step into a shop doorway to check maps, and keep your phone on the building side.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a>, <a href="https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA" target="_blank" rel="noopener">Suitcase Monkey</a>, <a href="https://www.youtube.com/@DutchTravelManiac" target="_blank" rel="noopener">Dutch Travel Maniac</a></span></div><div class="practical-card"><div class="practical-title">Pub table theft</div>
+  <div class="practical-text">Phones and wallets left on tables vanish in seconds. Keep bags in front of you or under the table, never on the back of your chair.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div><div class="practical-card"><div class="practical-title">Pedicab overcharging</div>
+  <div class="practical-text">Rickshaws in the West End have charged tourists hundreds of pounds for short rides. There is no regulated fare.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a>, <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a></span></div><div class="practical-card"><div class="practical-title">Street games &amp; &#x27;free&#x27; gifts</div>
+  <div class="practical-text">The shell game, a &#x27;found&#x27; ring or a free bracelet always ends with someone wanting money.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span></div><div class="practical-card"><div class="practical-title">Fake petitions &amp; charity collectors</div>
+  <div class="practical-text">Clipboard petitions around the sights are often a set-up for a donation or a distraction. A polite &#x27;no thanks&#x27; and keep walking.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span></div><div class="practical-card"><div class="practical-title">Currency conversion at ATMs and card machines</div>
+  <div class="practical-text">Always choose to pay in pounds. Letting the machine convert to your home currency can cost far more.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span></div><div class="practical-card"><div class="practical-title">Unofficial theatre tickets</div>
+  <div class="practical-text">Buy from the theatre box office, TodayTix or the official TKTS booth in Leicester Square - not from people on the street.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div></div>
+</div></section>
+
+<section id="stay" class="alt"><div class="container"><div class="section-rule">Chapter Three · Where to base yourself</div>
+<div class="section-label">Neighbourhoods</div><h2 class="section-title">Where to stay</h2>
+<p class="section-sub">Pick an area first, then a hotel. Every area card shows the latest recorded crime within about a mile, so you can compare busy against calm.</p>
+<div class="hood-grid">
+<article class="hood-card"><figure class="ph"><img src="img/south-kensington.jpg" alt="South Kensington" loading="lazy"><figcaption>Photo: Diego Delso · <a href="https://commons.wikimedia.org/wiki/File:Museo_de_Historia_Natural,_Londres,_Inglaterra,_2022-11-25,_DD_50-52_HDR.jpg" target="_blank" rel="noopener">CC BY-SA 4.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">South Kensington</div>
+    <div class="tier-pill t4">Lower recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families</div>
+    <p class="hood-desc">Walk to the Natural History Museum, Science Museum and V&amp;A - all free. Leafy, residential and well connected on three Tube lines.</p>
+    <div class="hood-data">1,166 crimes a month nearby · 23% theft · 21% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/kensington-high-street.jpg" alt="Kensington (High Street)" loading="lazy"><figcaption>Photo: Diego Delso · <a href="https://commons.wikimedia.org/wiki/File:Jardines_de_Kensington,_Londres,_Inglaterra,_2022-11-25,_DD_06-11_PAN.jpg" target="_blank" rel="noopener">CC BY-SA 4.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Kensington (High Street)</div>
+    <div class="tier-pill t4">Lower recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families</div>
+    <p class="hood-desc">Next to Kensington Gardens and the Diana Memorial Playground. Calmer than the West End, still zone 1.</p>
+    <div class="hood-data">1,123 crimes a month nearby · 22% theft · 21% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/westminster-south-bank.jpg" alt="Westminster &amp; South Bank" loading="lazy"><figcaption>Photo: Diliff · <a href="https://commons.wikimedia.org/wiki/File:Palace_of_Westminster,_London_-_Feb_2007.jpg" target="_blank" rel="noopener">CC BY-SA 2.5</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Westminster &amp; South Bank</div>
+    <div class="tier-pill t2">High recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families · First-timers</div>
+    <p class="hood-desc">Big Ben, the London Eye and the river walk to Tower Bridge on foot. Busy by day, so recorded theft is high - keep bags zipped on Westminster Bridge.</p>
+    <div class="hood-data">3,266 crimes a month nearby · 40% theft · 22% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA" target="_blank" rel="noopener">Suitcase Monkey</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/marylebone.jpg" alt="Marylebone" loading="lazy"><figcaption>Photo: DiscoA340 · <a href="https://commons.wikimedia.org/wiki/File:Marylebone_High_Street,_London_(January_2024)_02.jpg" target="_blank" rel="noopener">CC BY-SA 4.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Marylebone</div>
+    <div class="tier-pill t1">Highest recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families · Solo</div>
+    <p class="hood-desc">Village feel on Marylebone High Street, minutes from Oxford Street without its crowds. The data circle includes Oxford Street, which inflates the count.</p>
+    <div class="hood-data">4,019 crimes a month nearby · 39% theft · 17% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/greenwich.jpg" alt="Greenwich" loading="lazy"><figcaption>Photo: Jakub Hałun · <a href="https://commons.wikimedia.org/wiki/File:View_of_the_Royal_Observatory_Greenwich_from_One_Tree_Hill_in_Greenwich_Park,_London,_20260719_0940_4508.jpg" target="_blank" rel="noopener">CC BY 4.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Greenwich</div>
+    <div class="tier-pill t4">Lower recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families</div>
+    <p class="hood-desc">Royal Observatory, a free view over the whole city and a riverboat commute into town.</p>
+    <div class="hood-data">780 crimes a month nearby · 13% theft · 31% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/richmond-or-wimbledon.jpg" alt="Richmond or Wimbledon" loading="lazy"><figcaption>Photo: Diliff · <a href="https://commons.wikimedia.org/wiki/File:Richmond_Riverside,_London_-_Sept_2008.jpg" target="_blank" rel="noopener">CC BY-SA 3.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Richmond or Wimbledon</div>
+    <div class="tier-pill t5">Lowest recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Families · Calm base</div>
+    <p class="hood-desc">The lowest recorded crime of every area we checked. Richmond has the river and Petersham Meadows; both are 20-45 minutes from central London by train.</p>
+    <div class="hood-data">292 crimes a month nearby · 12% theft · 28% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w" target="_blank" rel="noopener">Camden David</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/king-s-cross.jpg" alt="King&#x27;s Cross" loading="lazy"><figcaption>Photo: mattbuck (category) · <a href="https://commons.wikimedia.org/wiki/File:London_MMB_%C2%BB1B4_Central_St_Martin%27s_College_of_Art_and_Design.jpg" target="_blank" rel="noopener">CC BY-SA 4.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">King&#x27;s Cross</div>
+    <div class="tier-pill t2">High recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Solo · Rail travellers</div>
+    <p class="hood-desc">London&#x27;s best-connected hub, with six Tube lines and Eurostar. Busy around the station at night; the canal-side Granary Square area is calmer.</p>
+    <div class="hood-data">2,786 crimes a month nearby · 31% theft · 22% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/borough-london-bridge.jpg" alt="Borough &amp; London Bridge" loading="lazy"><figcaption>Photo: Jeremy Keith from Brighton &amp; Hove, United Kingdom · <a href="https://commons.wikimedia.org/wiki/File:Borough_Market_(4701274756).jpg" target="_blank" rel="noopener">CC BY 2.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Borough &amp; London Bridge</div>
+    <div class="tier-pill t3">Moderate recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Solo</div>
+    <p class="hood-desc">Borough Market, riverside pubs and quick links everywhere. Bermondsey next door has a quieter, village feel.</p>
+    <div class="hood-data">2,368 crimes a month nearby · 38% theft · 21% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a></span>
+  </div>
+</article>
+<article class="hood-card"><figure class="ph"><img src="img/shoreditch.jpg" alt="Shoreditch" loading="lazy"><figcaption>Photo: Marathon · <a href="https://commons.wikimedia.org/wiki/File:Street_art_off_Brick_Lane_-_geograph.org.uk_-_4329038.jpg" target="_blank" rel="noopener">CC BY-SA 2.0</a></figcaption></figure>
+  <div class="hood-head"><div class="hood-name">Shoreditch</div>
+    <div class="tier-pill t3">Moderate recorded crime</div></div>
+  <div class="hood-body">
+    <div class="hood-tagline">Solo</div>
+    <p class="hood-desc">Street art, food and nightlife. Great for a younger solo trip - plan your late-night route home.</p>
+    <div class="hood-data">2,493 crimes a month nearby · 22% theft · 24% violence or robbery</div>
+    <span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span>
+  </div>
+</article></div>
+<h3 class="sub-h">Hotels we'd start with</h3>
+<div class="affiliate-note">Wiley Fox may earn a small commission if you book through these links. Your price stays the same.</div>
+<div class="hotel-grid">
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">Victoria · Families</div>
+  <div class="hotel-name">The Rubens at the Palace</div>
+  <p class="hotel-desc">Opposite the Royal Mews, walking distance to Buckingham Palace and St James&#x27;s Park.</p>
+  <div class="hotel-footer"><div class="hotel-price">££££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=The+Rubens+at+the+Palace+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Wiley Fox pick</span></div>
+</div></article>
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">South Bank · Families</div>
+  <div class="hotel-name">Park Plaza County Hall</div>
+  <p class="hotel-desc">Family rooms beside the London Eye and the river path.</p>
+  <div class="hotel-footer"><div class="hotel-price">£££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=Park+Plaza+County+Hall+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Wiley Fox pick</span></div>
+</div></article>
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">South Kensington · Families</div>
+  <div class="hotel-name">The Ampersand Hotel</div>
+  <p class="hotel-desc">A short walk to three free museums in the calmest of the central areas we checked.</p>
+  <div class="hotel-footer"><div class="hotel-price">££££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=The+Ampersand+Hotel+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Wiley Fox pick</span></div>
+</div></article>
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">Westminster · Families &amp; solo</div>
+  <div class="hotel-name">St James&#x27; Court, A Taj Hotel</div>
+  <p class="hotel-desc">Quiet courtyard hotel near Buckingham Palace - used as a base by Curly Tales.</p>
+  <div class="hotel-footer"><div class="hotel-price">£££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=St+James+Court+A+Taj+Hotel+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Via <a href="https://www.youtube.com/channel/UCDnq05Q89oYq-Tz5boL73Tw" target="_blank" rel="noopener">Curly Tales</a></span></div>
+</div></article>
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">Holborn · Solo</div>
+  <div class="hotel-name">The Hoxton, Holborn</div>
+  <p class="hotel-desc">A buzzy lobby with good wifi, walkable to Covent Garden and the British Museum. Camden David rates the Hoxton brand.</p>
+  <div class="hotel-footer"><div class="hotel-price">££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=The+Hoxton+Holborn+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Via <a href="https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w" target="_blank" rel="noopener">Camden David</a></span></div>
+</div></article>
+<article class="hotel-card"><div class="hotel-body">
+  <div class="hotel-meta">Tower Hill · Solo</div>
+  <div class="hotel-name">citizenM Tower of London</div>
+  <p class="hotel-desc">Compact rooms beside the Tower and the river, on the District and Circle lines.</p>
+  <div class="hotel-footer"><div class="hotel-price">££ <small>price band</small></div>
+    <a href="https://www.booking.com/searchresults.html?ss=citizenM+Tower+of+London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary btn-sm">See prices</a></div>
+  <div style="margin-top:10px"><span class="credit">Wiley Fox pick</span></div>
+</div></article>
+<article class="hotel-card search-card"><div class="hotel-name">Search all London hotels</div><p class="hotel-desc">Compare live prices, then check the street on the Wiley Fox map before you book.</p>
+<a href="https://www.booking.com/searchresults.html?ss=London&aid=YOUR_AID_HERE" target="_blank" rel="noopener sponsored" class="btn btn-primary">Search Booking.com</a></article></div>
+<div class="wf-cta"><div class="wf-cta-mark">WF</div><p>Clip a Wiley Fox QR wristband on each child. If you get separated in a crowd, anyone who scans it can contact you straight away - no app needed on their side.</p>
+      <a class="btn btn-primary btn-sm" href="https://www.thewileyfox.com" target="_blank" rel="noopener">Open Wiley Fox</a></div>
+</div></section>
+
+<section id="top"><div class="container"><div class="section-rule">Chapter Four · The Sights</div>
+<div class="section-label">What creators rate</div><h2 class="section-title">Ten things worth your time</h2>
+<p class="section-sub">Many of London's best experiences are free. Book the free ones early, because they fill up.</p><div class="top-list">
+<div class="top-row"><div class="top-rank">01</div>
+  <div class="top-content"><h3>The free museums</h3>
+    <div class="top-meta">South Kensington &amp; Bloomsbury <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">The Natural History Museum, Science Museum, V&amp;A and British Museum are free. Book a free time slot online to skip the queue.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span></div>
+  <div class="top-cta"><div class="price">Free</div>
+    <a href="https://www.nhm.ac.uk" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Details</a></div>
+</div>
+<div class="top-row"><div class="top-rank">02</div>
+  <div class="top-content"><figure class="ph"><img src="img/tower-of-london.jpg" alt="Tower of London" loading="lazy"><figcaption>Photo: Bob Collowan · <a href="https://commons.wikimedia.org/wiki/File:Tower_of_London_viewed_from_the_River_Thames.jpg" target="_blank" rel="noopener">CC BY-SA 3.0</a></figcaption></figure><h3>Tower of London</h3>
+    <div class="top-meta">Tower Hill <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">Crown Jewels and Beefeater stories. The evening Ceremony of the Keys is a few pounds but sells out a month ahead.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div>
+  <div class="top-cta"><div class="price">Paid</div>
+    <a href="https://www.getyourguide.com/s/?q=Tower+of+London&partner_id=WXZGXR9" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Book</a></div>
+</div>
+<div class="top-row"><div class="top-rank">03</div>
+  <div class="top-content"><h3>Free sky-high views</h3>
+    <div class="top-meta">The City <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">Sky Garden and Horizon 22 are free but need booking in advance. Sky Garden is higher than the London Eye.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a>, <a href="https://www.youtube.com/channel/UCWyPjY3I86JQt1u3mV8OyUw" target="_blank" rel="noopener">Through My Lens</a></span></div>
+  <div class="top-cta"><div class="price">Free, book ahead</div>
+    <a href="https://skygarden.london" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Details</a></div>
+</div>
+<div class="top-row"><div class="top-rank">04</div>
+  <div class="top-content"><figure class="ph"><img src="img/changing-the-guard.jpg" alt="Changing the Guard" loading="lazy"><figcaption>Photo: Carlos Delgado · <a href="https://commons.wikimedia.org/wiki/File:Guard_of_Buckingham_Palace_-_01.jpg" target="_blank" rel="noopener">CC BY-SA 3.0</a></figcaption></figure><h3>Changing the Guard</h3>
+    <div class="top-meta">Buckingham Palace <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">Not every day - check the official schedule the week before. Arrive early and watch your bag in the crowd.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a></span></div>
+  <div class="top-cta"><div class="price">Free</div>
+    <a href="https://www.householddivision.org.uk/changing-the-guard" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Details</a></div>
+</div>
+<div class="top-row"><div class="top-rank">05</div>
+  <div class="top-content"><figure class="ph"><img src="img/thames-path-london-eye-to-tower-bridge.jpg" alt="Thames path: London Eye to Tower Bridge" loading="lazy"><figcaption>Photo: Diego Delso · <a href="https://commons.wikimedia.org/wiki/File:Puente_de_la_Torre,_Londres,_Inglaterra,_2014-08-11,_DD_092.JPG" target="_blank" rel="noopener">CC BY-SA 4.0</a></figcaption></figure><h3>Thames path: London Eye to Tower Bridge</h3>
+    <div class="top-meta">South Bank <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">The classic riverside walk past Tate Modern, Shakespeare&#x27;s Globe and Borough Market.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA" target="_blank" rel="noopener">Suitcase Monkey</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span></div>
+  <div class="top-cta"><div class="price">Free</div>
+    <a href="https://www.getyourguide.com/s/?q=Thames+river+cruise&partner_id=WXZGXR9" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Book</a></div>
+</div>
+<div class="top-row"><div class="top-rank">06</div>
+  <div class="top-content"><h3>Greenwich &amp; the Royal Observatory</h3>
+    <div class="top-meta">Greenwich <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">One of the best free city views, stand on the Prime Meridian, and arrive by river boat.</p><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a>, <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a></span></div>
+  <div class="top-cta"><div class="price">Free view</div>
+    <a href="https://www.getyourguide.com/s/?q=Greenwich&partner_id=WXZGXR9" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Book</a></div>
+</div>
+<div class="top-row"><div class="top-rank">07</div>
+  <div class="top-content"><h3>Diana Memorial Playground</h3>
+    <div class="top-meta">Kensington Gardens <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">A pirate-ship playground next to Kensington Palace - a favourite for under-12s.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a></span></div>
+  <div class="top-cta"><div class="price">Free</div>
+    <a href="https://www.royalparks.org.uk" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Details</a></div>
+</div>
+<div class="top-row"><div class="top-rank">08</div>
+  <div class="top-content"><h3>Regent&#x27;s Canal walk</h3>
+    <div class="top-meta">Little Venice to King&#x27;s Cross <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">A traffic-free towpath through Camden. The Paddington to King&#x27;s Cross stretch suits families.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCmHn9fGfK0NmI9fMzuaYnjA" target="_blank" rel="noopener">Suitcase Monkey</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span></div>
+  <div class="top-cta"><div class="price">Free</div>
+    <a href="https://www.thewileyfox.com" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Details</a></div>
+</div>
+<div class="top-row"><div class="top-rank">09</div>
+  <div class="top-content"><h3>A West End show</h3>
+    <div class="top-meta">Covent Garden &amp; Soho <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">Enter ticket lotteries and check TodayTix for same-day deals. Skip the street touts.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span></div>
+  <div class="top-cta"><div class="price">From about £25</div>
+    <a href="https://www.getyourguide.com/s/?q=West+End+show&partner_id=WXZGXR9" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Book</a></div>
+</div>
+<div class="top-row"><div class="top-rank">10</div>
+  <div class="top-content"><h3>Harry Potter Studio Tour</h3>
+    <div class="top-meta">Leavesden, outside London <span class="sep">·</span> Great for kids</div>
+    <p class="top-desc">About an hour north of London - book weeks ahead, it sells out.</p><span class="credit">Via <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a>, <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div>
+  <div class="top-cta"><div class="price">Paid</div>
+    <a href="https://www.getyourguide.com/s/?q=Harry+Potter+Studio+Tour+London&partner_id=WXZGXR9" target="_blank" rel="noopener sponsored" class="btn btn-ghost btn-sm">Book</a></div>
+</div></div>
+<h3 class="sub-h">If you only have one day</h3><div class="itin-day"><div class="itin-day-num"><span class="label">One</span><span class="num">1</span></div><div class="itin-day-content"><h3>The classic loop</h3><div class="itin-block"><span class="itin-time">09:00</span><span class="itin-action"><strong>Westminster.</strong> Big Ben and Westminster Abbey, then walk to Buckingham Palace for Changing the Guard (check it&#x27;s on).</span></div><div class="itin-block"><span class="itin-time">12:30</span><span class="itin-action"><strong>Lunch.</strong> Regency Café for a proper fry-up, or pick up a meal deal for a picnic in St James&#x27;s Park.</span></div><div class="itin-block"><span class="itin-time">14:00</span><span class="itin-action"><strong>South Bank.</strong> Cross the river and walk the Thames path past Tate Modern to Borough Market.</span></div><div class="itin-block"><span class="itin-time">17:30</span><span class="itin-action"><strong>Tower Bridge.</strong> Walk over Tower Bridge and on to the Tower of London at golden hour.</span></div><div class="itin-block"><span class="itin-time">19:30</span><span class="itin-action"><strong>Dinner.</strong> Chinatown: Four Seasons for roast duck and Bun House for dessert. Keep phones away on the busy streets.</span></div></div></div>
+<h3 class="sub-h">Three days, grouped by area</h3><div class="itin-day"><div class="itin-day-num"><span class="label">Day</span><span class="num">1</span></div>
+  <div class="itin-day-content"><h3>Royal London</h3>
+  <div class="itin-block"><span class="itin-time">AM</span><span class="itin-action">Westminster, Buckingham Palace, St James&#x27;s Park, then the Thames path to Borough Market.</span></div>
+  <div class="itin-block"><span class="itin-time">PM</span><span class="itin-action">Tower of London and Tower Bridge.</span></div>
+  <div class="itin-block"><span class="itin-time">EVE</span><span class="itin-action">Chinatown and a West End show.</span></div></div></div><div class="itin-day"><div class="itin-day-num"><span class="label">Day</span><span class="num">2</span></div>
+  <div class="itin-day-content"><h3>Museums &amp; parks</h3>
+  <div class="itin-block"><span class="itin-time">AM</span><span class="itin-action">Natural History Museum and V&amp;A (free, book a slot).</span></div>
+  <div class="itin-block"><span class="itin-time">PM</span><span class="itin-action">Kensington Gardens and the Diana Memorial Playground.</span></div>
+  <div class="itin-block"><span class="itin-time">EVE</span><span class="itin-action">Dinner at Dishoom or Homeslice in Covent Garden.</span></div></div></div><div class="itin-day"><div class="itin-day-num"><span class="label">Day</span><span class="num">3</span></div>
+  <div class="itin-day-content"><h3>River &amp; views</h3>
+  <div class="itin-block"><span class="itin-time">AM</span><span class="itin-action">Uber Boat to Greenwich and the Royal Observatory.</span></div>
+  <div class="itin-block"><span class="itin-time">PM</span><span class="itin-action">Sky Garden or Horizon 22 (pre-booked) and a Leadenhall Market wander.</span></div>
+  <div class="itin-block"><span class="itin-time">EVE</span><span class="itin-action">Shoreditch for food; plan a cab or Safest Route home.</span></div></div></div>
+</div></section>
+
+<section id="eat" class="alt"><div class="container"><div class="section-rule">Chapter Five · The Table</div>
+<div class="section-label">With TOPJAW</div><h2 class="section-title">Where to eat</h2>
+<p class="section-sub">Restaurant picks lead with TOPJAW, who have interviewed more than 200 chefs about where they really eat. Every place is credited to the creator who recommended it.</p>
+<div class="eat-list">
+<article class="eat-row"><div class="eat-price">£</div>
+  <div class="eat-info"><h3>Regency Café</h3>
+    <div class="eat-meta">Westminster <span class="sep">·</span> Classic London café</div>
+    <p class="eat-desc">A time-warp caff that has starred in films. A full breakfast for about the price of a sourdough loaf elsewhere - have your order ready.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://regencycafe.co.uk" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">£</div>
+  <div class="eat-info"><h3>Bun House</h3>
+    <div class="eat-meta">Chinatown <span class="sep">·</span> Cantonese buns</div>
+    <p class="eat-desc">Filled steamed buns - pork, veggie and a custard one that children love.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://bun.house" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Four Seasons (Wardour Street)</h3>
+    <div class="eat-meta">Chinatown <span class="sep">·</span> Cantonese roast meats</div>
+    <p class="eat-desc">The place for roast duck and roast pork over rice.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.fs-restaurants.co.uk" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Arcade Food Hall</h3>
+    <div class="eat-meta">Tottenham Court Road <span class="sep">·</span> Food hall</div>
+    <p class="eat-desc">Eight kitchens under one roof - easy when everyone wants something different. Upstairs, Plaza Khao Gaeng (Michelin-listed southern Thai) does one of London&#x27;s best beef massaman curries.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.arcadefoodhall.com" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Seashell of Lisson Grove</h3>
+    <div class="eat-meta">Marylebone <span class="sep">·</span> Fish &amp; chips</div>
+    <p class="eat-desc">A long-running chippy on TOPJAW&#x27;s fish and chips list - near Regent&#x27;s Park and Baker Street.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.seashellrestaurant.co.uk" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Dishoom</h3>
+    <div class="eat-meta">Several sites incl. Covent Garden &amp; King&#x27;s Cross <span class="sep">·</span> Bombay café</div>
+    <p class="eat-desc">The London Indian restaurant creators send everyone to. Expect a queue at peak times.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a>, <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a></span></div></div>
+  <a href="https://www.dishoom.com" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Homeslice</h3>
+    <div class="eat-meta">Neal&#x27;s Yard, Seven Dials <span class="sep">·</span> Pizza</div>
+    <p class="eat-desc">Giant shareable pizzas a few steps from Covent Garden - a better bet than Leicester Square chains.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a></span></div></div>
+  <a href="https://www.homeslicepizza.co.uk" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">£</div>
+  <div class="eat-info"><h3>Beigel Bake</h3>
+    <div class="eat-meta">Brick Lane <span class="sep">·</span> Bakery, open 24 hours</div>
+    <p class="eat-desc">The salt beef bagel is a London rite of passage. A good daytime stop on a Brick Lane visit.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/channel/UCe2PZFToFbyRZWdim5YWb7w" target="_blank" rel="noopener">Camden David</a></span></div></div>
+  <a href="https://www.google.com/maps/search/Beigel+Bake+Brick+Lane" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Crisp Pizza</h3>
+    <div class="eat-meta">Hammersmith (W6) <span class="sep">·</span> Pizza in a pub</div>
+    <p class="eat-desc">TOPJAW&#x27;s pick for London&#x27;s best pizza. Book a couple of weeks ahead; they suggest the Picante and the hot-honey Vecna.</p>
+    <div class="eat-tags"><span class="eat-tag">Grown-ups</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.google.com/maps/search/Crisp+Pizza+Hammersmith" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Wingmans</h3>
+    <div class="eat-meta">Soho &amp; Kilburn <span class="sep">·</span> Chicken wings</div>
+    <p class="eat-desc">Award-winning wings, casual and quick.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.google.com/maps/search/Wingmans+London" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">£</div>
+  <div class="eat-info"><h3>Pophams</h3>
+    <div class="eat-meta">London Fields &amp; Islington <span class="sep">·</span> Bakery</div>
+    <p class="eat-desc">Pastries baked on site all day. The order: a cardamom bun and a black americano.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.pophamsbakery.com" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">££</div>
+  <div class="eat-info"><h3>Donia</h3>
+    <div class="eat-meta">Kingly Court, Carnaby <span class="sep">·</span> Filipino</div>
+    <p class="eat-desc">Upstairs in Kingly Court. Try the ube choux for dessert.</p>
+    <div class="eat-tags"><span class="eat-tag">Grown-ups</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.google.com/maps/search/Donia+Kingly+Court" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article>
+<article class="eat-row"><div class="eat-price">£££</div>
+  <div class="eat-info"><h3>The Harwood Arms</h3>
+    <div class="eat-meta">Fulham <span class="sep">·</span> Sunday roast</div>
+    <p class="eat-desc">Chefs&#x27; choice for a Sunday roast. Book well ahead.</p>
+    <div class="eat-tags"><span class="eat-tag safe">Family friendly</span><span class="credit">Via <a href="https://www.youtube.com/@topjaw" target="_blank" rel="noopener">TOPJAW</a></span></div></div>
+  <a href="https://www.harwoodarms.com" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Visit</a>
+</article></div><p class="small-note">For a grown-ups&#x27; night out, TOPJAW&#x27;s chef interviews point to The Devonshire in Soho for a pint of Guinness and the Connaught Bar in Mayfair for a martini. Opening times and menus change, so check before you travel. Wiley Fox is not paid for restaurant listings.</p>
+</div></section>
+
+<section id="practical"><div class="container"><div class="section-rule">Chapter Six · Getting around &amp; costs</div>
+<div class="section-label">Before you go</div><h2 class="section-title">Getting around London</h2>
+<div class="practical-grid"><div class="practical-card"><div class="practical-title">From the airport</div>
+  <div class="practical-text">Heathrow is on the Piccadilly and Elizabeth lines - tap your card and go. Creators rate the Heathrow Express as quick but poor value unless you are staying at Paddington. Check late-night options before booking a cheap arrival into Stansted or Luton; the last trains can leave you with an expensive taxi.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a></span></div><div class="practical-card"><div class="practical-title">Pay with contactless</div>
+  <div class="practical-text">Tap the same card or phone in and out. Daily caps are applied automatically: £8.90 a day for zones 1-2 on Tube and rail, frozen until March 2027. Paper tickets and paper day Travelcards cost more.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a>, <a href="https://www.youtube.com/channel/UCobaqk2JEYLiBJAhJZG0Oiw" target="_blank" rel="noopener">The Tour Guy</a></span></div><div class="practical-card"><div class="practical-title">Buses</div>
+  <div class="practical-text">£1.75 a ride with unlimited changes within an hour (the Hopper fare). Routes 11 and 24 pass many of the big sights and make a cheap sightseeing tour from the top deck.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCmhMC-AS8JDy7RSY4xfFvNw" target="_blank" rel="noopener">Sophie Nadeau</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div><div class="practical-card"><div class="practical-title">Children</div>
+  <div class="practical-text">Under-11s travel free on the Tube and buses with a paying adult. Avoid the Tube at 7:30-9am and 5-7pm with small children and pushchairs.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a></span></div><div class="practical-card"><div class="practical-title">Taxis</div>
+  <div class="practical-text">Black cabs are licensed and heavily regulated - if the orange light is on, it&#x27;s free. Free Now books licensed cabs by app and shows the fare estimate. Ignore unlicensed minicabs that approach you in the street.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a>, <a href="https://www.youtube.com/channel/UCu_ddDIgIZREFg_N_1-z4nQ" target="_blank" rel="noopener">Happy to Wander</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span></div><div class="practical-card"><div class="practical-title">By river</div>
+  <div class="practical-text">The Uber Boat (Thames Clippers) is part of the public network - tap in and ride to Greenwich or the Tower. A relaxing option when little legs are tired.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCOpA8lkWhQFdkfgi-o_oOOQ" target="_blank" rel="noopener">Destination Well Known</a>, <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a></span></div><div class="practical-card"><div class="practical-title">Walk more</div>
+  <div class="practical-text">Many central Tube stops are only 5-15 minutes apart on foot. Victoria to Buckingham Palace, for example, is faster walking. Stand on the right on escalators.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UCFr3sz2t3bDp6Cux08B93KQ" target="_blank" rel="noopener">Wolters World</a>, <a href="https://www.youtube.com/channel/UCT7H_xchRHaT9zr5GalIZVA" target="_blank" rel="noopener">Evan Edinger</a></span></div><div class="practical-card"><div class="practical-title">Late at night</div>
+  <div class="practical-text">If you&#x27;re on your own late, a licensed cab is worth the money over a long walk. Plan the route home before you head out - Wiley Fox&#x27;s Safest Route helps.</div><span class="credit">Via <a href="https://www.youtube.com/channel/UC2n4MvLJDH2-GWzjJrC58Zw" target="_blank" rel="noopener">Love and London</a></span></div></div>
+<div class="two-col"><div class="data-panel"><h3>What it costs</h3><div class="data-row"><span class="data-label">Tube, zones 1-2, full day</span><span class="data-value">£8.90 cap <small>2026</small></span></div><div class="data-row"><span class="data-label">Bus ride (Hopper)</span><span class="data-value">£1.75 <small>2026</small></span></div><div class="data-row"><span class="data-label">UK ETA (many visitors)</span><span class="data-value">£20 <small>Apr 2026</small></span></div><div class="data-row"><span class="data-label">Supermarket meal deal (sandwich, snack, drink)</span><span class="data-value">about £5 <small>Nov 2024</small></span></div><div class="data-row"><span class="data-label">Central 4-star hotel, no breakfast</span><span class="data-value">about £270 a night <small>Jan 2025</small></span></div><div class="data-row"><span class="data-label">Pint in a central pub</span><span class="data-value">about £7.50 <small>May 2023 - check current price</small></span></div><div class="data-row"><span class="data-label">Espresso at Algerian Coffee Stores, Soho</span><span class="data-value">about £1.20 <small>Apr 2024</small></span></div><div class="data-row"><span class="data-label">Restaurant service charge</span><span class="data-value">12.5% usually added <small>2025</small></span></div><p class="panel-foot">Creator prices carry the video date. Anything older than 18 months is marked to check.</p></div>
+<div><h3 class="sub-h" style="margin-top:0">Quick tips</h3><div class="practical-grid single"><div class="practical-card"><div class="practical-title">Look right</div><div class="practical-text">Traffic drives on the left. Wolters World has seen tourists hit stepping out the wrong way - follow the &#x27;look right&#x27; markings.</div></div><div class="practical-card"><div class="practical-title">Book the free stuff</div><div class="practical-text">Sky Garden, Horizon 22 and museum time slots are free but go fast. Book as soon as your dates are set.</div></div><div class="practical-card"><div class="practical-title">Don&#x27;t overload days</div><div class="practical-text">One or two paid sights a day, grouped by area. London rewards wandering.</div></div><div class="practical-card"><div class="practical-title">Skip the &#x27;awful four&#x27; combo</div><div class="practical-text">Love and London&#x27;s name for pricey ticket bundles (Dungeon, Shrek, Aquarium, Madame Tussauds). Fine for small kids; poor value otherwise.</div></div><div class="practical-card"><div class="practical-title">Keep kids out of phone boxes</div><div class="practical-text">The famous red boxes are often used as toilets. Photo outside, not in.</div></div><div class="practical-card"><div class="practical-title">Tag the kids</div><div class="practical-text">A Wiley Fox QR wristband on each child means anyone who finds them can reach you in seconds.</div></div></div></div></div>
+<div class="wf-cta"><div class="wf-cta-mark">WF</div><p>Seen something other travellers should know? Drop a community report on the map - it helps rate the area for the next family.</p>
+      <a class="btn btn-primary btn-sm" href="https://www.thewileyfox.com" target="_blank" rel="noopener">Open Wiley Fox</a></div>
+</div></section>
+
+<section id="local-tips" class="alt"><div class="container"><div class="section-rule">Chapter Seven · Local tips</div>
+<div class="section-label">The small things visitors worry about</div><h2 class="section-title">Local tips for London</h2>
+<p class="section-sub">Every tip here was checked against an official or trusted source (TfL, National Rail, gov.uk, NHS, the Royal Parks and others) on the date shown. Rules and prices change, so tap the link to double-check before you travel.</p>
+<h3 class="sub-h">Paying for transport</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Can I pay for the Tube with my phone?</div><div class="practical-text">Yes – just tap Apple Pay, Google Pay or a contactless card on the yellow reader; no need to buy a ticket or Oyster card first. <a class="lt-src" href="https://tfl.gov.uk/fares/how-to-pay-and-where-to-buy-tickets-and-oyster/pay-as-you-go/contactless-and-mobile-pay-as-you-go" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Will I overpay if I travel a lot in one day?</div><div class="practical-text">No – pay as you go is capped daily and across the Monday–Sunday week, but only if you touch in and out with the same card or phone every time. <a class="lt-src" href="https://tfl.gov.uk/fares/how-to-pay-and-where-to-buy-tickets-and-oyster/pay-as-you-go/contactless-and-mobile-pay-as-you-go" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Why was I charged twice or the wrong fare?</div><div class="practical-text">Keep your other cards away from your phone when you tap – the reader can pick the wrong card (&quot;card clash&quot;), which breaks your cap. <a class="lt-src" href="https://tfl.gov.uk/fares/how-to-pay-and-where-to-buy-tickets-and-oyster/pay-as-you-go/contactless-and-mobile-pay-as-you-go" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Do I touch out on the bus?</div><div class="practical-text">No – on buses and trams you only touch in when you board. On the Tube and trains, always touch out too or you may be charged a maximum fare. <a class="lt-src" href="https://tfl.gov.uk/fares/how-to-pay-and-where-to-buy-tickets-and-oyster/pay-as-you-go/contactless-and-mobile-pay-as-you-go" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Will my overseas card cost extra on the Tube?</div><div class="practical-text">It might – TfL warns non-UK cards can carry overseas transaction fees, so use a fee-free travel card or check with your bank before you go. <a class="lt-src" href="https://tfl.gov.uk/fares/how-to-pay-and-where-to-buy-tickets-and-oyster/pay-as-you-go/contactless-and-mobile-pay-as-you-go" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Do my kids need a ticket on the Tube?</div><div class="practical-text">Up to four children under 11 travel free with a fare-paying adult on the Tube, DLR, Overground and Elizabeth line, and they&#x27;re free on buses and trams too. <a class="lt-src" href="https://support.visitorshop.tfl.gov.uk/hc/en-gb/articles/16465480622354-Travelling-with-children" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Is there a cheaper fare for my teenager?</div><div class="practical-text">Yes – 11–15-year-olds pay child rates; visitors can ask station staff to add the Young Visitor discount (half adult pay as you go, up to 14 days) to a Visitor Oyster card. From 16 it&#x27;s adult fares. <a class="lt-src" href="https://support.visitorshop.tfl.gov.uk/hc/en-gb/articles/16465480622354-Travelling-with-children" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">How do families save on UK train tickets?</div><div class="practical-text">A Family &amp; Friends Railcard gives adults 1/3 off and kids 5–15 up to 60% off – at least one named adult and one child must travel together, and it works as a digital card in the app. <a class="lt-src" href="https://www.railcard.co.uk/family-and-friends-railcard/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Is there a railcard for two adults travelling together?</div><div class="practical-text">The Two Together Railcard saves 1/3 on train fares for two named adults travelling together – worth it for couples or friends doing day trips out of London. <a class="lt-src" href="https://www.railcard.co.uk/two-together-railcard/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Can the kids ride a Santander hire bike?</div><div class="practical-text">Only an adult 18+ can hire, but they can authorise riders aged 14 and over under their hire – younger children can&#x27;t ride them. <a class="lt-src" href="https://tfl.gov.uk/corporate/terms-and-conditions/santander-cycles" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">How do I avoid stairs with a buggy or wheelchair?</div><div class="practical-text">Check the step-free symbols on the official Tube map before you set off – many central stations still have stairs only. <a class="lt-src" href="https://content.tfl.gov.uk/standard-tube-map.pdf" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Water & snacks</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Where do I get cheap water and snacks?</div><div class="practical-text">Skip the coffee shop and pop into a Tesco, Sainsbury&#x27;s or Boots – their lunch meal deals (main, snack and drink for one price) are the best-value quick lunch in London. <a class="lt-src" href="https://www.tesco.com/shop/en-GB/browse/fresh-food/chilled-soup-sandwiches-and-salad-pots/lunch-meal-deals" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Can I ask for free tap water in a pub or restaurant?</div><div class="practical-text">Yes – any premises licensed to serve alcohol on site must give free tap water on request where it&#x27;s reasonably available, so just ask. <a class="lt-src" href="https://www.legislation.gov.uk/ukdsi/2010/9780111491553" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Where can I refill my water bottle for free?</div><div class="practical-text">Download the free Refill app – it maps cafés, shops and fountains that will top up your bottle at no charge. <a class="lt-src" href="https://www.refill.org.uk/about" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Toilets</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Where&#x27;s the nearest toilet?</div><div class="practical-text">Use the free Great British Public Toilet Map (toiletmap.org.uk) – it shows the nearest public loos, including accessible and baby-change facilities. <a class="lt-src" href="https://www.toiletmap.org.uk/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Do I have to pay for toilets at stations?</div><div class="practical-text">No – toilets at London&#x27;s National Rail stations are free, and TfL publishes a map of which Tube and rail stations have them. <a class="lt-src" href="https://www.visitlondon.com/traveller-information/essential-information/toilets-in-london" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Can I use a toilet without buying anything?</div><div class="practical-text">Museums and galleries usually have free loos, and in the City of London the Community Toilet Scheme lets you use toilets in participating shops, pubs and restaurants without buying. <a class="lt-src" href="https://www.visitlondon.com/traveller-information/essential-information/toilets-in-london" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Parks & play</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Are London&#x27;s playgrounds free?</div><div class="practical-text">Yes – the Royal Parks run 14 playgrounds, including Greenwich Park, Gloucester Gate in Regent&#x27;s Park and Bushy Park, and they&#x27;re free to use. <a class="lt-src" href="https://www.royalparks.org.uk/visit/things-see-do/playing" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Can we get into the Diana Memorial Playground?</div><div class="practical-text">It&#x27;s free for children up to 12 with a supervising adult, but it fills up fast on warm days – arrive at opening (10am) to avoid queues. <a class="lt-src" href="https://www.royalparks.org.uk/visit/parks/kensington-gardens/diana-memorial-playground" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Where can we go on a rainy day without spending much?</div><div class="practical-text">The big museums – British Museum, Natural History Museum, Science Museum, V&amp;A, National Gallery and Tate Modern – are free; book a free timed ticket online and note special exhibitions cost extra. <a class="lt-src" href="https://www.visitlondon.com/things-to-do/sightseeing/london-attraction/museum/free-museums-in-london" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Money & tipping</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Should I tip if there&#x27;s a service charge on the bill?</div><div class="practical-text">No need to add more – a service charge is effectively the tip, and by law all tips and service charges must be passed on in full to staff. <a class="lt-src" href="https://www.gov.uk/government/news/millions-to-take-home-more-cash-as-tipping-laws-come-into-force" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Does a tip paid on card reach the staff?</div><div class="practical-text">Yes – since October 2024 employers must pass on 100% of tips, including card tips, to workers without deductions. <a class="lt-src" href="https://www.gov.uk/government/news/millions-to-take-home-more-cash-as-tipping-laws-come-into-force" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Phones & data</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Will using my phone data in the UK cost a fortune?</div><div class="practical-text">Check your home network&#x27;s roaming charges before you arrive and switch off data roaming if unsure – a local SIM or travel eSIM plus free Wi-Fi is often much cheaper. <a class="lt-src" href="https://www.ofcom.org.uk/phones-and-broadband/saving-money/using-your-mobile-abroad" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">What should I note down in case my phone is stolen?</div><div class="practical-text">Dial *#06# to get your phone&#x27;s IMEI number and write it down – police and your network use it to block and trace a stolen handset. <a class="lt-src" href="https://www.met.police.uk/phonesnatch" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Safety habits</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">How do I stop my phone being snatched?</div><div class="practical-text">Step back from the kerb and stand near a wall when using your phone, keep calls short and don&#x27;t text while walking – thieves on bikes and mopeds target distracted people. <a class="lt-src" href="https://www.met.police.uk/phonesnatch" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">What if someone grabs my bag or phone?</div><div class="practical-text">Let it go – the Met&#x27;s advice is never to confront a thief; your safety matters more than the device. Set up a screen lock and remote wipe before your trip. <a class="lt-src" href="https://www.met.police.uk/phonesnatch" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Which areas should I be extra alert in?</div><div class="practical-text">Before heading out, check the neighbourhood&#x27;s safety score in the Wiley Fox app (www.thewileyfox.com) and pair it with the Met&#x27;s phone-safety habits. <a class="lt-src" href="https://www.met.police.uk/cp/crime-prevention/personal-safety-how-to-stay-safe/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div><div class="practical-card"><div class="practical-title">Which number do I call for help?</div><div class="practical-text">Call 999 in an emergency (112 also works from mobiles). For urgent but non-emergency medical help, use NHS 111 by phone or online at 111.nhs.uk – it&#x27;s available 24/7. <a class="lt-src" href="https://www.nhs.uk/nhs-services/urgent-and-emergency-care-services/when-to-use-111/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div><h3 class="sub-h">Local ways</h3><div class="practical-grid"><div class="practical-card"><div class="practical-title">Which side of the escalator do I stand on?</div><div class="practical-text">Stand on the right and leave the left clear for people walking – it&#x27;s one of the quickest ways to blend in on the Tube. <a class="lt-src" href="https://debretts.com/escalator-etiquette/" target="_blank" rel="noopener">Checked 2026-09 ↗</a></div></div></div>
+<style>.lt-src{display:inline-block;margin-left:4px;font-size:.78em;font-weight:600;color:#EA2E00;text-decoration:none;white-space:nowrap}</style>
+</div></section>
+
+<div class="cta-banner"><div class="container"><div class="cta-inner"><div class="cta-text"><h2>Travel with Wiley Fox</h2>
+<p>Live crime data for any UK street, Safest Route home, one-tap SOS, and QR wristbands so lost children and lost bags find their way back.</p></div>
+<div class="cta-buttons"><a href="https://www.thewileyfox.com" class="btn btn-primary">Open the Wiley Fox map</a><a href="https://www.thewileyfox.com" class="btn btn-on-dark">Get QR wristbands</a></div></div></div></div>
+
+<section id="sources" class="alt"><div class="container"><div class="section-rule">Credits</div><h2 class="section-title">Our sources</h2>
+<p class="section-sub">This guide summarises these creators' videos in our own words. Watch the originals - they are worth it. Crime data: data.police.uk (May 2026 to Jul 2026), contains public sector information licensed under the Open Government Licence v3.0. Fares: Transport for London. ETA: UK Home Office.</p>
+<ol class="sources"><li><a href="https://www.youtube.com/watch?v=8SMrIT_cBwI" target="_blank" rel="noopener">Areas in London tourists should AVOID (+where to go instead)</a> <span class="src-by">Love and London · 2024-03</span></li><li><a href="https://www.youtube.com/watch?v=oDyOUAsYWQg" target="_blank" rel="noopener">Important things you MUST know before visiting London (2025)</a> <span class="src-by">Love and London · 2024-11</span></li><li><a href="https://www.youtube.com/watch?v=yWhRNGnV_XQ" target="_blank" rel="noopener">15 biggest mistakes London tourists always make</a> <span class="src-by">Love and London · 2022-08</span></li><li><a href="https://www.youtube.com/watch?v=xVOESWNHa0A" target="_blank" rel="noopener">5 things to avoid in London (and what to do instead)</a> <span class="src-by">Love and London · 2022-10</span></li><li><a href="https://www.youtube.com/watch?v=QBpRYapgXUM" target="_blank" rel="noopener">Which is London&#x27;s best area?</a> <span class="src-by">Love and London · 2022-06</span></li><li><a href="https://www.youtube.com/watch?v=nwSsCnS8f0c" target="_blank" rel="noopener">Tourist Scams of London</a> <span class="src-by">Wolters World · 2023-12</span></li><li><a href="https://www.youtube.com/watch?v=tyjgi0mN2Co" target="_blank" rel="noopener">London Tourist Mistakes All 1st Time Visitors Make</a> <span class="src-by">Wolters World · 2023-10</span></li><li><a href="https://www.youtube.com/watch?v=AMj51nd4Oeg" target="_blank" rel="noopener">London&#x27;s Best Restaurants: Where Chefs Eat</a> <span class="src-by">TOPJAW · 2024-04</span></li><li><a href="https://www.youtube.com/watch?v=vw8Pb8VbQu8" target="_blank" rel="noopener">The 3 Best Spots in London&#x27;s Chinatown ft. Big John</a> <span class="src-by">TOPJAW · 2024-12</span></li><li><a href="https://www.youtube.com/watch?v=5qBWFUxFtqY" target="_blank" rel="noopener">London&#x27;s Best Thai Restaurant with Niall Horan</a> <span class="src-by">TOPJAW · 2026-06</span></li><li><a href="https://www.youtube.com/watch?v=mqrhoS8KgkE" target="_blank" rel="noopener">Best Chicken Wings in London?</a> <span class="src-by">TOPJAW · 2025-07</span></li><li><a href="https://www.youtube.com/watch?v=z-MU-su97DQ" target="_blank" rel="noopener">We Think These Are The 12 Best Free Views In London</a> <span class="src-by">TOPJAW · 2020-11</span></li><li><a href="https://www.youtube.com/watch?v=_7Gqs5GQvTU" target="_blank" rel="noopener">Chet Sharma (BiBi) Best of London</a> <span class="src-by">TOPJAW · 2023-07</span></li><li><a href="https://www.instagram.com/topjaw/p/Ddn4woGjNFa/" target="_blank" rel="noopener">Our favourite fish &amp; chips spots in London (Instagram)</a> <span class="src-by">TOPJAW · 2026-09</span></li><li><a href="https://www.youtube.com/watch?v=oS_dSDU4skg" target="_blank" rel="noopener">10 mistakes tourists ALWAYS make in London</a> <span class="src-by">Evan Edinger · 2023-05</span></li><li><a href="https://www.youtube.com/watch?v=jmH8ijFeKoo" target="_blank" rel="noopener">55 essential London travel tips</a> <span class="src-by">Sophie Nadeau · 2025-02</span></li><li><a href="https://www.youtube.com/watch?v=vpCYaDgX65w" target="_blank" rel="noopener">London travel tips for first timers</a> <span class="src-by">Happy to Wander · 2023-08</span></li><li><a href="https://www.youtube.com/watch?v=xGxYepW3bRE" target="_blank" rel="noopener">21 Things I Wish I Knew Before Visiting London</a> <span class="src-by">Destination Well Known · 2024-11</span></li><li><a href="https://www.youtube.com/watch?v=62qQNho-cL4" target="_blank" rel="noopener">First Time in London? 14 Things You Need to Do</a> <span class="src-by">Destination Well Known · 2025-01</span></li><li><a href="https://www.youtube.com/watch?v=iwdCKxz9s7w" target="_blank" rel="noopener">The 14 Best Things to Do in London</a> <span class="src-by">Destination Well Known · 2024-06</span></li><li><a href="https://www.youtube.com/watch?v=iQHMf8JK4FI" target="_blank" rel="noopener">22 Tips I Wish I Knew Before Visiting London</a> <span class="src-by">Camden David · 2024-01</span></li><li><a href="https://www.youtube.com/watch?v=mWCavIiDLug" target="_blank" rel="noopener">London 2026 Travel Tips: Complete Planning Guide</a> <span class="src-by">The Tour Guy · 2025-10</span></li><li><a href="https://www.youtube.com/watch?v=8qsGOMdhY-s" target="_blank" rel="noopener">The Best Things to See in London in 2026</a> <span class="src-by">The Tour Guy · 2025-03</span></li><li><a href="https://www.youtube.com/watch?v=alQBbuhK0Ng" target="_blank" rel="noopener">London&#x27;s Best Neighbourhoods: Streets for Cafes, Walks, Shopping, Food</a> <span class="src-by">Suitcase Monkey · 2024-08</span></li><li><a href="https://www.youtube.com/watch?v=JO06MOZW19s" target="_blank" rel="noopener">I Went to Brixton</a> <span class="src-by">Dutch Travel Maniac · 2025-07</span></li><li><a href="https://www.youtube.com/watch?v=GVBAjp1BdHw" target="_blank" rel="noopener">60+ Things to do in London in 2025</a> <span class="src-by">Through My Lens · 2025-07</span></li><li><a href="https://www.youtube.com/watch?v=zDxuIbquEo0" target="_blank" rel="noopener">First Time Travel Guide To London</a> <span class="src-by">Curly Tales · 2023-07</span></li></ol></div></section>
+
+<footer><div class="footer-logo">Wiley Fox <span class="accent">·</span> Travel</div>
+<p><a href="https://www.thewileyfox.com">thewileyfox.com</a></p>
+<p class="footer-small">Accommodation and activity links are affiliate links. Editorial recommendations are independent. Safety information is guidance, not a guarantee. In an emergency call 999.</p>
+<div class="footer-meta">© 2026 Wiley Fox · Updated 2026-09-24</div></footer>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function(){
+const H={"R":350,"clat":51.4675,"clng":-0.1425,"mLat":110540,"mLng":69347.73541782572,"cats":["Anti-social behaviour","Bicycle theft","Burglary","Criminal damage","Drugs","Other","Other theft","Public order","Robbery","Shoplifting","Theft from the person","Vehicle crime","Violence","Weapons"],"month":"2026-07","total":64789,"h":[[-8,-20,5,5,0],[-8,-19,4,25,0],[-10,-20,5,3,0],[-9,-19,5,11,12],[-11,-18,5,7,3],[-10,-19,5,1,3],[-9,-20,5,2,4],[-10,-18,5,1,11],[-9,-18,5,4,12],[-7,-20,5,11,0],[-8,-18,4,32,12],[-7,-18,3,34,12],[-7,-19,5,12,12],[-6,-19,4,19,12],[-6,-18,5,8,12],[-7,-21,5,3,9],[-6,-20,5,1,12],[-4,-21,5,1,0],[-4,-18,5,4,12],[-4,-20,4,14,12],[-3,-21,5,1,0],[-4,-19,5,8,0],[-3,-20,5,7,12],[-5,-20,5,5,12],[-5,-19,5,2,13],[-2,-20,5,7,12],[-2,-18,5,11,12],[-2,-19,4,36,12],[-1,-20,5,6,12],[-3,-19,5,2,0],[-1,-19,5,7,6],[-3,-18,5,2,12],[1,-19,5,17,0],[1,-18,5,9,0],[0,-18,5,6,2],[-1,-18,5,5,0],[2,-20,5,11,2],[0,-20,4,16,0],[0,-19,5,12,12],[1,-20,5,14,9],[3,-20,4,24,12],[3,-19,4,16,12],[4,-20,5,12,0],[3,-18,5,10,12],[2,-18,5,5,11],[4,-19,5,9,12],[2,-19,5,5,12],[5,-19,4,16,12],[6,-20,4,28,0],[6,-19,4,24,12],[7,-20,4,39,9],[6,-18,4,18,12],[5,-20,5,2,0],[5,-18,3,41,12],[4,-18,3,47,12],[8,-19,4,24,9],[9,-20,5,10,12],[7,-18,5,13,12],[7,-19,4,18,12],[8,-18,5,1,0],[8,-20,5,8,12],[11,-18,4,25,9],[12,-20,5,22,9],[11,-19,5,7,12],[11,-20,5,8,12],[10,-20,5,3,12],[10,-18,5,1,12],[13,-18,2,89,12],[14,-20,2,69,12],[14,-19,1,164,12],[12,-18,3,34,12],[13,-20,4,32,12],[12,-19,4,24,0],[13,-19,3,73,9],[17,-20,5,13,12],[15,-20,1,168,12],[15,-19,2,96,12],[16,-19,3,34,12],[14,-18,3,47,0],[15,-18,3,35,12],[16,-20,3,47,12],[15,-21,5,4,0],[16,-21,5,3,0],[16,-18,4,28,12],[18,-18,4,16,12],[18,-19,5,3,2],[17,-18,3,45,0],[17,-19,4,26,0],[19,-19,3,58,9],[18,-20,5,2,11],[21,-19,5,3,0],[21,-20,5,7,0],[20,-20,5,6,0],[20,-18,5,3,11],[19,-18,5,2,1],[20,-19,5,8,11],[23,-19,4,23,12],[24,-20,5,4,12],[23,-20,5,4,11],[22,-18,3,32,12],[22,-19,5,12,9],[24,-19,4,24,9],[25,-20,5,4,0],[26,-20,5,3,0],[25,-19,5,3,0],[26,-19,5,3,11],[24,-18,5,1,11],[25,-18,5,6,12],[27,-20,5,7,0],[26,-18,5,10,0],[27,-19,4,20,0],[29,-21,5,1,0],[28,-19,5,4,12],[27,-18,5,6,12],[31,-19,5,7,0],[30,-18,5,8,12],[31,-20,5,5,9],[-10,-16,4,14,12],[-11,-16,4,35,0],[-11,-15,4,31,12],[-12,-15,5,2,0],[-12,-17,5,2,0],[-10,-17,5,5,12],[-9,-17,4,23,0],[-12,-16,5,6,11],[-11,-17,5,5,12],[-8,-16,5,6,0],[-9,-16,4,17,12],[-8,-17,5,8,12],[-8,-15,5,5,2],[-9,-15,5,6,12],[-7,-16,5,6,0],[-10,-15,5,5,6],[-7,-17,5,7,11],[-6,-16,5,5,0],[-5,-17,4,27,12],[-5,-18,5,5,0],[-7,-15,5,6,0],[-6,-15,5,3,12],[-5,-16,5,3,12],[-4,-17,4,16,12],[-4,-15,5,8,12],[-3,-16,5,2,2],[-2,-17,5,2,6],[-4,-16,5,5,12],[-3,-17,5,3,12],[-5,-15,5,4,12],[-1,-16,5,12,0],[0,-17,5,6,0],[-1,-17,4,13,12],[-2,-15,5,2,11],[-1,-15,5,4,11],[1,-16,5,7,12],[1,-15,5,8,12],[3,-17,3,31,12],[1,-17,4,12,12],[2,-17,4,12,12],[2,-16,5,4,0],[2,-15,4,13,12],[4,-16,4,16,0],[5,-17,4,13,12],[5,-16,5,6,0],[4,-17,4,11,12],[4,-15,5,10,12],[3,-16,5,13,12],[3,-15,5,3,11],[6,-17,4,28,12],[6,-16,5,6,0],[5,-15,5,5,12],[7,-17,5,1,12],[10,-17,5,15,0],[9,-15,4,17,0],[8,-15,5,9,0],[9,-17,5,3,0],[9,-16,4,23,6],[10,-16,5,12,0],[8,-17,5,2,6],[8,-16,5,1,11],[11,-17,3,50,0],[12,-17,2,73,12],[12,-16,3,51,12],[11,-16,3,53,12],[11,-15,2,66,12],[10,-15,4,19,12],[13,-17,3,55,12],[12,-15,4,21,12],[13,-16,4,20,0],[14,-17,3,46,12],[14,-16,4,20,12],[13,-15,3,51,12],[14,-15,4,23,6],[15,-17,5,6,12],[16,-17,4,22,12],[17,-17,4,15,12],[17,-16,4,25,12],[15,-15,3,46,12],[16,-15,3,43,0],[15,-16,5,9,0],[16,-16,5,9,12],[18,-17,4,21,12],[20,-17,5,10,0],[19,-15,5,14,0],[19,-16,5,9,12],[19,-17,5,8,12],[18,-15,4,17,6],[18,-16,5,12,4],[17,-15,5,3,4],[21,-15,5,5,0],[22,-16,5,2,0],[22,-17,5,4,1],[20,-15,5,7,1],[20,-16,5,9,8],[21,-16,5,14,9],[21,-17,5,4,12],[25,-17,5,6,12],[25,-16,5,8,7],[22,-15,5,9,7],[23,-16,5,3,9],[23,-15,5,5,11],[24,-16,5,3,11],[24,-17,5,3,12],[27,-17,5,2,0],[26,-16,5,5,0],[26,-17,5,4,12],[25,-15,5,5,12],[26,-15,4,28,12],[27,-15,4,14,12],[30,-17,5,13,12],[29,-17,5,8,0],[29,-16,5,8,0],[28,-16,4,17,12],[28,-15,5,6,6],[29,-15,5,2,7],[-11,-14,5,11,0],[-12,-13,4,41,0],[-12,-12,1,212,9],[-13,-12,1,151,9],[-12,-14,5,5,0],[-11,-13,5,10,0],[-9,-13,4,16,12],[-10,-13,5,11,12],[-11,-12,3,37,12],[-10,-12,5,15,0],[-8,-14,4,19,7],[-10,-14,5,8,12],[-9,-14,5,2,12],[-6,-14,3,48,12],[-7,-14,4,18,12],[-7,-13,5,5,1],[-9,-12,5,9,12],[-8,-13,5,3,12],[-7,-12,5,2,11],[-8,-12,5,2,12],[-3,-15,5,4,0],[-4,-14,4,23,12],[-5,-14,5,11,0],[-5,-13,5,7,0],[-6,-13,5,2,0],[-4,-13,5,15,0],[-5,-12,5,8,0],[-6,-12,5,1,11],[-3,-14,5,6,0],[-4,-12,4,30,12],[-1,-14,5,6,0],[-2,-12,5,18,0],[-3,-12,5,6,0],[-3,-13,5,6,6],[-2,-14,5,1,11],[1,-14,3,53,0],[0,-12,5,3,0],[-1,-13,5,3,0],[0,-14,5,6,0],[0,-13,5,8,11],[-1,-12,5,4,0],[1,-13,5,2,4],[2,-12,4,20,12],[1,-12,5,8,0],[3,-13,4,18,12],[2,-13,4,30,12],[3,-14,5,13,12],[4,-14,4,22,12],[2,-14,5,5,12],[4,-13,2,70,12],[6,-14,5,14,0],[6,-13,5,11,0],[3,-12,4,22,0],[4,-12,3,27,12],[5,-13,4,26,0],[5,-14,5,4,0],[5,-12,4,21,12],[8,-14,4,21,12],[7,-12,5,12,0],[7,-14,4,31,12],[8,-13,4,25,12],[7,-15,5,8,0],[6,-12,4,31,12],[7,-13,4,17,12],[9,-14,4,26,0],[8,-12,3,63,9],[10,-14,3,39,12],[10,-13,5,15,0],[9,-12,4,14,12],[11,-14,4,28,12],[9,-13,4,29,0],[10,-12,4,17,0],[11,-13,4,22,12],[13,-13,5,10,0],[12,-13,4,27,12],[11,-12,4,13,12],[12,-14,3,63,0],[12,-12,5,8,12],[13,-14,4,13,12],[14,-14,4,27,12],[15,-13,4,31,0],[16,-14,4,18,0],[14,-13,5,10,7],[15,-12,4,28,12],[15,-14,3,32,12],[13,-12,5,11,12],[16,-13,4,24,9],[17,-12,4,27,12],[18,-13,5,10,11],[18,-12,5,19,0],[17,-14,5,5,0],[17,-13,5,9,11],[16,-12,4,20,12],[18,-14,5,7,12],[19,-14,5,8,12],[20,-13,5,16,0],[21,-14,5,7,0],[19,-13,4,19,12],[19,-12,4,36,0],[20,-14,5,5,12],[20,-12,4,16,9],[23,-14,5,6,0],[22,-14,5,2,0],[23,-13,5,10,6],[21,-12,5,6,0],[22,-13,5,10,12],[21,-13,5,2,11],[26,-14,5,3,0],[25,-14,3,77,0],[23,-12,5,10,11],[24,-12,3,60,0],[24,-13,3,47,12],[25,-13,3,71,9],[24,-14,5,6,0],[25,-12,5,16,0],[26,-13,5,20,9],[27,-14,5,6,9],[27,-13,5,6,6],[28,-13,5,1,6],[28,-14,5,1,6],[26,-12,5,1,12],[-13,-10,5,7,0],[-14,-11,4,23,0],[-13,-11,4,38,0],[-15,-11,5,2,0],[-15,-10,5,9,12],[-12,-11,4,24,0],[-15,-9,4,23,0],[-14,-9,5,6,7],[-13,-9,5,7,12],[-16,-9,5,4,12],[-14,-10,5,2,12],[-11,-10,5,14,0],[-11,-11,5,14,12],[-12,-10,5,17,0],[-10,-11,3,26,12],[-10,-10,5,1,11],[-9,-11,5,1,6],[-7,-11,5,6,6],[-6,-10,5,2,0],[-5,-11,5,8,12],[-8,-10,5,1,12],[-6,-11,5,1,12],[-4,-10,5,6,0],[-3,-10,5,6,0],[-3,-11,5,5,0],[-4,-11,5,6,0],[-5,-10,5,4,0],[-4,-9,4,26,12],[-5,-9,5,2,11],[0,-11,4,30,0],[-1,-11,4,21,12],[-2,-10,2,101,12],[-1,-10,5,11,0],[-3,-9,5,13,12],[-2,-9,5,7,12],[-2,-11,5,1,12],[2,-11,4,28,12],[0,-10,4,30,12],[1,-10,4,40,0],[1,-9,2,70,12],[1,-11,4,32,11],[-1,-9,4,22,9],[2,-10,4,21,12],[0,-9,5,5,12],[4,-11,4,25,12],[2,-9,2,60,12],[3,-10,3,41,12],[3,-11,5,8,12],[3,-9,4,36,11],[5,-11,4,20,0],[4,-10,4,22,12],[4,-9,4,18,12],[5,-10,4,28,0],[7,-10,4,27,0],[6,-11,3,48,0],[6,-10,3,34,12],[7,-11,4,31,0],[5,-9,4,31,12],[6,-9,3,52,12],[8,-11,4,16,0],[8,-9,4,19,12],[9,-10,5,8,12],[9,-11,5,9,0],[9,-9,4,35,12],[8,-10,5,1,0],[7,-9,4,15,0],[11,-10,4,28,0],[11,-9,4,31,11],[12,-11,4,16,12],[11,-11,5,6,12],[12,-10,2,71,0],[10,-10,5,16,0],[10,-9,4,21,0],[10,-11,5,8,12],[14,-11,3,41,12],[13,-10,5,13,12],[14,-12,5,7,12],[14,-10,4,18,7],[15,-11,3,54,12],[13,-11,4,18,11],[12,-9,5,9,11],[16,-11,3,58,12],[16,-10,5,9,0],[15,-10,4,21,12],[17,-11,5,5,4],[14,-9,4,14,12],[15,-9,3,55,0],[16,-9,3,39,12],[18,-10,5,9,11],[18,-11,5,11,11],[19,-10,5,9,12],[17,-10,5,3,0],[19,-11,5,13,12],[20,-11,5,3,1],[17,-9,4,30,0],[21,-10,4,15,12],[22,-11,5,12,0],[19,-9,3,46,0],[20,-9,2,100,9],[21,-9,4,24,12],[21,-11,5,1,11],[24,-11,5,14,0],[23,-11,5,8,4],[22,-10,4,16,12],[22,-9,4,24,12],[24,-10,5,4,0],[23,-10,4,23,12],[24,-9,5,8,0],[25,-11,5,4,4],[27,-11,5,2,7],[27,-12,5,2,12],[-16,-7,4,21,12],[-16,-8,5,4,0],[-15,-8,5,10,0],[-15,-7,5,4,12],[-17,-6,5,11,0],[-14,-8,5,4,0],[-16,-6,5,4,2],[-17,-7,5,4,6],[-13,-8,5,7,12],[-12,-7,5,1,12],[-14,-7,5,1,12],[-10,-8,5,4,12],[-9,-8,5,3,0],[-10,-6,5,2,4],[-10,-7,5,3,12],[-10,-9,5,1,11],[-9,-9,5,2,12],[-7,-8,5,4,12],[-9,-6,4,18,12],[-9,-7,5,1,12],[-5,-7,5,11,12],[-4,-8,5,9,0],[-5,-8,5,1,0],[-6,-7,5,2,0],[-6,-6,5,14,0],[-2,-8,5,4,0],[-3,-8,5,7,2],[-3,-7,5,10,0],[-4,-7,5,2,0],[-2,-7,5,5,12],[-1,-8,4,28,0],[-1,-7,4,14,12],[0,-8,2,52,12],[1,-8,1,129,12],[0,-7,4,16,12],[0,-6,2,63,12],[2,-7,3,36,12],[1,-7,3,51,11],[3,-8,4,14,12],[2,-8,3,39,11],[3,-7,4,19,0],[1,-6,4,24,12],[2,-6,4,26,11],[5,-7,3,67,0],[5,-8,3,55,9],[6,-8,4,22,12],[4,-7,5,2,6],[4,-6,4,19,6],[4,-8,5,4,12],[5,-6,2,96,0],[6,-7,4,27,0],[8,-8,4,25,12],[7,-8,4,15,0],[7,-7,4,20,12],[8,-7,2,75,12],[7,-6,3,54,9],[6,-6,4,16,12],[9,-8,4,26,0],[11,-8,4,28,12],[10,-8,4,30,12],[9,-7,4,17,12],[9,-6,5,12,6],[8,-6,5,10,11],[10,-7,5,7,8],[12,-7,5,4,0],[13,-8,4,15,12],[12,-8,5,9,12],[10,-6,5,4,0],[13,-7,4,30,12],[13,-9,5,7,12],[12,-6,5,9,6],[11,-7,5,2,7],[14,-7,4,34,12],[15,-7,4,16,11],[15,-8,3,32,12],[14,-6,4,19,0],[14,-8,4,41,0],[13,-6,3,38,12],[16,-8,3,67,0],[15,-6,4,34,0],[18,-8,4,28,12],[18,-7,4,25,0],[17,-8,4,27,12],[18,-9,4,24,12],[16,-7,4,14,12],[17,-7,4,30,12],[17,-6,4,16,12],[16,-6,4,17,12],[20,-7,3,42,0],[19,-7,5,11,11],[19,-8,4,14,4],[20,-8,4,19,12],[21,-8,4,17,12],[23,-7,4,17,0],[22,-7,4,23,12],[23,-8,4,30,12],[22,-8,3,30,12],[21,-6,5,14,0],[21,-7,5,12,12],[23,-9,5,10,0],[22,-6,5,9,11],[25,-7,5,6,0],[24,-8,4,28,12],[25,-8,4,20,0],[25,-9,5,8,4],[26,-9,4,11,12],[24,-7,5,3,11],[-16,-5,5,3,7],[-18,-4,5,2,6],[-16,-4,5,2,12],[-9,-4,3,51,12],[-10,-4,4,21,0],[-9,-5,5,8,0],[-7,-4,5,12,12],[-6,-4,4,19,12],[-5,-6,5,13,12],[-6,-5,4,23,12],[-8,-4,5,3,0],[-7,-5,5,1,12],[-5,-5,4,25,0],[-3,-5,4,33,0],[-4,-4,5,14,11],[-4,-5,4,16,11],[-5,-4,5,10,11],[-3,-6,5,12,11],[-4,-6,5,10,11],[-5,-3,4,16,12],[-3,-4,4,32,0],[-2,-6,4,16,12],[-2,-5,5,5,0],[-1,-5,5,3,12],[-4,-3,3,60,0],[-2,-4,4,21,12],[-1,-4,5,2,6],[-3,-3,5,10,11],[-1,-6,5,3,6],[1,-5,2,94,9],[2,-5,4,33,0],[1,-4,3,47,12],[0,-4,4,15,12],[0,-5,4,17,12],[0,-3,4,37,11],[3,-4,4,23,0],[3,-6,5,14,0],[1,-3,3,41,12],[2,-4,4,22,12],[4,-4,3,59,0],[4,-5,4,18,12],[3,-5,5,9,12],[7,-5,4,27,0],[5,-5,4,23,0],[6,-5,4,31,0],[5,-4,3,34,12],[5,-3,3,34,12],[4,-3,3,68,0],[6,-4,5,9,12],[8,-4,5,5,11],[7,-4,4,21,12],[8,-5,5,11,0],[9,-4,5,9,11],[9,-5,5,2,6],[8,-3,5,6,1],[11,-5,4,24,0],[10,-4,4,31,9],[10,-5,5,3,0],[11,-4,4,21,12],[13,-5,4,28,12],[14,-5,4,31,12],[12,-4,5,8,11],[13,-4,4,37,0],[14,-4,5,12,12],[13,-3,5,14,11],[12,-5,5,4,11],[11,-3,5,12,12],[16,-5,1,114,12],[16,-4,2,93,12],[14,-3,4,30,12],[15,-4,5,8,11],[15,-5,4,18,12],[17,-5,2,78,12],[19,-6,5,11,12],[19,-5,4,26,12],[18,-4,3,41,12],[17,-4,4,29,12],[18,-3,4,22,2],[18,-6,4,20,12],[18,-5,3,56,12],[16,-3,2,81,12],[20,-4,4,30,12],[20,-6,5,8,4],[20,-5,4,14,12],[21,-5,4,21,12],[21,-4,4,13,12],[19,-4,5,4,4],[23,-4,4,20,12],[22,-4,5,13,0],[23,-5,3,25,12],[24,-6,5,4,9],[22,-5,5,7,12],[-18,-2,3,47,12],[-17,-2,4,22,11],[-18,-1,2,89,12],[-19,-3,5,9,11],[-17,-1,4,25,0],[-18,-3,5,3,0],[-19,-1,5,4,0],[-19,-2,5,4,0],[-17,-3,5,6,12],[-16,-3,4,14,12],[-16,-2,5,10,0],[-16,-1,4,24,12],[-15,-1,5,8,0],[-12,-2,5,4,0],[-13,-2,5,1,0],[-14,-1,4,23,9],[-13,-1,5,9,11],[-14,-2,5,2,8],[-10,-3,5,14,0],[-10,-1,5,16,9],[-11,-1,5,2,0],[-11,-3,4,29,12],[-9,-3,4,17,12],[-10,-2,5,8,12],[-12,-1,4,20,12],[-11,-2,5,3,12],[-8,-2,4,17,0],[-8,-3,5,12,12],[-8,-1,2,80,9],[-9,-1,4,18,2],[-7,-3,5,12,12],[-9,-2,4,16,0],[-7,-2,4,25,12],[-9,0,4,32,0],[-6,-2,4,14,12],[-6,-1,4,26,0],[-5,-2,2,80,12],[-7,-1,4,15,0],[-6,-3,4,20,0],[-4,-1,3,50,0],[-3,-1,3,58,12],[-5,-1,3,50,0],[-4,-2,3,56,0],[-3,-2,4,19,4],[-2,-2,3,63,12],[-2,-3,5,7,12],[-1,-2,4,21,11],[-1,-1,4,26,0],[-2,-1,2,124,0],[-1,-3,4,25,12],[0,-2,5,4,8],[0,-1,4,19,6],[2,-3,4,39,0],[1,-1,1,165,12],[2,-1,1,131,10],[1,-2,5,13,0],[3,-3,3,45,12],[2,-2,3,47,11],[3,-2,4,46,0],[4,-2,2,89,0],[3,-1,3,55,0],[4,-1,1,390,12],[5,-1,3,75,0],[6,-3,3,58,1],[5,-2,3,41,0],[7,-3,5,14,10],[6,-2,4,20,6],[7,-2,4,13,12],[6,-1,5,5,0],[8,-2,4,22,12],[7,-1,4,19,12],[9,-2,3,76,9],[8,-1,4,21,12],[9,-1,4,32,12],[10,-3,4,25,11],[9,-3,4,25,11],[10,-2,5,10,10],[10,-1,3,39,11],[12,-3,5,10,12],[11,-2,4,14,12],[12,-1,4,26,12],[13,-2,4,25,12],[12,-2,3,36,11],[11,-1,5,7,11],[14,-1,4,23,0],[13,-1,3,45,12],[15,-2,4,24,12],[15,-3,4,30,11],[14,-2,5,13,0],[15,-1,2,87,12],[12,0,4,24,12],[16,-2,2,69,12],[16,-1,1,116,12],[17,-2,3,66,9],[17,-3,3,62,0],[17,-1,4,17,0],[18,-2,2,82,9],[19,-2,5,11,0],[19,-3,4,25,11],[19,-1,5,9,12],[20,-3,5,12,12],[20,-2,5,12,12],[18,-1,5,11,12],[20,-1,3,51,12],[22,-3,4,13,12],[21,-1,4,16,12],[21,-2,4,30,0],[21,-3,5,14,0],[23,-3,5,9,12],[22,-2,4,14,12],[22,-1,5,7,13],[-18,0,5,13,0],[-19,2,5,1,10],[-17,0,4,18,0],[-17,2,4,21,12],[-16,0,4,20,0],[-17,1,5,11,12],[-18,1,5,1,0],[-18,2,5,7,2],[-16,1,5,3,12],[-15,0,4,27,12],[-14,0,4,37,0],[-16,2,5,8,0],[-15,1,5,6,12],[-14,2,5,11,0],[-13,0,5,12,11],[-13,1,4,22,12],[-14,1,5,7,12],[-11,0,5,8,0],[-12,0,5,9,12],[-12,2,5,10,1],[-12,1,5,7,11],[-13,2,5,6,11],[-10,2,5,9,0],[-8,0,4,18,0],[-10,0,5,11,11],[-10,1,5,4,0],[-9,1,5,6,11],[-9,2,4,24,12],[-8,1,4,37,0],[-7,1,4,34,12],[-6,1,3,38,12],[-7,2,4,37,0],[-8,2,4,38,0],[-7,0,5,3,0],[-6,0,5,12,12],[-3,0,2,85,0],[-5,2,5,11,0],[-5,1,4,38,0],[-4,0,3,60,0],[-4,1,3,67,0],[-5,0,4,25,2],[-6,2,3,39,12],[-4,2,3,40,12],[-1,0,3,53,0],[-2,0,3,40,12],[-2,1,3,47,0],[-2,2,3,62,12],[-3,1,4,44,0],[-1,1,4,24,0],[-3,2,5,9,12],[0,2,3,46,12],[1,0,3,41,0],[0,0,4,36,0],[2,0,2,74,12],[0,1,3,36,12],[1,1,3,53,0],[-1,2,3,46,0],[1,2,2,98,9],[3,1,3,63,0],[3,0,1,129,0],[3,2,3,56,0],[2,1,2,70,0],[2,2,3,62,12],[4,0,3,45,12],[4,1,4,31,12],[6,0,1,92,12],[4,2,3,61,0],[5,2,3,59,0],[5,1,2,104,12],[6,1,3,38,0],[5,0,3,51,12],[6,2,2,78,12],[7,0,5,13,12],[8,0,4,30,0],[8,1,1,210,0],[7,1,3,73,0],[8,2,2,80,0],[9,1,3,64,12],[7,2,2,77,0],[9,0,2,71,10],[10,2,3,45,12],[11,2,2,60,12],[9,2,3,58,12],[10,1,4,22,12],[11,0,5,8,11],[11,1,4,15,12],[10,0,4,30,12],[14,1,3,52,12],[13,0,4,27,12],[13,1,3,41,12],[14,0,3,46,12],[12,2,1,123,12],[12,1,3,45,0],[13,2,3,47,12],[15,1,4,20,12],[14,2,3,36,12],[15,0,3,41,12],[16,0,5,6,0],[15,2,5,7,6],[17,0,4,36,9],[17,2,4,18,0],[18,2,4,28,11],[18,1,5,7,12],[18,0,4,14,12],[17,1,5,2,0],[19,0,5,11,12],[20,1,4,15,0],[20,2,5,12,0],[21,1,5,11,0],[20,0,4,18,12],[19,2,4,21,12],[21,0,5,9,0],[19,1,4,14,12],[-20,3,4,34,0],[-20,4,3,42,12],[-21,5,3,42,12],[-21,3,4,31,9],[-21,4,5,9,11],[-20,5,4,19,12],[-22,4,5,4,12],[-22,5,3,43,12],[-21,2,5,4,11],[-22,3,5,9,12],[-19,4,4,18,12],[-18,3,5,10,11],[-17,3,5,8,0],[-18,5,4,26,11],[-19,5,3,39,12],[-18,4,5,8,0],[-19,3,5,1,11],[-17,5,4,30,0],[-17,4,4,21,12],[-16,3,4,13,12],[-16,5,3,57,9],[-15,4,5,11,12],[-15,2,5,4,0],[-16,4,5,11,11],[-14,3,5,11,11],[-15,3,5,5,12],[-13,3,5,11,0],[-13,5,3,54,12],[-14,5,4,27,11],[-14,4,5,5,12],[-15,5,4,20,6],[-13,4,5,6,12],[-12,3,5,2,7],[-11,5,3,43,0],[-12,5,1,144,0],[-10,4,4,40,0],[-11,4,2,93,12],[-10,3,3,35,12],[-11,3,5,6,6],[-12,4,5,10,6],[-8,3,2,90,0],[-9,4,2,83,0],[-9,3,3,41,12],[-8,5,2,114,0],[-10,5,3,62,0],[-8,4,3,36,12],[-7,3,4,21,7],[-9,5,3,67,0],[-6,3,3,62,12],[-6,4,2,65,12],[-7,4,3,42,12],[-7,5,3,49,0],[-5,3,4,18,12],[-6,5,4,30,0],[-5,4,3,60,0],[-5,5,2,95,9],[-2,3,3,47,9],[-4,5,3,77,9],[-3,4,5,14,0],[-3,5,2,75,6],[-4,4,5,3,0],[-3,3,5,7,12],[-4,3,5,1,11],[0,3,2,86,12],[-1,5,3,58,12],[-1,4,4,26,12],[-2,4,3,69,0],[-2,5,1,128,0],[-1,3,3,43,12],[2,4,3,50,10],[2,3,2,72,12],[1,3,3,63,0],[0,5,3,60,0],[3,3,3,52,0],[1,5,2,72,0],[0,4,1,154,10],[1,4,2,73,10],[2,5,2,97,0],[4,3,2,95,12],[3,4,1,186,9],[4,4,2,72,12],[5,3,4,31,0],[3,5,1,164,12],[4,5,2,69,0],[5,4,2,86,0],[6,4,3,66,0],[7,4,4,31,12],[6,3,3,39,12],[7,3,3,42,12],[6,5,3,51,12],[7,5,3,45,12],[5,5,3,46,12],[8,3,4,34,12],[8,5,2,67,12],[8,4,4,27,10],[9,5,2,66,12],[9,4,4,19,6],[10,4,3,43,12],[9,3,4,29,0],[10,3,4,22,12],[12,4,5,18,0],[10,5,3,34,12],[12,3,3,61,12],[11,3,3,48,12],[11,4,5,6,0],[11,5,4,30,12],[12,5,4,24,0],[13,3,2,72,0],[14,3,3,56,9],[15,3,4,37,9],[13,4,4,19,0],[13,5,4,28,12],[14,4,5,12,6],[16,4,4,23,0],[14,5,4,16,12],[15,5,4,22,11],[15,4,2,71,12],[16,5,3,49,9],[16,3,4,14,12],[17,3,4,16,12],[16,2,5,2,0],[17,4,4,32,9],[18,4,3,42,12],[18,3,4,25,12],[19,3,4,23,9],[19,4,5,8,12],[18,5,4,17,12],[19,5,5,9,12],[20,3,5,4,11],[-24,8,4,23,0],[-22,7,5,20,0],[-21,6,4,16,12],[-23,6,5,7,12],[-22,6,4,25,12],[-22,8,5,14,0],[-23,8,5,12,0],[-23,7,4,15,9],[-24,7,5,5,7],[-21,7,5,7,0],[-23,5,5,1,4],[-20,6,5,4,0],[-19,7,4,34,0],[-21,8,5,8,6],[-20,8,5,15,0],[-20,7,5,12,9],[-19,6,5,2,12],[-18,7,4,37,0],[-18,6,4,14,12],[-16,6,4,20,0],[-18,8,3,51,12],[-17,7,5,13,11],[-17,6,4,17,12],[-16,7,5,13,12],[-17,8,5,20,0],[-19,8,2,78,0],[-15,7,3,39,12],[-14,7,4,28,0],[-14,6,4,33,0],[-15,6,4,24,12],[-16,8,3,61,9],[-15,8,3,36,12],[-13,8,1,303,9],[-13,7,2,79,12],[-12,7,3,40,12],[-13,6,3,44,0],[-12,6,3,59,12],[-11,6,4,28,0],[-14,8,2,83,12],[-12,8,4,21,12],[-9,7,2,126,9],[-10,6,3,52,12],[-9,6,3,56,12],[-10,7,4,23,6],[-11,7,4,26,0],[-10,8,4,22,12],[-8,6,3,53,9],[-8,8,5,3,0],[-6,6,4,34,12],[-8,7,4,22,12],[-7,6,3,53,6],[-7,7,4,26,11],[-7,8,5,1,1],[-9,8,5,1,10],[-6,7,2,111,9],[-5,7,2,76,6],[-4,6,4,35,6],[-5,6,4,26,11],[-5,8,3,53,10],[-4,7,5,11,0],[-3,6,1,246,0],[-2,6,2,110,0],[-2,8,1,182,10],[-1,6,4,23,6],[-2,7,2,89,6],[-3,7,3,35,10],[-4,8,2,80,10],[-3,8,3,52,6],[0,8,1,156,10],[-1,8,1,159,6],[1,6,3,45,0],[-1,7,1,107,12],[0,7,1,187,0],[0,6,3,63,0],[1,7,1,138,12],[2,8,1,282,6],[2,7,2,99,10],[1,8,2,117,10],[2,6,1,246,10],[3,7,1,112,12],[3,6,2,77,10],[3,8,2,90,6],[4,6,2,102,0],[5,6,3,63,0],[5,7,4,29,12],[4,7,2,114,6],[6,6,2,98,10],[6,7,4,33,0],[5,8,4,42,0],[4,8,4,19,6],[6,8,4,41,0],[8,6,3,38,10],[7,7,3,56,12],[8,7,4,23,0],[7,6,4,25,10],[7,8,5,11,12],[8,8,4,32,0],[9,6,4,31,0],[10,7,2,99,12],[9,7,4,22,12],[11,6,3,58,12],[10,8,2,122,0],[10,6,5,12,12],[11,7,2,61,12],[9,8,4,26,12],[12,6,2,67,0],[11,8,4,24,12],[12,7,5,12,0],[13,7,3,48,12],[14,6,4,26,0],[15,8,4,34,0],[15,6,3,36,12],[14,7,4,11,12],[15,7,5,7,4],[16,7,3,59,12],[18,6,5,3,0],[17,7,4,25,10],[17,8,4,22,11],[17,5,5,3,4],[18,7,5,4,7],[16,8,5,2,10],[-24,11,5,20,0],[-25,10,4,22,0],[-23,10,2,92,12],[-24,9,3,66,0],[-23,9,3,69,9],[-24,10,3,53,12],[-25,9,5,8,0],[-25,11,5,8,11],[-21,9,4,34,9],[-20,9,4,44,0],[-22,9,4,22,12],[-22,10,4,23,9],[-20,10,5,11,12],[-21,10,5,7,12],[-21,11,5,14,11],[-23,11,5,6,11],[-22,11,5,9,11],[-19,9,2,101,0],[-19,10,4,33,12],[-18,9,5,16,0],[-18,10,3,33,12],[-20,11,5,8,12],[-19,11,3,51,12],[-17,9,4,22,0],[-15,9,3,55,12],[-16,9,4,18,0],[-17,10,3,50,0],[-18,11,5,10,0],[-16,10,3,34,0],[-17,11,4,16,0],[-16,11,5,9,7],[-14,9,3,72,9],[-13,9,1,212,9],[-15,10,2,63,12],[-13,10,3,64,0],[-14,10,4,21,12],[-15,11,4,34,12],[-14,11,4,32,0],[-10,9,2,93,0],[-12,9,4,22,0],[-12,10,2,129,0],[-13,11,1,136,0],[-11,9,2,84,12],[-11,10,3,50,0],[-11,11,2,82,12],[-11,8,5,14,6],[-12,11,3,44,0],[-10,11,3,66,0],[-9,10,2,136,6],[-10,10,1,149,0],[-9,11,1,190,12],[-8,10,2,115,12],[-9,9,4,27,12],[-8,9,3,45,12],[-6,9,2,105,10],[-6,10,1,336,9],[-7,10,1,262,10],[-8,11,1,169,0],[-7,9,5,8,4],[-6,11,2,105,0],[-5,9,2,101,9],[-7,11,1,140,6],[-4,9,1,344,6],[-4,10,1,691,10],[-5,11,1,180,0],[-5,10,1,480,9],[-3,9,1,622,6],[-3,10,1,264,0],[-4,11,1,127,6],[-2,9,1,257,6],[-2,10,2,104,6],[-2,11,2,116,9],[-1,9,4,30,10],[-3,11,1,149,6],[-1,10,3,49,6],[0,10,3,69,9],[1,9,2,82,6],[1,10,4,36,6],[2,9,2,76,6],[0,9,4,21,6],[1,11,3,62,9],[-1,11,1,135,9],[0,11,2,88,9],[2,11,1,132,0],[3,10,1,146,12],[3,11,2,74,12],[4,9,3,66,9],[4,10,1,138,12],[3,9,2,100,6],[2,10,2,96,12],[5,9,2,70,12],[4,11,1,134,12],[6,9,3,55,0],[5,10,2,82,0],[6,10,3,57,0],[7,10,2,79,12],[6,11,2,81,0],[7,9,4,30,0],[5,11,2,86,12],[8,9,4,34,0],[9,10,2,81,0],[8,10,1,173,0],[9,9,2,74,0],[8,11,1,150,9],[10,9,2,93,12],[7,11,3,41,12],[12,8,4,32,0],[11,10,2,69,9],[11,9,3,60,0],[10,10,2,75,0],[12,9,3,42,12],[9,11,3,58,0],[10,11,5,9,12],[13,9,3,51,0],[12,10,3,59,11],[14,8,4,28,0],[13,10,2,71,12],[14,10,3,59,9],[12,11,3,52,12],[13,11,3,48,12],[14,9,3,45,12],[11,11,4,18,0],[15,9,3,46,6],[17,9,5,11,10],[15,11,3,44,12],[15,10,3,47,0],[16,9,3,38,12],[14,11,4,30,12],[16,10,5,9,12],[16,11,5,1,0],[-26,13,5,6,11],[-26,12,4,22,12],[-25,12,5,12,2],[-26,11,5,1,4],[-25,13,5,3,6],[-24,12,5,4,12],[-24,14,5,13,0],[-24,13,3,39,12],[-22,13,4,26,9],[-23,14,4,32,12],[-22,12,4,24,0],[-23,13,4,32,11],[-23,12,5,10,11],[-21,12,4,18,0],[-21,13,3,43,12],[-19,12,3,37,9],[-20,12,5,12,12],[-20,13,5,12,6],[-17,13,4,22,12],[-19,13,4,17,12],[-19,14,1,124,12],[-18,13,5,5,0],[-15,13,3,52,0],[-15,12,3,40,12],[-14,12,3,45,12],[-15,14,4,19,0],[-16,12,5,3,11],[-16,13,5,14,7],[-17,14,4,19,0],[-16,14,4,22,0],[-13,13,2,97,0],[-14,14,3,69,0],[-13,12,1,168,9],[-12,12,2,74,0],[-14,13,3,44,12],[-12,13,4,37,0],[-13,14,3,48,12],[-10,12,3,65,0],[-11,13,3,38,12],[-10,13,4,33,0],[-9,12,1,122,0],[-11,12,3,42,0],[-11,14,4,23,0],[-10,14,4,38,0],[-8,12,2,100,0],[-9,13,4,22,0],[-7,12,4,28,6],[-8,13,5,4,1],[-7,13,4,25,0],[-6,12,1,154,10],[-6,14,2,88,12],[-5,13,1,146,6],[-5,12,1,123,6],[-6,13,3,57,12],[-4,12,1,159,6],[-7,14,2,86,0],[-4,13,1,293,0],[-5,14,2,145,6],[-2,12,2,90,6],[-3,13,2,71,12],[-4,14,2,70,12],[-3,14,1,211,12],[-3,12,3,38,12],[-2,13,1,141,9],[0,13,2,107,12],[-1,13,2,124,0],[1,12,1,187,10],[0,12,1,216,9],[-1,12,2,68,12],[-2,14,3,46,0],[-1,14,3,61,0],[1,13,2,124,0],[2,13,2,74,0],[3,12,3,63,0],[2,12,1,149,12],[1,14,3,54,0],[2,14,3,50,0],[3,13,2,117,12],[0,14,2,75,0],[4,12,2,86,12],[4,13,3,55,12],[5,13,3,58,0],[5,12,1,163,9],[3,14,2,106,9],[4,14,4,22,0],[6,12,3,62,9],[8,12,3,47,11],[7,13,2,85,0],[7,12,2,73,0],[6,13,2,75,9],[5,14,3,43,12],[8,13,2,82,12],[6,14,2,79,12],[9,12,2,91,0],[9,13,4,26,12],[9,14,4,23,12],[12,12,4,20,12],[10,13,3,86,9],[12,13,3,64,12],[11,13,5,13,0],[11,12,4,28,12],[13,12,3,41,12],[10,14,3,54,0],[13,13,3,48,12],[14,12,3,38,12],[15,13,4,18,11],[13,14,1,123,12],[14,13,2,75,0],[15,12,3,31,12],[12,14,3,58,12],[14,14,3,55,12],[-26,16,3,33,12],[-27,14,4,22,12],[-26,14,5,7,0],[-28,16,5,11,0],[-26,15,4,32,0],[-27,16,5,8,12],[-27,15,4,14,12],[-25,15,3,35,12],[-25,14,5,14,12],[-28,15,5,5,10],[-23,15,5,14,0],[-25,16,4,15,12],[-24,16,4,18,0],[-24,15,4,30,11],[-26,17,4,19,12],[-21,14,3,33,12],[-21,16,3,43,12],[-22,16,3,57,12],[-21,15,4,39,0],[-23,16,4,24,12],[-22,14,5,7,11],[-20,15,1,130,0],[-18,14,4,23,0],[-19,15,3,46,12],[-20,16,3,36,12],[-18,15,4,23,12],[-20,14,5,6,6],[-19,16,5,8,12],[-18,16,4,29,12],[-16,15,5,15,0],[-17,15,5,9,12],[-17,16,5,12,12],[-16,16,4,17,2],[-14,16,2,82,0],[-15,15,4,25,9],[-14,15,2,87,0],[-13,15,1,123,12],[-15,16,2,130,0],[-12,14,4,29,0],[-13,16,4,24,12],[-11,16,4,36,0],[-12,16,3,70,9],[-11,15,5,14,10],[-12,15,4,30,0],[-12,17,4,22,0],[-9,16,3,61,12],[-10,15,5,11,12],[-9,15,4,35,0],[-10,16,4,32,12],[-8,15,1,209,12],[-9,14,5,5,0],[-8,16,2,99,12],[-7,15,1,137,0],[-6,15,4,37,7],[-6,16,3,47,12],[-7,16,3,55,0],[-9,17,3,49,0],[-8,14,5,3,0],[-3,15,2,126,9],[-5,16,2,111,9],[-4,16,2,90,0],[-5,15,3,57,12],[-4,15,4,27,0],[-2,16,3,71,9],[-2,15,2,79,12],[-1,15,3,49,0],[-3,16,3,48,0],[-4,17,2,110,0],[-1,16,3,47,0],[0,15,2,103,0],[1,15,3,39,12],[0,16,2,77,12],[2,15,2,105,12],[1,16,4,33,12],[2,16,2,111,0],[4,15,4,23,0],[3,16,3,53,9],[3,15,3,50,12],[4,16,3,43,12],[2,17,2,123,9],[6,15,3,46,0],[5,16,3,59,9],[5,15,5,7,10],[7,14,4,13,4],[6,16,3,52,10],[8,16,1,247,9],[7,16,3,93,9],[9,15,2,91,12],[8,15,3,43,12],[7,17,3,58,12],[9,16,2,115,0],[7,15,3,28,12],[8,14,5,6,10],[10,16,1,136,0],[11,14,3,55,12],[10,15,3,38,0],[11,16,3,42,0],[11,15,4,16,12],[12,15,4,35,11],[13,16,3,52,0],[14,15,3,35,12],[12,16,3,51,12],[13,15,1,116,11],[11,17,2,112,0],[-27,19,4,17,0],[-27,18,1,122,9],[-29,19,4,25,12],[-28,19,4,18,0],[-30,19,5,5,13],[-29,18,4,31,0],[-28,18,3,38,7],[-28,17,5,8,12],[-27,17,4,15,12],[-26,18,2,84,0],[-26,19,3,50,12],[-24,17,4,20,12],[-25,18,3,44,12],[-25,19,1,109,12],[-25,17,5,5,12],[-23,18,4,30,0],[-22,18,3,52,12],[-24,18,5,11,12],[-22,17,4,15,12],[-23,17,4,19,12],[-24,19,5,2,6],[-21,17,3,52,12],[-19,17,3,69,0],[-21,18,4,31,0],[-20,18,4,41,0],[-20,17,2,72,0],[-22,19,3,53,12],[-21,19,5,14,0],[-20,19,5,13,0],[-19,18,4,28,0],[-18,17,2,87,0],[-17,17,3,48,0],[-17,18,3,44,12],[-18,18,4,28,0],[-19,19,5,13,0],[-18,19,2,73,12],[-16,17,3,45,0],[-15,17,3,60,0],[-15,19,4,16,12],[-15,18,4,37,0],[-16,18,4,31,12],[-14,17,3,76,0],[-16,19,5,9,0],[-17,19,4,20,2],[-13,17,2,87,0],[-13,18,4,24,9],[-14,19,4,18,0],[-12,18,3,59,12],[-13,19,4,19,12],[-14,18,5,13,2],[-10,17,3,49,0],[-11,17,3,50,9],[-12,19,5,14,0],[-10,18,3,44,12],[-11,18,3,43,0],[-10,19,3,41,12],[-11,19,5,4,12],[-8,18,3,29,12],[-8,17,2,89,9],[-9,18,3,51,9],[-9,19,3,48,0],[-7,17,3,50,0],[-8,19,4,30,0],[-7,18,4,35,0],[-7,19,1,166,0],[-6,17,2,76,12],[-6,18,2,94,0],[-5,18,3,65,0],[-5,19,3,47,0],[-5,17,3,56,0],[-6,19,2,78,0],[-4,19,4,27,0],[-4,18,3,41,0],[-3,17,3,44,6],[-2,17,3,46,12],[-3,19,3,44,12],[-2,18,3,52,0],[-3,18,3,47,7],[-1,17,1,196,0],[0,17,2,106,0],[-1,18,2,78,12],[-2,19,3,49,12],[0,18,3,48,0],[-1,19,3,38,0],[1,17,1,126,9],[0,19,3,45,0],[2,19,4,26,12],[1,18,2,112,0],[3,17,3,58,12],[2,18,1,108,12],[1,19,3,50,12],[3,18,3,52,12],[5,17,4,27,0],[4,17,4,34,0],[4,18,4,25,0],[3,19,5,4,0],[7,19,3,35,12],[7,18,3,36,12],[6,19,3,61,0],[8,17,2,67,12],[6,17,3,45,0],[5,19,4,19,2],[5,18,5,7,12],[6,18,5,5,4],[8,18,4,31,0],[9,17,3,75,0],[10,17,3,56,0],[8,19,4,33,0],[9,18,5,16,0],[9,19,5,7,0],[10,18,3,63,0],[12,18,4,18,12],[12,17,3,35,12],[11,18,5,10,12],[13,17,4,15,12],[-29,22,5,9,0],[-29,21,5,12,0],[-30,20,4,16,9],[-28,20,4,23,12],[-30,22,5,8,12],[-29,20,4,21,12],[-30,21,5,5,11],[-31,22,5,2,2],[-26,20,2,100,12],[-28,22,5,12,0],[-26,21,4,15,0],[-27,20,5,12,12],[-27,21,5,12,0],[-27,22,5,1,0],[-28,21,5,8,11],[-25,20,2,66,12],[-24,21,4,22,12],[-26,22,5,3,0],[-24,20,4,29,0],[-23,20,3,47,0],[-25,22,5,6,12],[-25,21,5,8,12],[-23,19,5,2,11],[-22,20,3,44,12],[-21,20,4,28,12],[-22,21,4,18,12],[-21,21,4,19,0],[-23,21,5,1,12],[-24,22,5,1,12],[-19,21,4,12,12],[-20,21,5,21,0],[-20,20,4,22,12],[-19,20,4,18,12],[-20,22,4,23,0],[-19,22,4,14,12],[-18,20,4,22,12],[-21,22,5,5,9],[-17,22,3,52,0],[-17,21,4,16,12],[-17,20,4,27,0],[-18,21,4,14,12],[-16,20,4,23,0],[-18,22,5,3,0],[-16,21,5,3,1],[-16,22,5,5,0],[-15,20,5,3,0],[-15,22,5,3,0],[-14,22,5,2,1],[-14,20,5,5,4],[-14,21,5,1,7],[-15,21,5,2,7],[-12,20,5,1,0],[-12,22,5,8,11],[-11,20,5,9,1],[-12,21,5,6,2],[-9,21,2,67,12],[-10,21,1,143,12],[-10,20,3,42,12],[-9,20,2,134,9],[-11,22,4,22,0],[-10,22,3,34,12],[-8,20,2,117,9],[-11,21,5,1,2],[-9,22,4,17,12],[-7,20,2,105,0],[-6,20,1,193,0],[-8,21,3,62,0],[-7,21,2,100,0],[-8,22,4,19,0],[-7,22,4,26,0],[-6,21,3,59,12],[-4,20,4,28,0],[-6,22,2,56,12],[-5,22,4,21,10],[-5,20,4,27,0],[-5,21,3,46,0],[-4,21,4,20,12],[-3,20,4,32,12],[-3,21,3,36,12],[-1,20,3,37,12],[-2,21,4,29,12],[-2,20,3,65,0],[-2,22,4,18,12],[-3,22,3,42,12],[-4,22,5,10,7],[0,21,4,18,0],[0,20,2,89,0],[1,20,4,34,0],[1,21,5,11,0],[-1,21,4,29,12],[4,20,4,23,0],[2,21,4,27,12],[3,21,5,12,0],[2,22,5,16,0],[3,22,3,52,12],[1,22,5,6,0],[4,21,4,36,0],[5,22,4,24,12],[5,20,3,60,0],[5,21,3,37,12],[6,21,3,35,12],[6,20,4,33,12],[4,22,4,26,12],[8,20,4,32,0],[7,21,1,189,9],[7,20,3,52,9],[6,22,4,19,0],[7,22,4,37,9],[8,21,5,5,0],[8,22,5,8,0],[9,20,5,8,0],[9,22,5,2,0],[11,20,5,6,11],[10,20,5,6,11],[10,21,5,2,0],[9,21,5,2,6],[11,19,5,11,9],[10,22,5,2,12]],"mode":"relative"}; const PINS=[{"n": "Westminster", "lat": 51.4995, "lng": -0.1248, "m": 3354, "t": 37, "v": 22}, {"n": "South Kensington", "lat": 51.4941, "lng": -0.1738, "m": 1166, "t": 23, "v": 21}, {"n": "Covent Garden", "lat": 51.5117, "lng": -0.124, "m": 4626, "t": 42, "v": 18}, {"n": "Leicester Square", "lat": 51.5103, "lng": -0.1301, "m": 4587, "t": 42, "v": 18}, {"n": "Soho", "lat": 51.5136, "lng": -0.1365, "m": 4828, "t": 42, "v": 18}, {"n": "Bloomsbury", "lat": 51.5205, "lng": -0.1256, "m": 4879, "t": 41, "v": 19}, {"n": "King's Cross", "lat": 51.5308, "lng": -0.1238, "m": 2786, "t": 31, "v": 22}, {"n": "Shoreditch", "lat": 51.5265, "lng": -0.0786, "m": 2493, "t": 22, "v": 24}, {"n": "Whitechapel", "lat": 51.5194, "lng": -0.0612, "m": 2435, "t": 18, "v": 27}, {"n": "Camden Town", "lat": 51.539, "lng": -0.1426, "m": 1644, "t": 23, "v": 27}, {"n": "Greenwich", "lat": 51.4826, "lng": -0.0077, "m": 780, "t": 13, "v": 31}, {"n": "Richmond", "lat": 51.4613, "lng": -0.3037, "m": 292, "t": 12, "v": 28}, {"n": "Wimbledon", "lat": 51.4214, "lng": -0.2064, "m": 351, "t": 12, "v": 27}, {"n": "Lewisham", "lat": 51.4615, "lng": -0.0138, "m": 1104, "t": 9, "v": 34}, {"n": "Croydon", "lat": 51.3762, "lng": -0.0982, "m": 1354, "t": 8, "v": 31}, {"n": "South Bank / Waterloo", "lat": 51.5033, "lng": -0.1145, "m": 3266, "t": 40, "v": 22}, {"n": "Canary Wharf", "lat": 51.5054, "lng": -0.0235, "m": 1429, "t": 11, "v": 29}, {"n": "Notting Hill", "lat": 51.5094, "lng": -0.1968, "m": 1523, "t": 17, "v": 22}, {"n": "Marylebone", "lat": 51.5189, "lng": -0.15, "m": 4019, "t": 39, "v": 17}, {"n": "Paddington", "lat": 51.5154, "lng": -0.1755, "m": 2051, "t": 26, "v": 21}, {"n": "Stratford", "lat": 51.5416, "lng": -0.0034, "m": 1421, "t": 19, "v": 24}, {"n": "Hampstead", "lat": 51.5557, "lng": -0.178, "m": 637, "t": 19, "v": 23}, {"n": "London Bridge / Borough", "lat": 51.5055, "lng": -0.091, "m": 2368, "t": 38, "v": 21}, {"n": "Oxford Street", "lat": 51.5152, "lng": -0.1419, "m": 4863, "t": 42, "v": 17}, {"n": "Kensington (High St)", "lat": 51.5009, "lng": -0.1925, "m": 1123, "t": 22, "v": 21}];
+const COL={5:'#3FA34D',4:'#A4C957',3:'#FFC857',2:'#F46036',1:'#D7263D',0:'#9ED2B2'};
+const LAB={5:'Lowest 35% in London',4:'Middle 30% in London',3:'Busier than most (top 35%)',2:'Busy (top 15%)',1:'Highest 5% in London'};
+const toLL=(x,y)=>[H.clng+x/H.mLng,H.clat+y/H.mLat];
+const feats=H.h.map(([q,r,b,n,c])=>{const cx=H.R*Math.sqrt(3)*(q+r/2),cy=H.R*1.5*r;const ring=[];
+ for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);ring.push(toLL(cx+H.R*Math.cos(a),cy+H.R*Math.sin(a)));} ring.push(ring[0]);
+ return {type:'Feature',properties:{b,n,top:H.cats[c],col:COL[b],lab:LAB[b]},geometry:{type:'Polygon',coordinates:[ring]}};});
+const pins={type:'FeatureCollection',features:PINS.map(p=>({type:'Feature',properties:p,geometry:{type:'Point',coordinates:[p.lng,p.lat]}}))};
+if(!window.maplibregl){document.getElementById('gmap').innerHTML='<p style="padding:20px">Map unavailable offline - open the Wiley Fox map online.</p>';return;}
+const map=new maplibregl.Map({container:'gmap',style:'https://tiles.openfreemap.org/styles/positron',center:[-0.13,51.49],zoom:(window.innerWidth<700?9.4:10.6),cooperativeGestures:true,attributionControl:{compact:true}});
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-right');
+map.on('load',()=>{
+ map.addSource('hex',{type:'geojson',data:{type:'FeatureCollection',features:feats}});
+ map.addLayer({id:'hex',type:'fill',source:'hex',paint:{'fill-color':['get','col'],'fill-opacity':0.55}});
+ map.addSource('pins',{type:'geojson',data:pins});
+ map.addLayer({id:'pins',type:'circle',source:'pins',paint:{'circle-radius':6,'circle-color':'#1a1a1a','circle-stroke-color':'#fff','circle-stroke-width':2}});
+ map.addLayer({id:'pinlab',type:'symbol',source:'pins',layout:{'text-field':['get','n'],'text-size':11,'text-offset':[0,1.1],'text-anchor':'top','text-font':['Noto Sans Bold']},paint:{'text-color':'#1a1a1a','text-halo-color':'#fff','text-halo-width':1.6}});
+ const pop=new maplibregl.Popup({closeButton:true,maxWidth:'260px'});
+ map.on('click','pins',e=>{const p=e.features[0].properties;pop.setLngLat(e.lngLat).setHTML(`<b>${p.n}</b><br>${Number(p.m).toLocaleString('en-GB')} crimes a month within ~1 mile<br>${p.t}% theft · ${p.v}% violence or robbery<br><a href="https://www.thewileyfox.com" target="_blank">Open on Wiley Fox</a>`).addTo(map);});
+ map.on('click','hex',e=>{if(map.queryRenderedFeatures(e.point,{layers:['pins']}).length)return;const p=e.features[0].properties;pop.setLngLat(e.lngLat).setHTML(`<b style="color:${p.col}">${p.lab}</b><br>${p.n} crimes in ${'Jul 2026'}<br>Most common: ${p.top}`).addTo(map);});
+ ['hex','pins'].forEach(l=>{map.on('mouseenter',l,()=>map.getCanvas().style.cursor='pointer');map.on('mouseleave',l,()=>map.getCanvas().style.cursor='');});
+});
+})();
+</script>
+</body></html>

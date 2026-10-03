@@ -11,7 +11,7 @@ import { getShopifyShopUrl } from '@/lib/shopify-shop';
 import { cn } from '@/lib/utils';
 import { extractQrCode } from '@/lib/qr-utils';
 import { QrCameraScanner } from '@/components/qr/qr-camera-scanner';
-import { isProTier } from '@safetag/shared';
+import { describeDigitalUsage, isProTier, TIER_LIMITS } from '@safetag/shared';
 
 const QR_CATEGORIES = ['pet', 'bag', 'key', 'person', 'vehicle', 'other', 'medical', 'place'] as const;
 
@@ -65,8 +65,9 @@ export default function QrPage() {
 
   const isPro = isProTier(user?.subscriptionTier);
   const shopUrl = getShopifyShopUrl();
-  const freeLimit = 5;
-  const digitalCount = tags.filter((t) => t.customFields?.acquisition !== 'claimed').length;
+  const freeLimit = TIER_LIMITS.free.maxQrCodes;
+  const usage = useMemo(() => describeDigitalUsage(tags, user?.subscriptionTier), [tags, user?.subscriptionTier]);
+  const digitalCount = usage.digitalUsed;
   const atDigitalLimit = !isPro && digitalCount >= freeLimit;
 
   useEffect(() => {
@@ -210,20 +211,23 @@ export default function QrPage() {
           </div>
         </div>
 
-        {atDigitalLimit ? (
-          <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-            Free plan allows {freeLimit} digital tags ({digitalCount}/{freeLimit}). Bought physical tags can still be
-            linked anytime. Unlink a digital tag or{' '}
-            <Link href="/dashboard/subscription" className="underline">
-              upgrade
-            </Link>{' '}
-            to create more.
-          </p>
-        ) : !isPro ? (
-          <p className="mt-3 text-xs text-[#8A7B67]">
-            Digital tags {digitalCount}/{freeLimit} · physical claims unlimited
-          </p>
-        ) : null}
+        <div className="mt-3 space-y-1">
+          <p className="text-xs text-[#8A7B67]">{usage.summaryLine}</p>
+          {usage.categories.length > 0 ? (
+            <p className="text-xs text-[#8A7B67]">
+              {usage.categories.map((c) => `${c.label} ${c.count}`).join(' · ')}
+            </p>
+          ) : null}
+          {atDigitalLimit ? (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+              Free digital limit reached. Bought physical tags can still be linked anytime. Unlink a digital tag or{' '}
+              <Link href="/dashboard/subscription" className="underline">
+                upgrade
+              </Link>{' '}
+              to create more.
+            </p>
+          ) : null}
+        </div>
 
         {shopUrl ? (
           <a
@@ -338,11 +342,10 @@ export default function QrPage() {
         </div>
 
         <p className="mt-3 text-xs text-[#8A7B67]">
-          {isPro ? 'Pro plan' : 'Free plan'}: {tags.length}
-          {!isPro ? ` / ${freeLimit}` : ''} active tags.{' '}
+          {isPro ? 'Pro plan' : 'Free plan'}: {usage.summaryLine}.{' '}
           {!isPro ? (
             <Link href="/dashboard/subscription" className="font-extrabold text-brand-600">
-              Pro removes the limit →
+              Pro removes the digital limit →
             </Link>
           ) : null}
         </p>
@@ -523,7 +526,7 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function applyScannedCode(raw: string) {
-    const parsed = extractQrCode(raw) ?? raw.trim().toUpperCase();
+    const parsed = extractQrCode(raw) ?? raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!parsed) {
       setError('Could not read a Wiley Fox code from that QR.');
       return;
@@ -531,17 +534,39 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
     setCode(parsed);
     setError('');
     setScanning(false);
-    setStep(2);
+    void continueFromCodeWith(parsed);
+  }
+
+  async function continueFromCodeWith(parsed: string) {
+    setSaving(true);
+    setError('');
+    try {
+      const info = await publicQr.get(parsed);
+      if (info.status !== 'unclaimed') {
+        setError('This code is already linked to a profile.');
+        return;
+      }
+      setCode(info.uniqueCode ?? parsed);
+      setStep(2);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+        setError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setError('Could not reach the server. Try again in a moment.');
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function continueFromCode() {
-    const parsed = code.trim().toUpperCase();
+    const parsed = extractQrCode(code) ?? code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!parsed) {
       setError('Enter the code printed under the QR, or scan / upload the tag image.');
       return;
     }
-    setError('');
-    setStep(2);
+    await continueFromCodeWith(parsed);
   }
 
   async function handleImageUpload(file: File | null) {
@@ -585,7 +610,14 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
       onLinked(created);
       setStep(3);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Could not link this tag');
+      const msg = e instanceof Error ? e.message : 'Could not link this tag';
+      if (msg.includes('QR_ALREADY_CLAIMED') || msg.toLowerCase().includes('already been claimed')) {
+        setError('This code is already linked to a profile.');
+      } else if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+        setError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -643,16 +675,17 @@ function LinkTagSheet({ onClose, onLinked }: { onClose: () => void; onLinked: (t
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. WF-7K2-QRB"
+                placeholder="e.g. DNYL4XZ6"
                 className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
               />
               {error ? <p className="text-xs text-red-600">{error}</p> : null}
               <button
                 type="button"
                 onClick={() => void continueFromCode()}
-                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white"
+                disabled={saving}
+                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
               >
-                Continue
+                {saving ? 'Checking…' : 'Continue'}
               </button>
             </div>
           ) : null}

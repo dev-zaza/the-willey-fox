@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Map, Tag, Bell, MessageSquare, Shield, Navigation, ShieldCheck, X, LocateFixed, BarChart3, Plus } from 'lucide-react';
@@ -326,18 +327,18 @@ export function DashboardClient() {
     const lng = props.lng;
     setAreaSummaryLoading(true);
     // Hex-scoped radius (~700 m) so neighbouring cells show distinct crime totals
+    // Prefer suburb,city from reverse geocode so the selected cell is not just lat/long or city-only.
+    void reversePlaceName(lat, lng).then((placeLabel) => {
+      if (placeLabel) setSearchedPlace({ label: placeLabel, lat, lng });
+    });
     safetyEngine
       .getAreaSummary({ lat, lng, radius: 700 })
       .then(async (summary) => {
-        if (!summary.cityName) {
-          const name = await reversePlaceName(lat, lng);
-          if (name) {
-            setSearchedPlace({ label: name, lat, lng });
-            setAreaSummary({ ...summary, cityName: name });
-            return;
-          }
-        } else {
-          setSearchedPlace({ label: summary.cityName, lat, lng });
+        const name = (await reversePlaceName(lat, lng)) || summary.cityName || '';
+        if (name) {
+          setSearchedPlace({ label: name, lat, lng });
+          setAreaSummary({ ...summary, cityName: name });
+          return;
         }
         setAreaSummary(summary);
       })
@@ -986,11 +987,16 @@ export function DashboardClient() {
             {selectedH3 && (
               <div className="rounded-xl border border-surface-border bg-surface-elevated p-4">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-bold text-[var(--text-primary)]">Selected Cell</span>
+                  <span className="text-xs font-bold text-[var(--text-primary)]">Selected area</span>
                   <button type="button" onClick={() => setSelectedH3(null)} className="cursor-pointer text-[#7a6957] hover:text-[var(--text-primary)]" aria-label="Clear selected cell">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
+                {(searchedPlace?.label || areaSummary?.cityName) ? (
+                  <p className="mb-2 text-sm font-semibold text-[var(--text-primary)]">
+                    {searchedPlace?.label || areaSummary?.cityName}
+                  </p>
+                ) : null}
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-full border text-sm font-black"
@@ -1005,6 +1011,19 @@ export function DashboardClient() {
                     <div className="text-xs text-[#7a6957]">{selectedH3.incidentCount} incidents</div>
                   </div>
                 </div>
+                {(() => {
+                  const place = searchedPlace?.label || areaSummary?.cityName || '';
+                  const cityPart = place.includes(',') ? place.split(',').pop()?.trim() : place;
+                  const slug = cityPart?.toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-') ?? '';
+                  return slug ? (
+                    <Link
+                      href={`/guides/${slug}`}
+                      className="mt-2 block text-xs font-bold text-brand-600 hover:underline"
+                    >
+                      Open {cityPart} travel guide →
+                    </Link>
+                  ) : null;
+                })()}
                 <button
                   type="button"
                   onClick={() => {
@@ -1015,6 +1034,7 @@ export function DashboardClient() {
                     void openAreaReport({
                       lat: selectedH3.lat,
                       lng: selectedH3.lng,
+                      name: searchedPlace?.label || areaSummary?.cityName,
                     });
                   }}
                   className="mt-3 w-full cursor-pointer rounded-lg bg-brand-500/15 py-2 text-xs font-semibold text-brand-600 hover:bg-brand-500/25"

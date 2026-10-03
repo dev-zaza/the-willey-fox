@@ -31,6 +31,7 @@ export interface SelectedHex {
   incidentCount: number;
   centLat: number;
   centLng: number;
+  placeName?: string;
 }
 
 interface Props {
@@ -91,6 +92,11 @@ export function SafetyHexSheet({ hex, onClose, onViewAreaReport }: Props) {
           }} />
 
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+            {hex.placeName ? (
+              <Text style={{ fontSize: 16, fontWeight: '700', color: textPrimary, marginBottom: 12 }}>
+                {hex.placeName}
+              </Text>
+            ) : null}
             {/* Score + band row */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 }}>
               <View style={{

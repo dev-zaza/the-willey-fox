@@ -374,9 +374,21 @@ export const qrCodes = {
   },
 };
 
+export interface QrPublicLookup {
+  id?: string;
+  uniqueCode: string;
+  status?: string;
+  category?: string;
+  name?: string;
+  isLost?: boolean;
+}
+
 export const publicQr = {
+  get: (code: string) => request<QrPublicLookup>(`/public/q/${encodeURIComponent(code)}`, {}, false),
   activate: (payload: ActivateQrPayload) =>
     request<QrCode>('/public/qr/activate', { method: 'POST', body: JSON.stringify(payload) }),
+  recordScan: (code: string) =>
+    request<{ notified: boolean }>(`/public/q/${encodeURIComponent(code)}/scan`, { method: 'POST' }, false),
 };
 
 // ── Reports (public + authed) ─────────────────────────────────────────────────

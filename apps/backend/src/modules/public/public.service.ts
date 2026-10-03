@@ -186,10 +186,13 @@ export class PublicService {
 
     this.logger.log(`New report submitted for QR ${qrCode.uniqueCode} (ID: ${report.id})`);
 
-    // Notify owner and guardians asynchronously
-    this.notificationsService
-      .notifyGuardiansOfReport(report.id, qrCode.id)
-      .catch((err) => this.logger.error(`Failed to queue notifications for report ${report.id}`, err));
+    let ownerNotified = false;
+    try {
+      await this.notificationsService.notifyGuardiansOfReport(report.id, qrCode.id);
+      ownerNotified = true;
+    } catch (err) {
+      this.logger.error(`Failed to queue notifications for report ${report.id}`, err);
+    }
 
     // Auto-create conversation between authenticated finder and QR owner
     let conversationId: string | null = null;
@@ -203,8 +206,26 @@ export class PublicService {
     return {
       id: report.id,
       conversationId,
-      message: 'Report submitted successfully. The owner has been notified.',
+      message: ownerNotified
+        ? 'Report submitted successfully. The owner has been notified.'
+        : 'Report submitted successfully. We could not notify the owner right now — please also try contacting them if details are shown.',
+      ownerNotified,
     };
+  }
+
+  async recordPublicScan(code: string, viewerUserId?: string): Promise<{ notified: boolean }> {
+    const [qrCode] = await this.db
+      .select({ id: qrCodes.id, status: qrCodes.status, userId: qrCodes.userId })
+      .from(qrCodes)
+      .where(eq(qrCodes.uniqueCode, code))
+      .limit(1);
+
+    if (!qrCode || qrCode.status === 'unclaimed' || !qrCode.userId) {
+      return { notified: false };
+    }
+
+    const notified = await this.notificationsService.notifyOwnerOfScan(qrCode.id, viewerUserId);
+    return { notified };
   }
 
   async listBroadcasts(page = 1, pageSize = 20) {

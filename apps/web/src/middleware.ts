@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PROTECTED_PATHS = ['/dashboard', '/admin', '/tags', '/profile', '/settings', '/onboard'];
+const PROTECTED_PATHS = ['/dashboard', '/admin', '/tags', '/profile', '/settings', '/onboard', '/guides'];
 const AUTH_PATHS = ['/login', '/register'];
 const AUTH_MARKER_COOKIE = 'st_auth';
 

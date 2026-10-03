@@ -87,13 +87,15 @@ function loadTemplate(fileName: string): string {
 }
 
 /**
- * Injects a real QR PNG into the dashed placeholder box of a print-svg template.
+ * Injects a real QR PNG into the dashed placeholder box of a print-svg template,
+ * plus the human-readable uniqueCode under the QR for camera-fail fallback entry.
  * Templates without a placeholder (e.g. text-only reverse sides) render unchanged.
  */
 async function renderSvgWithQr(
   fileName: string,
   scanUrl: string | null,
   overrideDims?: { wMm: number; hMm: number },
+  uniqueCode?: string,
 ): Promise<{ svg: string; wMm: number; hMm: number }> {
   let svg = loadTemplate(fileName);
 
@@ -131,9 +133,23 @@ async function renderSvgWithQr(
         color: { dark: '#1a1a1a', light: '#ffffff' },
       });
       const qrB64 = qrBuf.toString('base64');
+      const code = uniqueCode ?? scanUrl.match(/\/q\/([A-Z0-9]+)/i)?.[1]?.toUpperCase() ?? '';
+      const fontSize = Math.max(2.2, Math.min(bw * 0.18, 4.2));
+      const codeY = by + bh + fontSize + 0.8;
+      const codeText = code
+        ? `<text x="${bx + bw / 2}" y="${codeY}" text-anchor="middle" font-family="Spline Sans Mono, ui-monospace, monospace" font-size="${fontSize}" font-weight="600" fill="#1a1a1a" letter-spacing="0.08em">${code}</text>`
+        : '';
+      // Short scan hint when the template has no instruction copy near the QR
+      const hintSize = Math.max(1.6, Math.min(bw * 0.11, 2.8));
+      const hintY = codeY + (code ? hintSize + 0.6 : 0);
+      const hasScanCopy = /SCAN|IF FOUND|lost/i.test(svg);
+      const hintText =
+        !hasScanCopy && bw >= 12
+          ? `<text x="${bx + bw / 2}" y="${hintY}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="${hintSize}" fill="#444444">Scan if found · private</text>`
+          : '';
       svg = svg.replace(
         /<rect [^>]*stroke-dasharray[^>]*>/,
-        `<image href="data:image/png;base64,${qrB64}" xlink:href="data:image/png;base64,${qrB64}" x="${bx}" y="${by}" width="${bw}" height="${bh}"></image>`,
+        `<image href="data:image/png;base64,${qrB64}" xlink:href="data:image/png;base64,${qrB64}" x="${bx}" y="${by}" width="${bw}" height="${bh}"></image>${codeText}${hintText}`,
       );
       svg = svg.replace(/<text[^>]*>QR<\/text>/, '');
       svg = svg.replace(/<text[^>]*>PLACE<\/text>/, '');
@@ -214,13 +230,13 @@ export class PrintExportService implements OnModuleDestroy {
       const scanUrl = `${publicBaseUrl}/q/${uniqueCode}`;
       const fmtDims = 'wMm' in fmt ? { wMm: (fmt as any).wMm, hMm: (fmt as any).hMm } : undefined;
 
-      const front = await renderSvgWithQr(fmt.front, scanUrl, fmtDims);
+      const front = await renderSvgWithQr(fmt.front, scanUrl, fmtDims, uniqueCode);
       wMm = front.wMm;
       hMm = front.hMm;
       pages.push(uniqueClipId(front.svg, pageIndex++));
 
       if ('reverse' in fmt && fmt.reverse) {
-        const reverse = await renderSvgWithQr(fmt.reverse, scanUrl, fmtDims);
+        const reverse = await renderSvgWithQr(fmt.reverse, scanUrl, fmtDims, uniqueCode);
         pages.push(uniqueClipId(reverse.svg, pageIndex++));
       }
     }

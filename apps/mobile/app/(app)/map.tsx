@@ -909,15 +909,45 @@ export default function MapScreen() {
                 const feature = e?.features?.[0] ?? e?.nativeEvent?.payload?.features?.[0];
                 if (!feature?.properties) return;
                 const p = feature.properties;
+                const centLat = p.centLat != null ? Number(p.centLat) : 0;
+                const centLng = p.centLng != null ? Number(p.centLng) : 0;
                 setSelectedHex({
                   h3: p.h3 ?? '',
                   score: p.score != null ? Number(p.score) : null,
                   band: p.band ?? '',
                   color: p.color ?? '#888888',
                   incidentCount: p.incidentCount != null ? Number(p.incidentCount) : 0,
-                  centLat: p.centLat != null ? Number(p.centLat) : 0,
-                  centLng: p.centLng != null ? Number(p.centLng) : 0,
+                  centLat,
+                  centLng,
                 });
+                if (centLat && centLng) {
+                  void fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${centLat}&lon=${centLng}&format=json`,
+                    { headers: { Accept: 'application/json', 'Accept-Language': 'en' } },
+                  )
+                    .then((r) => (r.ok ? r.json() : null))
+                    .then((data: { address?: Record<string, string> } | null) => {
+                      if (!data?.address) return;
+                      const addr = data.address;
+                      const suburb =
+                        addr.suburb ||
+                        addr.neighbourhood ||
+                        addr.neighborhood ||
+                        addr.quarter ||
+                        addr.city_district ||
+                        '';
+                      const city = addr.city || addr.town || addr.village || addr.municipality || '';
+                      const label =
+                        suburb && city && suburb.toLowerCase() !== city.toLowerCase()
+                          ? `${suburb}, ${city}`
+                          : suburb || city;
+                      if (!label) return;
+                      setSelectedHex((prev) =>
+                        prev && prev.h3 === (p.h3 ?? '') ? { ...prev, placeName: label } : prev,
+                      );
+                    })
+                    .catch(() => {});
+                }
               }}
             >
               <MapboxFillLayer

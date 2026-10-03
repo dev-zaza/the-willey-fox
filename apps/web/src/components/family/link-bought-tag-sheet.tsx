@@ -27,7 +27,7 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function applyScannedCode(raw: string) {
-    const parsed = extractQrCode(raw) ?? raw.trim().toUpperCase();
+    const parsed = extractQrCode(raw) ?? raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!parsed) {
       setError('Could not read a Wiley Fox code from that QR.');
       return;
@@ -35,7 +35,27 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
     setCode(parsed);
     setError('');
     setScanning(false);
-    setStep(2);
+    void (async () => {
+      setSaving(true);
+      try {
+        const info = await publicQr.get(parsed);
+        if (info.status !== 'unclaimed') {
+          setError('This code is already linked to a profile.');
+          return;
+        }
+        setCode(info.uniqueCode ?? parsed);
+        setStep(2);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : '';
+        if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+          setError('Tag code not found. Check the printed code and try again.');
+        } else {
+          setError('Could not reach the server. Try again in a moment.');
+        }
+      } finally {
+        setSaving(false);
+      }
+    })();
   }
 
   async function handleImageUpload(file: File | null) {
@@ -67,6 +87,34 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
     }
   }
 
+  async function continueFromCode() {
+    const parsed = extractQrCode(code) ?? code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!parsed) {
+      setError('Enter the code, or scan / upload the QR image.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const info = await publicQr.get(parsed);
+      if (info.status !== 'unclaimed') {
+        setError('This code is already linked to a profile.');
+        return;
+      }
+      setCode(info.uniqueCode ?? parsed);
+      setStep(2);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+        setError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setError('Could not reach the server. Try again in a moment.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function linkTag() {
     setSaving(true);
     setError('');
@@ -80,7 +128,14 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
       onLinked(created);
       setStep(3);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Could not link this tag');
+      const msg = e instanceof Error ? e.message : 'Could not link this tag';
+      if (msg.includes('QR_ALREADY_CLAIMED') || msg.toLowerCase().includes('already been claimed')) {
+        setError('This code is already linked to a profile.');
+      } else if (msg.includes('QR_NOT_FOUND') || msg.toLowerCase().includes('not found')) {
+        setError('Tag code not found. Check the printed code and try again.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -137,23 +192,17 @@ export function LinkBoughtTagSheet({ onClose, onLinked, familyId }: LinkBoughtTa
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="Tag code"
+                placeholder="e.g. DNYL4XZ6"
                 className="w-full rounded-xl border border-[#E3D8C6] px-3 py-2 text-sm uppercase"
               />
               {error ? <p className="text-xs text-red-600">{error}</p> : null}
               <button
                 type="button"
-                onClick={() => {
-                  if (!code.trim()) {
-                    setError('Enter the code, or scan / upload the QR image.');
-                    return;
-                  }
-                  setError('');
-                  setStep(2);
-                }}
-                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white"
+                onClick={() => void continueFromCode()}
+                disabled={saving}
+                className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
               >
-                Continue
+                {saving ? 'Checking…' : 'Continue'}
               </button>
             </div>
           ) : null}
