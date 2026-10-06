@@ -70,8 +70,8 @@ export class PaymentsService {
         metadata: { userId },
       },
       metadata: { userId },
-      success_url: dto.successUrl ?? `${publicBaseUrl}/subscription?success=true`,
-      cancel_url: dto.cancelUrl ?? `${publicBaseUrl}/subscription?canceled=true`,
+      success_url: dto.successUrl ?? `${publicBaseUrl}/dashboard/subscription?success=true`,
+      cancel_url: dto.cancelUrl ?? `${publicBaseUrl}/dashboard/subscription?canceled=true`,
     });
 
     if (!session.url) {

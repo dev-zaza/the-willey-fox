@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Zap, Crown, XCircle, CreditCard, RefreshCw } from 'lucide-react';
 import { payments, settings, type SubscriptionStatus, type Invoice, type PricingConfig } from '@/lib/api';
 import { isProTier } from '@safetag/shared';
@@ -38,13 +39,44 @@ export default function SubscriptionPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'error' | 'success'; text: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<'cancel' | 'switch' | null>(null);
+  const searchParams = useSearchParams();
+  const checkoutResult = searchParams.get('success') === 'true'
+    ? 'success'
+    : searchParams.get('canceled') === 'true'
+      ? 'canceled'
+      : null;
 
   useEffect(() => {
+    if (checkoutResult === 'success') {
+      setNotice({
+        tone: 'success',
+        text: 'Payment received. Your Pro plan will appear here as soon as Stripe confirms it.',
+      });
+    } else if (checkoutResult === 'canceled') {
+      setNotice({
+        tone: 'error',
+        text: 'Checkout was canceled. You have not been charged.',
+      });
+    }
+  }, [checkoutResult]);
+
+  useEffect(() => {
+    let refreshTimer: number | undefined;
     Promise.all([payments.getSubscription(), payments.getInvoices(), settings.getPricing()])
       .then(([s, i, p]) => { setSub(s); setInvoices(i); setPricing(p); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+
+    if (checkoutResult === 'success') {
+      refreshTimer = window.setTimeout(() => {
+        payments.getSubscription().then(setSub).catch(() => {});
+      }, 2500);
+    }
+
+    return () => {
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+    };
+  }, [checkoutResult]);
 
   async function checkout(interval: BillingInterval) {
     setNotice(null);

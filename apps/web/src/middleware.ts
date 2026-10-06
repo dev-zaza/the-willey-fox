@@ -6,6 +6,14 @@ const AUTH_MARKER_COOKIE = 'st_auth';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Stripe Checkout still returns to the old path. Keep the query (?success=true / ?canceled=true).
+  if (pathname === '/subscription' || pathname === '/subscription/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard/subscription';
+    return NextResponse.redirect(url);
+  }
+
   const isAuthenticated = request.cookies.has(AUTH_MARKER_COOKIE);
 
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
@@ -13,8 +21,9 @@ export function middleware(request: NextRequest) {
 
   if (isProtected && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
+    const returnTo = `${pathname}${request.nextUrl.search}`;
     // After login, send new users into onboarding when they were headed to onboard
-    loginUrl.searchParams.set('redirect', pathname.startsWith('/onboard') ? '/onboard/welcome' : pathname);
+    loginUrl.searchParams.set('redirect', pathname.startsWith('/onboard') ? '/onboard/welcome' : returnTo);
     return NextResponse.redirect(loginUrl);
   }
 

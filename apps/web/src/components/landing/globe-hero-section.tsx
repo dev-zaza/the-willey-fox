@@ -194,27 +194,33 @@ export function GlobeHeroSection() {
       />
 
       {/* Nav */}
-      <nav className="relative z-20 w-full max-w-[1400px] mx-auto px-8 sm:px-16 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Image src="/logo.png" alt="TheWileyfox" width={36} height={36} className="object-contain" />
+      <nav className="relative z-20 mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-8 sm:py-5 lg:px-16">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+          <Image
+            src="/logo.png"
+            alt="TheWileyfox"
+            width={36}
+            height={36}
+            className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9"
+          />
           <span
-            className="text-lg tracking-tight"
+            className="truncate text-[15px] tracking-tight sm:text-lg"
             style={{ fontFamily: 'var(--font-display, Georgia, serif)', fontWeight: 900, color: '#1b1410', letterSpacing: '-0.02em' }}
           >
             TheWileyfox
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/login"
-            className="text-sm font-medium px-4 py-3 rounded-full transition-colors"
+            className="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-3"
             style={{ color: '#5a4a3d' }}
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="text-sm font-semibold text-white px-5 py-2.5 rounded-full transition-all hover:-translate-y-0.5"
+            className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 sm:px-5 sm:py-2.5"
             style={{
               background: '#1b1410',
               boxShadow: '0 4px 12px rgba(27,20,16,0.18)',

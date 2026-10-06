@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
   devIndicators: {
     position: 'bottom-right',
   },
+  async redirects() {
+    return [
+      {
+        source: '/subscription',
+        destination: '/dashboard/subscription',
+        permanent: false,
+      },
+    ];
+  },
   // Required for three-globe and leaflet which use browser globals
   webpack: (config, { isServer }) => {
     if (isServer) {
