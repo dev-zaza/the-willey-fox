@@ -153,10 +153,10 @@ export default function SubscriptionPage() {
         {notice && (
           <div
             role={notice.tone === 'error' ? 'alert' : 'status'}
-            className={`rounded-xl border px-4 py-3 text-sm ${
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
               notice.tone === 'error'
-                ? 'border-red-500/30 bg-red-500/10 text-red-300'
-                : 'border-green-500/30 bg-green-500/10 text-green-300'
+                ? 'border-red-700 bg-red-50 text-red-800'
+                : 'border-green-700 bg-green-50 text-green-800'
             }`}
           >
             {notice.text}
