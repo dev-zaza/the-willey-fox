@@ -221,6 +221,22 @@ export class PaymentsService {
       .orderBy(desc(transactions.createdAt));
   }
 
+  /**
+   * Pull paid Stripe subscriptions into the local database.
+   * Covers production checkouts that completed before the webhook listener
+   * was running, and any event the listener drops after a restart.
+   * Returns how many local rows were created or changed.
+   */
+  async syncPaidSubscriptions(): Promise<number> {
+    const since = Math.floor(Date.now() / 1000) - 90 * 24 * 60 * 60;
+    let changed = 0;
+
+    changed += await this.syncSubscriptionList(since);
+    changed += await this.syncCompletedCheckoutSessions(since);
+
+    return changed;
+  }
+
   // ------- Webhook handlers -------
 
   private async onCheckoutCompleted(session: Stripe.Checkout.Session) {
@@ -321,6 +337,109 @@ export class PaymentsService {
     const sub = subDetails.subscription;
     if (!sub) return null;
     return typeof sub === 'string' ? sub : sub.id;
+  }
+
+  private async syncSubscriptionList(sinceUnix: number): Promise<number> {
+    let changed = 0;
+    let startingAfter: string | undefined;
+
+    for (let page = 0; page < 5; page++) {
+      const result = await this.stripe.subscriptions.list({
+        status: 'all',
+        limit: 100,
+        created: { gte: sinceUnix },
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      });
+
+      for (const stripeSub of result.data) {
+        if (await this.applyStripeSubscription(stripeSub)) changed++;
+      }
+
+      if (!result.has_more || result.data.length === 0) break;
+      startingAfter = result.data[result.data.length - 1]?.id;
+    }
+
+    return changed;
+  }
+
+  private async syncCompletedCheckoutSessions(sinceUnix: number): Promise<number> {
+    let changed = 0;
+    let startingAfter: string | undefined;
+
+    for (let page = 0; page < 3; page++) {
+      const result = await this.stripe.checkout.sessions.list({
+        status: 'complete',
+        limit: 100,
+        created: { gte: sinceUnix },
+        ...(startingAfter ? { starting_after: startingAfter } : {}),
+      });
+
+      for (const session of result.data) {
+        if (session.mode !== 'subscription') continue;
+        const userId = session.metadata?.userId;
+        const stripeSubscriptionId = this.checkoutSubscriptionId(session);
+        if (!userId || !stripeSubscriptionId) continue;
+
+        const [existing] = await this.db
+          .select({ status: subscriptions.status })
+          .from(subscriptions)
+          .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
+          .limit(1);
+
+        if (existing && ['active', 'trialing'].includes(existing.status)) continue;
+
+        const stripeSub = await this.stripe.subscriptions.retrieve(stripeSubscriptionId);
+        const withUser: Stripe.Subscription = stripeSub.metadata?.userId
+          ? stripeSub
+          : { ...stripeSub, metadata: { ...stripeSub.metadata, userId } };
+        if (await this.applyStripeSubscription(withUser)) changed++;
+      }
+
+      if (!result.has_more || result.data.length === 0) break;
+      startingAfter = result.data[result.data.length - 1]?.id;
+    }
+
+    return changed;
+  }
+
+  private checkoutSubscriptionId(session: Stripe.Checkout.Session): string | null {
+    const sub = session.subscription;
+    if (!sub) return null;
+    return typeof sub === 'string' ? sub : sub.id;
+  }
+
+  private async applyStripeSubscription(stripeSub: Stripe.Subscription): Promise<boolean> {
+    const userId = stripeSub.metadata?.userId;
+    if (!userId) return false;
+    if (!['active', 'trialing', 'past_due', 'unpaid', 'canceled'].includes(stripeSub.status)) {
+      return false;
+    }
+
+    const [existing] = await this.db
+      .select({
+        status: subscriptions.status,
+        cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+      })
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSub.id))
+      .limit(1);
+
+    if (
+      existing?.status === stripeSub.status &&
+      existing.cancelAtPeriodEnd === stripeSub.cancel_at_period_end
+    ) {
+      return false;
+    }
+
+    if (stripeSub.status === 'canceled') {
+      if (!existing) return false;
+      await this.onSubscriptionDeleted(stripeSub);
+    } else {
+      await this.upsertSubscription(userId, stripeSub);
+    }
+
+    this.logger.log(`Synced Stripe subscription ${stripeSub.id} → ${stripeSub.status}`);
+    return true;
   }
 
   // ------- Helpers -------

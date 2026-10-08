@@ -18,6 +18,7 @@ import { PaymentsService } from './payments.service';
 import { ShopifyWebhookService } from './shopify-webhook.service';
 import { CreateCheckoutDto, UpdateSubscriptionDto } from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiBearerAuth('JWT')
 @ApiTags('payments')
@@ -38,6 +39,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @SkipThrottle()
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   handleWebhook(
@@ -74,6 +76,7 @@ export class PaymentsController {
   }
 
   @Public()
+  @SkipThrottle()
   @Post('webhook/shopify')
   @HttpCode(HttpStatus.OK)
   handleShopifyWebhook(

@@ -34,9 +34,12 @@ FROM node:22-slim AS runner
 WORKDIR /app
 
 # tini: clean PID 1. Chromium + fonts: Puppeteer PDF export. build tools: bcrypt native addon.
+# curl + ca-certificates: download the Stripe CLI webhook listener.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     netcat-openbsd \
+    curl \
+    ca-certificates \
     python3 make g++ \
     chromium \
     fonts-liberation \
@@ -71,11 +74,30 @@ COPY --from=builder /app/apps/backend/tsconfig.json ./apps/backend/tsconfig.json
 COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Stripe CLI — production containers forward live/test webhooks into this process.
+# Signing secret is stable across `stripe listen` restarts for the same API key.
+ARG STRIPE_CLI_VERSION=1.43.7
+RUN set -eux; \
+  arch="$(dpkg --print-architecture)"; \
+  case "$arch" in \
+    amd64) stripe_arch="x86_64" ;; \
+    arm64) stripe_arch="arm64" ;; \
+    *) echo "unsupported architecture: $arch" >&2; exit 1 ;; \
+  esac; \
+  curl -fsSL "https://github.com/stripe/stripe-cli/releases/download/v${STRIPE_CLI_VERSION}/stripe_${STRIPE_CLI_VERSION}_linux_${stripe_arch}.tar.gz" \
+    -o /tmp/stripe-cli.tar.gz; \
+  tar -xzf /tmp/stripe-cli.tar.gz -C /usr/local/bin stripe; \
+  rm /tmp/stripe-cli.tar.gz; \
+  stripe version
+
 ENV NODE_ENV=production
 # Tell Puppeteer to use system Chromium installed above instead of downloading its own binary.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Start `stripe listen` in this container unless explicitly disabled.
+ENV STRIPE_WEBHOOK_LISTEN=true
+ENV STRIPE_CLI_TELEMETRY_OPTOUT=1
 # Backend listens on $PORT (defaults to 3000 in main.ts). Dokploy sets PORT via env.
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/usr/local/bin/docker-entrypoint.sh"]
