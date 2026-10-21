@@ -82,6 +82,22 @@ function citySlug(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, '-').replace(/_/g, '-');
 }
 
+function nearestListedCity(lat: number, lng: number): string {
+  const all = [...UK_CITIES, ...GLOBAL_CITIES];
+  let best = all[0];
+  let bestD = Infinity;
+  for (const city of all) {
+    const dLat = city.lat - lat;
+    const dLng = city.lng - lng;
+    const d = dLat * dLat + dLng * dLng;
+    if (d < bestD) {
+      best = city;
+      bestD = d;
+    }
+  }
+  return best.name;
+}
+
 interface GeocodeResult {
   id: string;
   name: string;
@@ -126,6 +142,7 @@ export function AreaSafetyPanel({
   const [guideLoading, setGuideLoading] = useState(false);
   const [proHighlights, setProHighlights] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [citiesOpen, setCitiesOpen] = useState(false);
 
   const userTypingRef = useRef(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -313,10 +330,12 @@ export function AreaSafetyPanel({
   const score = summary?.score != null ? Math.round(summary.score) : null;
   const displayCity = summary?.cityName || selectedArea?.name || placeLabel;
   const tips = getTips(displayCity);
-  const guideCity = displayCity;
-  const guideCitySlug = guideCity
-    ? citySlug(guideCity.includes(',') ? guideCity.split(',').pop()!.trim() : guideCity)
-    : '';
+  const listedMatch = [...UK_CITIES, ...GLOBAL_CITIES].find((city) =>
+    displayCity.toLowerCase().includes(city.name.toLowerCase()),
+  );
+  const guideCity = listedMatch?.name
+    ?? (summary ? nearestListedCity(summary.lat, summary.lng) : '');
+  const guideCitySlug = guideCity ? citySlug(guideCity) : '';
   const guideHref = guideCitySlug ? `/guides/${guideCitySlug}` : null;
 
   return (
@@ -408,11 +427,22 @@ export function AreaSafetyPanel({
       <main
         className={
           isPanel
-            ? 'min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4'
-            : 'mx-auto max-w-2xl space-y-4 px-4 pt-5'
+            ? 'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 py-4'
+            : 'mx-auto flex max-w-2xl flex-col gap-4 px-4 pt-5'
         }
       >
-        <section>
+        <section className="order-2">
+          <button
+            type="button"
+            onClick={() => setCitiesOpen((open) => !open)}
+            className="mb-2 flex w-full items-center justify-between text-left text-[11px] font-bold uppercase tracking-wider text-[#8A7B67]"
+            aria-expanded={citiesOpen}
+          >
+            Browse cities
+            <span>{citiesOpen ? 'Hide' : 'Show'}</span>
+          </button>
+          {citiesOpen ? (
+            <>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#8A7B67]">UK cities · live data</p>
           <div className="grid grid-cols-2 gap-2">
             {UK_CITIES.map((city) => (
@@ -463,9 +493,13 @@ export function AreaSafetyPanel({
               </button>
             ))}
           </div>
+            </>
+          ) : null}
         </section>
 
+        <div className="order-3">
         <SaveSpotForm fallbackLat={selectedArea?.lat ?? currentLocation?.lat} fallbackLng={selectedArea?.lng ?? currentLocation?.lng} />
+        </div>
 
         {summaryLoading && (
           <div className="flex flex-col items-center gap-3 py-16">
@@ -479,7 +513,7 @@ export function AreaSafetyPanel({
         )}
 
         {!summaryLoading && summary && (
-          <>
+          <div className="order-1 space-y-4">
             <section className="rounded-2xl border border-[#ECECEC] bg-white p-5">
               <div className="flex items-center gap-4">
                 <div
@@ -693,7 +727,7 @@ export function AreaSafetyPanel({
                       className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#FF7B14] bg-[#FFE9D6] py-3.5 text-sm font-semibold text-[#E2620A]"
                     >
                       <BarChart3 className="h-4 w-4" />
-                      Open full travel guide
+                      {listedMatch ? `Open ${guideCity} travel guide` : `Nearest city guide: ${guideCity}`}
                     </Link>
                   )}
                   {guideCity && (
@@ -707,7 +741,7 @@ export function AreaSafetyPanel({
                 </>
               )}
             </section>
-          </>
+          </div>
         )}
 
         {!summaryLoading && !summary && !error && (

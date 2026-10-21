@@ -16,6 +16,7 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
+import { readCurrentPosition } from '@/lib/geo';
 import { LinkBoughtTagSheet } from '@/components/family/link-bought-tag-sheet';
 
 const AVATAR_COLORS = ['#0F766E', '#B45309', '#1D4ED8', '#7C3AED', '#B91C1C'];
@@ -341,9 +342,13 @@ export default function PeoplePage() {
                               await qrCodes.markFound(p.id);
                             } else {
                               await qrCodes.markLost(p.id);
+                              const loc = await readCurrentPosition();
                               await reports.createMissing({
                                 qrCodeId: p.id,
-                                requestBroadcast: p.category === 'person',
+                                description: p.name,
+                                lat: loc?.lat,
+                                lng: loc?.lng,
+                                requestBroadcast: p.category === 'person' || p.category === 'medical',
                               });
                             }
                             const memberships = await families.list();

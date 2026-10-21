@@ -16,9 +16,43 @@ interface ReportNotificationData {
   reportTime: Date;
   portalUrl: string;
   unsubscribeUrl?: string;
+  /** Finder reports are "found". Owner-raised missing/SOS reports must not use the found template. */
+  alertKind?: 'found' | 'missing';
 }
 
 export function buildEmailNotification(data: ReportNotificationData) {
+  if (data.alertKind === 'missing') {
+    const subject = `TheWileyfox SOS: "${data.itemName}" has been reported missing`;
+    const locationRow = data.locationAddress
+      ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Last seen</td><td style="padding:4px 0;font-size:14px;">${data.locationAddress}</td></tr>`
+      : '';
+    const notesRow = data.finderNotes
+      ? `<tr><td style="padding:4px 0;color:#6b7280;font-size:14px;vertical-align:top;">Details</td><td style="padding:4px 0;font-size:14px;">${data.finderNotes}</td></tr>`
+      : '';
+    const body = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;padding:24px;">
+      <div style="background:#ffffff;border-radius:8px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+        <h2 style="margin:0 0 8px;font-size:22px;color:#991b1b;text-align:center;">Missing person alert</h2>
+        <p style="margin:0 0 24px;color:#6b7280;text-align:center;font-size:15px;">
+          <strong>"${data.itemName}"</strong> (${data.itemCategory}) was reported missing. This is not a found-item notice.
+        </p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+          <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Time</td><td style="padding:4px 0;font-size:14px;">${data.reportTime.toLocaleString()}</td></tr>
+          ${locationRow}
+          ${notesRow}
+        </table>
+        <div style="text-align:center;">
+          <a href="${data.portalUrl}" style="display:inline-block;padding:12px 28px;background:#dc2626;color:#ffffff;text-decoration:none;border-radius:6px;font-size:15px;font-weight:600;">
+            Open the alert
+          </a>
+        </div>
+        ${unsubscribeFooter(data.unsubscribeUrl)}
+      </div>
+    </div>
+  `.trim();
+    return { subject, body };
+  }
+
   const subject = `TheWileyfox Alert: Someone found your ${data.itemCategory} "${data.itemName}"`;
 
   const locationRow = data.locationAddress
@@ -62,11 +96,20 @@ export function buildEmailNotification(data: ReportNotificationData) {
 
 export function buildSmsNotification(data: ReportNotificationData) {
   const location = data.locationAddress ? ` Location: ${data.locationAddress}.` : '';
-  const body = `TheWileyfox Alert: Someone found "${data.itemName}"!${location} View: ${data.portalUrl}`;
+  const body = data.alertKind === 'missing'
+    ? `TheWileyfox SOS: "${data.itemName}" reported missing.${location} View: ${data.portalUrl}`
+    : `TheWileyfox Alert: Someone found "${data.itemName}"!${location} View: ${data.portalUrl}`;
   return { body: body.substring(0, 160) };
 }
 
 export function buildPushNotification(data: ReportNotificationData) {
+  if (data.alertKind === 'missing') {
+    const subject = `"${data.itemName}" reported missing`;
+    const body = data.locationAddress
+      ? `Missing alert near ${data.locationAddress}. Open Wiley Fox for details.`
+      : `A missing-person alert was raised. Tap to view details.`;
+    return { subject, body };
+  }
   const subject = `"${data.itemName}" has been found!`;
   const body = data.locationAddress
     ? `Someone reported finding your ${data.itemCategory} near ${data.locationAddress}.`

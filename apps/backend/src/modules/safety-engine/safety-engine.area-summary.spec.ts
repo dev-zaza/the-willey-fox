@@ -76,6 +76,22 @@ describe('SafetyEngineController area-summary + tiles (UAT map)', () => {
       expect(result.incidentCount).toBe(4);
     });
 
+    it('estimates a band when crimes exist but the hex score row is missing', async () => {
+      execute
+        .mockResolvedValueOnce([
+          { crime_type: 'theft', total: 200 },
+          { crime_type: 'violence', total: 96 },
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await controller.getAreaSummary('51.415', '-0.753', '5000', 'Bracknell', '0');
+      expect(result.incidentCount).toBe(296);
+      expect(result.dataLimited).toBe(false);
+      expect(result.band).toMatch(/^band[1-5]$/);
+      expect(result.score).not.toBeNull();
+      expect(result.scoreMethodology).toMatch(/Estimated/i);
+    });
+
     it('returns different counts for different seed queries (regression guard)', async () => {
       execute
         .mockResolvedValueOnce([{ crime_type: 'theft', total: 12 }])

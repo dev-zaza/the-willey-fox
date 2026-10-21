@@ -169,7 +169,13 @@ export class ReportsService {
   async createMissingReport(userId: string, dto: CreateMissingReportDto) {
     // Verify caller owns or is guardian of the QR code
     const [qr] = await this.db
-      .select({ id: qrCodes.id, userId: qrCodes.userId, name: qrCodes.name, uniqueCode: qrCodes.uniqueCode })
+      .select({
+        id: qrCodes.id,
+        userId: qrCodes.userId,
+        name: qrCodes.name,
+        uniqueCode: qrCodes.uniqueCode,
+        photoUrl: qrCodes.photoUrl,
+      })
       .from(qrCodes)
       .where(eq(qrCodes.id, dto.qrCodeId))
       .limit(1);
@@ -203,6 +209,7 @@ export class ReportsService {
         locationAddress: dto.lastSeenLocation,
         locationLat: dto.lat?.toString(),
         locationLng: dto.lng?.toString(),
+        photoUrl: qr.photoUrl ?? null,
         isPublicBroadcast: dto.requestBroadcast ? true : false,
         broadcastApprovedAt: dto.requestBroadcast ? now : null,
         broadcastExpiresAt: dto.requestBroadcast
@@ -215,7 +222,7 @@ export class ReportsService {
 
     // Notify guardians
     this.notificationsService
-      .notifyGuardiansOfReport(report.id, qr.id)
+      .notifyGuardiansOfReport(report.id, qr.id, 'missing')
       .catch((err) => this.logger.error(`Guardian notify failed for report ${report.id}`, err));
 
     // Also notify family group members if the QR is linked to a family

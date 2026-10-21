@@ -35,6 +35,7 @@ import {
   FamilyProfileLimitError,
   type FamilyProfileCategory,
 } from '@/lib/family-profiles';
+import { readCurrentPosition } from '@/lib/geo';
 
 export default function FamilyPage() {
   const { user } = useAuth();
@@ -475,9 +476,13 @@ export default function FamilyPage() {
                                     await qrCodes.markFound(qr.id);
                                   } else {
                                     await qrCodes.markLost(qr.id);
+                                    const loc = await readCurrentPosition();
                                     await reports.createMissing({
                                       qrCodeId: qr.id,
-                                      requestBroadcast: qr.category === 'person',
+                                      description: qr.name,
+                                      lat: loc?.lat,
+                                      lng: loc?.lng,
+                                      requestBroadcast: qr.category === 'person' || qr.category === 'medical',
                                     });
                                   }
                                   await openFamily(selectedId);

@@ -8,7 +8,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { eq, and, or, count, gte, sql } from 'drizzle-orm';
+import { eq, and, or, count, gte, sql, inArray, ne, notInArray } from 'drizzle-orm';
 import { DRIZZLE } from '../../database/database.module';
 import type { DrizzleDB } from '../../database/database.module';
 import { emergencyContacts, familyGroups, familyMembers, pins, sosAlerts, users } from '../../database/schema';
@@ -407,9 +407,9 @@ export class EmergencyService {
           .innerJoin(familyGroups, eq(familyGroups.id, familyMembers.familyId))
           .where(
             and(
-              sql`${familyMembers.familyId} = ANY(${familyIds})`,
-              sql`${familyMembers.userId} != ${userId}`,
-              sql`${familyMembers.userId} != ALL(${contactUserIds})`,
+              inArray(familyMembers.familyId, familyIds),
+              ne(familyMembers.userId, userId),
+              contactUserIds.length > 0 ? notInArray(familyMembers.userId, contactUserIds) : undefined,
             ),
           );
 
@@ -423,6 +423,20 @@ export class EmergencyService {
             },
             { priority: 'critical' },
           );
+          const [memberUser] = await this.db
+            .select({ email: users.email, notificationPreferences: users.notificationPreferences })
+            .from(users)
+            .where(eq(users.id, member.userId))
+            .limit(1);
+          const prefs = (memberUser?.notificationPreferences || {}) as { email?: boolean };
+          if (memberUser?.email && prefs.email !== false) {
+            void this.notificationsService.sendAuthEmail(
+              memberUser.email,
+              member.userId,
+              `SOS from ${userName}`,
+              `${userName} has triggered an SOS alert.\n\n${alertMessage}\n\nOpen TheWileyfox immediately.`,
+            );
+          }
           familyNotifiedCount++;
         }
       }
@@ -556,18 +570,19 @@ export class EmergencyService {
         sa.is_acknowledged AS "isAcknowledged",
         sa.created_at AS "createdAt",
         (6371000 * acos(
-          LEAST(1, cos(radians(${lat})) * cos(radians(CAST(ul.lat AS float))) *
-          cos(radians(CAST(ul.lng AS float)) - radians(${lng})) +
-          sin(radians(${lat})) * sin(radians(CAST(ul.lat AS float))))
+          LEAST(1, cos(radians(${lat})) * cos(radians(CAST(sa.lat AS float))) *
+          cos(radians(CAST(sa.lng AS float)) - radians(${lng})) +
+          sin(radians(${lat})) * sin(radians(CAST(sa.lat AS float))))
         )) AS distance_metres
       FROM sos_alerts sa
-      INNER JOIN user_locations ul ON ul.user_id = sa.user_id
       WHERE sa.is_acknowledged = false
         AND sa.created_at >= NOW() - INTERVAL '24 hours'
+        AND sa.lat IS NOT NULL
+        AND sa.lng IS NOT NULL
         AND (6371000 * acos(
-          LEAST(1, cos(radians(${lat})) * cos(radians(CAST(ul.lat AS float))) *
-          cos(radians(CAST(ul.lng AS float)) - radians(${lng})) +
-          sin(radians(${lat})) * sin(radians(CAST(ul.lat AS float))))
+          LEAST(1, cos(radians(${lat})) * cos(radians(CAST(sa.lat AS float))) *
+          cos(radians(CAST(sa.lng AS float)) - radians(${lng})) +
+          sin(radians(${lat})) * sin(radians(CAST(sa.lat AS float))))
         )) <= ${radiusMetres}
       ORDER BY sa.created_at DESC
     `);

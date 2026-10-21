@@ -9,9 +9,7 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/context/auth-context';
 import { PrintPreviewModal } from '@/components/print-preview-modal';
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1')
-  .replace(/\/api\/v\d+\/?$/, '');
+import { readCurrentPosition } from '@/lib/geo';
 
 const TIER_ORDER = ['free', 'basic', 'premium', 'enterprise'];
 
@@ -178,8 +176,12 @@ export default function QrDetailPage() {
         const updated = await qrCodes.markLost(id);
         setTag(updated);
         try {
+          const loc = await readCurrentPosition();
           await reports.createMissing({
             qrCodeId: id,
+            description: tag.label || tag.name,
+            lat: loc?.lat,
+            lng: loc?.lng,
             requestBroadcast: requestBroadcast && (tag.category === 'person' || tag.category === 'medical'),
           });
         } catch {
@@ -556,7 +558,6 @@ export default function QrDetailPage() {
         <PrintPreviewModal
           template={selectedTemplate}
           qrCode={tag}
-          apiBase={API_BASE}
           logoUrl={logoUrl}
           onClose={() => setShowPrintModal(false)}
         />

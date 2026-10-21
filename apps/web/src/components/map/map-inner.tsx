@@ -130,9 +130,11 @@ const LONG_PRESS_MOVE_PX = 12;
 /** Match mobile: add-pin only on long-press (or desktop right-click). Short tap does not open create-pin. */
 function MapEventHandler({
   onMapLongPress,
+  onMapClick,
   onBoundsChange,
 }: {
   onMapLongPress?: (latlng: LatLng) => void;
+  onMapClick?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
 }) {
   const map = useMap();
@@ -141,6 +143,8 @@ function MapEventHandler({
   const suppressClickUntil = useRef(0);
   const onLongPressRef = useRef(onMapLongPress);
   onLongPressRef.current = onMapLongPress;
+  const onClickRef = useRef(onMapClick);
+  onClickRef.current = onMapClick;
 
   useMapEvents({
     contextmenu(e) {
@@ -148,11 +152,15 @@ function MapEventHandler({
       e.originalEvent.preventDefault();
       onLongPressRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
     },
-    click() {
-      // Swallow ghost click after long-press
+    click(e) {
       if (Date.now() < suppressClickUntil.current) {
         return;
       }
+      const target = e.originalEvent?.target as HTMLElement | null;
+      if (target?.closest('.leaflet-marker-icon, .leaflet-interactive, .leaflet-popup')) {
+        return;
+      }
+      onClickRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
     },
     moveend(e) {
       const b = e.target.getBounds();
@@ -366,6 +374,7 @@ interface MapInnerProps {
   onMissingClick?: (id: string) => void;
   /** Fired on long-press / right-click — used to open create-pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
+  onMapClick?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: BoundsPayload) => void;
   onH3Click?: (props: {
     h3: string;
@@ -392,6 +401,7 @@ export function MapInner({
   onSosClick,
   onMissingClick,
   onMapLongPress,
+  onMapClick,
   onBoundsChange,
   onH3Click,
 }: MapInnerProps) {
@@ -432,7 +442,7 @@ export function MapInner({
           <MapTiles url={TILE_URL} attribution={TILE_ATTRIBUTION} maxZoom={22} />
         ) : null}
         <MapController center={center} zoom={zoom} />
-        <MapEventHandler onMapLongPress={onMapLongPress} onBoundsChange={onBoundsChange} />
+        <MapEventHandler onMapLongPress={onMapLongPress} onMapClick={onMapClick} onBoundsChange={onBoundsChange} />
 
         {pins.map((pin) => (
           <EventPin key={pin.id} pin={pin} onClick={onPinClick} />

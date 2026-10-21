@@ -272,10 +272,21 @@ export class QrService {
   }
 
   async generateQrImage(uniqueCode: string): Promise<Buffer> {
-    const publicBaseUrl = this.configService.get<string>(
-      'PUBLIC_BASE_URL',
-      'http://localhost:3000',
-    );
+    const configured =
+      this.configService.get<string>('QR_PUBLIC_BASE_URL') ||
+      this.configService.get<string>('PUBLIC_BASE_URL') ||
+      'http://127.0.0.1:3001';
+    const publicBaseUrl = configured.replace(/\/$/, '');
+    let host = '';
+    try {
+      host = new URL(publicBaseUrl).hostname;
+    } catch {
+      throw new BadRequestException('QR_PUBLIC_URL_INVALID');
+    }
+    const isLoopback = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+    if (this.configService.get<string>('NODE_ENV') === 'production' && isLoopback) {
+      throw new BadRequestException('QR_PUBLIC_URL_MISCONFIGURED');
+    }
     const url = `${publicBaseUrl}/q/${uniqueCode}`;
 
     return QRCode.toBuffer(url, {

@@ -200,16 +200,16 @@ export default function ReportsPage() {
               {/* Finder */}
               <div className="flex items-center gap-2">
                 <p className="text-xs text-[#9d8c7a]">Finder:</p>
-                <p className="text-xs text-brand-400 font-medium flex-1 truncate">{report.finderContact}</p>
-                {report.finderContact.includes('@') ? (
+                <p className="text-xs text-brand-400 font-medium flex-1 truncate">{report.finderContact || 'Not provided'}</p>
+                {report.finderContact?.includes('@') ? (
                   <a href={`mailto:${report.finderContact}`} className="flex items-center gap-1 bg-brand-500/15 text-brand-400 text-xs font-medium px-2 py-1 rounded-lg hover:bg-brand-500/25 transition-colors">
                     <Mail className="w-3 h-3" /> Email
                   </a>
-                ) : (
+                ) : report.finderContact ? (
                   <a href={`tel:${report.finderContact}`} className="flex items-center gap-1 bg-green-500/15 text-green-400 text-xs font-medium px-2 py-1 rounded-lg hover:bg-green-500/25 transition-colors">
                     <Phone className="w-3 h-3" /> Call
                   </a>
-                )}
+                ) : null}
               </div>
 
               {/* Location */}

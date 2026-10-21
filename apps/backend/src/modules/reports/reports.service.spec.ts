@@ -105,7 +105,7 @@ describe('ReportsService', () => {
 
       expect(result.id).toBe('report-new');
       expect(result.broadcast).toBe(false);
-      expect(mockNotifications.notifyGuardiansOfReport).toHaveBeenCalledWith('report-new', 'qr-1');
+      expect(mockNotifications.notifyGuardiansOfReport).toHaveBeenCalledWith('report-new', 'qr-1', 'missing');
     });
 
     it('forbids non-owner non-guardian', async () => {

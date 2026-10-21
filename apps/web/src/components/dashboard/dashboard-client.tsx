@@ -395,6 +395,24 @@ export function DashboardClient() {
     if (modal === 'none') setModal('create-pin');
   }
 
+  function handleMapClick(latlng: LatLng) {
+    setSearchedPlace({ label: '', lat: latlng.lat, lng: latlng.lng });
+    setAreaSummaryLoading(true);
+    void reversePlaceName(latlng.lat, latlng.lng).then((placeLabel) => {
+      if (placeLabel) setSearchedPlace({ label: placeLabel, lat: latlng.lat, lng: latlng.lng });
+    });
+    safetyEngine
+      .getAreaSummary({ lat: latlng.lat, lng: latlng.lng, radius: 5000 })
+      .then(async (summary) => {
+        const name = (await reversePlaceName(latlng.lat, latlng.lng)) || summary.cityName || '';
+        if (name) setSearchedPlace({ label: name, lat: latlng.lat, lng: latlng.lng });
+        setAreaSummary(name ? { ...summary, cityName: name } : summary);
+        if (isDesktop) setAreaPanel({ lat: latlng.lat, lng: latlng.lng, name });
+      })
+      .catch(() => setAreaSummary(null))
+      .finally(() => setAreaSummaryLoading(false));
+  }
+
   function handleSearchSelect(result: { label: string; location: LatLng }) {
     const label = shortPlaceName(result.label);
     const place = { label, lat: result.location.lat, lng: result.location.lng };
@@ -446,6 +464,7 @@ export function DashboardClient() {
             if (m) setAreaAlertSheet({ kind: 'missing', ...m });
           }}
           onMapLongPress={handleMapLongPress}
+          onMapClick={handleMapClick}
           onBoundsChange={handleBoundsChange}
           onH3Click={handleH3Click}
         />
@@ -673,7 +692,7 @@ export function DashboardClient() {
           </button>
         </div>
 
-        <div className="pointer-events-auto absolute bottom-8 left-4 z-20 flex flex-wrap gap-2">
+        <div className="pointer-events-auto absolute bottom-28 left-4 z-30 flex flex-wrap gap-2 lg:bottom-8">
           <button
             type="button"
             onClick={() => setModal('create-pin')}

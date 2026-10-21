@@ -208,7 +208,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyGuardiansOfReport(reportId: string, qrCodeId: string): Promise<void> {
+  async notifyGuardiansOfReport(
+    reportId: string,
+    qrCodeId: string,
+    alertKind: 'found' | 'missing' = 'found',
+  ): Promise<void> {
     const [qrCode] = await this.db
       .select()
       .from(qrCodes)
@@ -262,7 +266,9 @@ export class NotificationsService {
 
     const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3001');
     const apiBase = this.configService.get<string>('API_BASE_URL', 'http://localhost:3000/api/v1');
-    const portalUrl = `${baseUrl}/q/${qrCode.uniqueCode}`;
+    const portalUrl = alertKind === 'missing'
+      ? `${baseUrl}/dashboard/alerts/${reportId}`
+      : `${baseUrl}/q/${qrCode.uniqueCode}`;
 
     for (const recipient of allRecipients) {
       if (!recipient) continue;
@@ -278,6 +284,7 @@ export class NotificationsService {
         unsubscribeUrl,
         locationAddress: report?.locationAddress ?? undefined,
         finderNotes: report?.finderNotes ?? undefined,
+        alertKind,
       };
 
       // Default to email and SMS when no preferences are set (null/empty object)
@@ -920,6 +927,7 @@ export class NotificationsService {
       finderNotes?: string;
       reportTime: Date;
       portalUrl: string;
+      alertKind?: 'found' | 'missing';
     },
   ): Promise<void> {
     let subject: string | undefined;

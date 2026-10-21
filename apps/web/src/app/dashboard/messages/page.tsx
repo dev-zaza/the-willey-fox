@@ -329,7 +329,7 @@ export default function MessagesPage() {
                   ←
                 </button>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1D4ED8] text-xs font-bold text-white">
-                  {other ? `${other.firstName[0]}${other.lastName[0]}` : '?'}
+                  {other ? `${other.firstName?.[0] ?? ''}${other.lastName?.[0] ?? ''}` || '?' : '?'}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-[#17130F]">

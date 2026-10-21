@@ -370,8 +370,9 @@ export const qrCodes = {
   uploadPhoto: (id: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return request<{ photoUrl: string }>(`/qr-codes/${id}/photo`, { method: 'POST', body: formData }, false, false);
+    return request<{ photoUrl: string }>(`/qr-codes/${id}/photo`, { method: 'POST', body: formData }, true, false);
   },
+  downloadImage: (id: string) => requestBlob(`/qr-codes/${id}/download`),
 };
 
 export interface QrPublicLookup {

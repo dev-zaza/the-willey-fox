@@ -16,6 +16,14 @@ import { colourFor } from './lib/bands';
 import { UkPoliceAdapter } from './adapters/uk-police.adapter';
 import { isProTier } from '@safetag/shared';
 
+function bandFromSafetyScore(score: number): string {
+  if (score >= 80) return 'band5';
+  if (score >= 60) return 'band4';
+  if (score >= 40) return 'band3';
+  if (score >= 20) return 'band2';
+  return 'band1';
+}
+
 interface CityGuide {
   city: string;
   region?: string;
@@ -420,13 +428,22 @@ export class SafetyEngineController {
       band = 'low_count';
     }
 
-    const blendedScore = rawScore != null
-      ? this.h3Scorer.blendWithNumbeo(rawScore, cityName, countryIso)
-      : null;
-
     const radiusKm = radiusMetres / 1000;
     const areaKm2 = Math.PI * radiusKm * radiusKm;
     const weightedPerKm2 = totalIncidents > 0 ? Math.round((totalIncidents / areaKm2) * 10) / 10 : 0;
+
+    let blendedScore = rawScore != null
+      ? this.h3Scorer.blendWithNumbeo(rawScore, cityName, countryIso)
+      : null;
+    let scoreEstimated = false;
+
+    // Crimes are in the database but the hex score row is missing (e.g. Bracknell before a rescore).
+    if (blendedScore == null && !dataLimited) {
+      const interimPolice = Math.max(15, Math.min(85, Math.round(85 - Math.min(weightedPerKm2, 50) * 1.2)));
+      blendedScore = this.h3Scorer.blendWithNumbeo(interimPolice, cityName, countryIso);
+      band = bandFromSafetyScore(blendedScore);
+      scoreEstimated = true;
+    }
 
     return {
       lat,
@@ -443,7 +460,9 @@ export class SafetyEngineController {
       dataMonth: new Date().toISOString().slice(0, 7),
       scoreMethodology: dataLimited
         ? 'Limited local crime data for this area · try a nearby street or wider report'
-        : '70% live police data · 30% Numbeo · population-adjusted',
+        : scoreEstimated
+          ? 'Estimated from crimes recorded in this radius until the safety grid is recalculated'
+          : '70% live police data · 30% Numbeo · population-adjusted',
     };
   }
 

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Printer } from 'lucide-react';
-import type { PrintTemplate, QrCode, TextSlots } from '@/lib/api';
+import { qrCodes, type PrintTemplate, type QrCode, type TextSlots } from '@/lib/api';
 
 interface PrintPreviewModalProps {
   template: PrintTemplate;
   qrCode: QrCode;
-  apiBase: string;
   logoUrl?: string | null;
   onClose: () => void;
 }
@@ -18,12 +17,37 @@ const FORMAT_DIMENSIONS: Record<string, { width: number; height: number }> = {
   wristband: { width: 500, height: 120 },
 };
 
-export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose }: PrintPreviewModalProps) {
+export function PrintPreviewModal({ template, qrCode, logoUrl, onClose }: PrintPreviewModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const slots = (template.textSlots ?? {}) as TextSlots;
   const dim = FORMAT_DIMENSIONS[template.formatType] ?? FORMAT_DIMENSIONS.square;
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const [qrError, setQrError] = useState('');
+
+  useEffect(() => {
+    let objectUrl = '';
+    let cancelled = false;
+    qrCodes
+      .downloadImage(qrCode.id)
+      .then(({ blob }) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setQrImageUrl(objectUrl);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setQrError(e instanceof Error ? e.message : 'Could not load QR code');
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [qrCode.id]);
 
   function handlePrint() {
+    if (!qrImageUrl) {
+      alert(qrError || 'QR code is still loading');
+      return;
+    }
     const style = document.createElement('style');
     style.id = '__safetag_print_style';
     style.innerHTML = `
@@ -50,8 +74,6 @@ export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
-
-  const qrImageUrl = `${apiBase}/qr-codes/${qrCode.id}/download`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -128,15 +150,34 @@ export function PrintPreviewModal({ template, qrCode, apiBase, logoUrl, onClose 
                 </div>
               )}
 
-              {/* QR Code image */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrImageUrl}
-                alt="QR Code"
-                width={template.qrSize}
-                height={template.qrSize}
-                style={{ borderRadius: 8, display: 'block' }}
-              />
+              {qrImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrImageUrl}
+                  alt="QR Code"
+                  width={template.qrSize}
+                  height={template.qrSize}
+                  style={{ borderRadius: 8, display: 'block' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: template.qrSize,
+                    height: template.qrSize,
+                    borderRadius: 8,
+                    background: '#f3f4f6',
+                    color: '#6b7280',
+                    fontSize: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    padding: 8,
+                  }}
+                >
+                  {qrError || 'Loading QR…'}
+                </div>
+              )}
 
               {/* Tag name below QR */}
               {slots.showTagName && slots.tagNamePosition !== 'top' && (

@@ -45,6 +45,8 @@ interface MapViewProps {
   onMissingClick?: (id: string) => void;
   /** Long-press / right-click to create a pin (matches mobile). */
   onMapLongPress?: (latlng: LatLng) => void;
+  /** Short tap on empty map loads area safety for that point. */
+  onMapClick?: (latlng: LatLng) => void;
   onBoundsChange?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number }) => void;
   onH3Click?: (props: H3ClickPayload) => void;
 }
