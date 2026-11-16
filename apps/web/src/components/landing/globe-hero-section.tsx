@@ -213,10 +213,10 @@ export function GlobeHeroSection() {
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
             href="/login"
-            className="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium transition-colors sm:px-4 sm:py-3"
-            style={{ color: '#5a4a3d' }}
+            className="whitespace-nowrap rounded-full border px-3 py-2 text-sm font-bold transition-colors sm:px-4 sm:py-2.5"
+            style={{ color: '#1b1410', borderColor: 'rgba(27,20,16,0.2)', background: '#fff' }}
           >
-            Sign In
+            Sign in
           </Link>
           <Link
             href="/register"
@@ -291,15 +291,15 @@ export function GlobeHeroSection() {
             </Link>
             <Link
               href="/login"
-              className="font-medium px-7 py-4 rounded-full text-base transition-all hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="font-semibold px-7 py-4 rounded-full text-base transition-all hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               style={{
                 color: '#1b1410',
-                background: 'transparent',
-                border: '1px solid rgba(27,20,16,0.12)',
+                background: '#fff',
+                border: '1px solid rgba(27,20,16,0.2)',
                 outlineColor: '#ea2e00',
               }}
             >
-              See how it works
+              Sign in
             </Link>
           </motion.div>
 

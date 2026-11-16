@@ -552,9 +552,25 @@ export function AreaSafetyPanel({
               </div>
 
               <p className="mt-3 text-[11px] leading-4 text-[#8a8a8a]">{summary.scoreMethodology}</p>
+              {summary.partialNote ? (
+                <p className="mt-1 text-[11px] leading-4 text-amber-700">{summary.partialNote}</p>
+              ) : null}
               <p className="mt-1 text-[11px] text-[#8a8a8a]">
                 Data period: {summary.dataMonth} · Radius: {(summary.radiusMetres / 1000).toFixed(1)} km
+                {summary.lastUpdated
+                  ? ` · Last updated ${new Date(summary.lastUpdated).toLocaleDateString()}`
+                  : ''}
               </p>
+              {summary.fcdoAdviceUrl ? (
+                <a
+                  href={summary.fcdoAdviceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-brand-600"
+                >
+                  Official travel advice (FCDO) <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : null}
             </section>
 
             <div className="grid grid-cols-2 gap-3">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tag, Plus, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Tag, Plus, AlertCircle, ShoppingBag, ScanLine } from 'lucide-react';
 import { qrCodes } from '@/lib/api';
 import type { TrackedItem } from '@/types';
 import { getShopifyShopUrl } from '@/lib/shopify-shop';
@@ -45,17 +45,21 @@ export function MyTagsModal({ onTagSelect, onRegister }: MyTagsModalProps) {
 
   return (
     <div className="p-5">
+      <p className="mb-3 text-xs leading-5 text-[#8A7B67]">
+        A QR tag links a digital profile to a finder page. Scan from your phone or print / order a physical tag —
+        optional for SOS, alerts, and the map. Free plan includes 5 physical tags; family profiles stay free.
+      </p>
       <button
         onClick={() => router.push('/dashboard/scan')}
         className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-3"
       >
-        <span aria-hidden>📷</span> Scan a QR tag
+        <ScanLine className="w-4 h-4" /> Scan a physical tag
       </button>
       <button
         onClick={onRegister}
         className="w-full flex items-center justify-center gap-2 border border-dashed border-brand-500/40 rounded-xl py-3 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors mb-3"
       >
-        <Plus className="w-4 h-4" /> Register new tag
+        <Plus className="w-4 h-4" /> Create new digital tag
       </button>
       {shopUrl && (
         <a

@@ -205,7 +205,7 @@ export function EmergencyModal(_: EmergencyModalProps) {
                     <p className="text-sm font-medium text-white truncate">
                       {c.contact ? `${c.contact.firstName} ${c.contact.lastName}` : 'Unknown'}
                     </p>
-                    <p className="text-xs text-amber-400">
+                    <p className="text-xs font-medium text-amber-700">
                       {c.isRequester ? 'Awaiting acceptance' : 'Invited you'}
                     </p>
                   </div>

@@ -43,8 +43,8 @@ export class PublicController {
 
   @Public()
   @Get('q/:code')
-  getQrInfo(@Param('code') code: string) {
-    return this.publicService.getPublicQrInfo(code);
+  getQrInfo(@Param('code') code: string, @CurrentUser() user?: AuthenticatedUser) {
+    return this.publicService.getPublicQrInfo(code, user?.id);
   }
 
   @Public()

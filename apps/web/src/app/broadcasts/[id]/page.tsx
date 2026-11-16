@@ -89,6 +89,8 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
                   src={data.photoUrl}
                   alt={`Photo of ${data.name ?? 'missing person'}`}
                   className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                  loading="eager"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#7a6957]">
@@ -106,10 +108,22 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
 
             {data.description && <p className="text-[#5a4a3d]">{data.description}</p>}
 
+            <div>
+              <p className="text-[#9d8c7a] text-xs uppercase tracking-wide">Who</p>
+              <p className="text-white font-semibold">{data.name ?? 'Missing person'}</p>
+            </div>
+
             {data.lastSeenLocation && (
               <div>
-                <p className="text-[#9d8c7a] text-xs uppercase tracking-wide">Last seen</p>
+                <p className="text-[#9d8c7a] text-xs uppercase tracking-wide">Last seen place</p>
                 <p className="text-white">{data.lastSeenLocation}</p>
+              </div>
+            )}
+
+            {data.createdAt && (
+              <div>
+                <p className="text-[#9d8c7a] text-xs uppercase tracking-wide">Reported</p>
+                <p className="text-white">{new Date(data.createdAt).toLocaleString()}</p>
               </div>
             )}
 
@@ -123,14 +137,21 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
             {data.customFields && typeof data.customFields === 'object' && Object.keys(data.customFields).length > 0 && (
               <MedicalBlock fields={data.customFields as Record<string, unknown>} />
             )}
+
+            <a
+              href="#ive-seen-them"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-[#6D28D9] px-4 py-3 text-sm font-bold text-white"
+            >
+              I&apos;ve seen them
+            </a>
           </div>
         </div>
 
-        <div className="bg-surface-card border border-surface-border rounded-2xl p-6 space-y-3">
-          <h2 className="text-white font-semibold">Have information?</h2>
+        <div id="ive-seen-them" className="bg-surface-card border border-surface-border rounded-2xl p-6 space-y-3">
+          <h2 className="text-white font-semibold">I&apos;ve seen them</h2>
           <p className="text-[#7a6957] text-sm">
-            If you believe you have seen this person, contact the family through TheWileyfox directly. For emergencies,
-            contact local emergency services immediately.
+            Tell the family where and when you saw {data.name?.split(/\s+/)[0] ?? 'them'}. For immediate danger, call
+            local emergency services first.
           </p>
           <BroadcastMessageForm broadcastId={data.id} />
         </div>

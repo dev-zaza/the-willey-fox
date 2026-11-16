@@ -464,11 +464,17 @@ export function MapInner({
           <Circle
             key={`missing-${m.id}`}
             center={[m.lat, m.lng]}
-            radius={70}
-            pathOptions={{ color: '#ea2e00', fillColor: '#ea2e00', fillOpacity: 0.4, weight: 2 }}
+            radius={90}
+            pathOptions={{
+              // Distinct from incident pins (#F97316 etc.) and safety-band colours
+              color: '#6D28D9',
+              fillColor: '#7C3AED',
+              fillOpacity: 0.55,
+              weight: 3,
+            }}
             eventHandlers={{ click: () => onMissingClick?.(m.id) }}
           >
-            <Tooltip sticky>Missing: {m.name ?? 'Child'}</Tooltip>
+            <Tooltip sticky>Missing child: {m.name ?? 'Child'}</Tooltip>
           </Circle>
         ))}
 

@@ -177,11 +177,17 @@ export default function QrDetailPage() {
         setTag(updated);
         try {
           const loc = await readCurrentPosition();
+          const firstName = (tag.label || tag.name || 'Someone').split(/\s+/)[0];
+          const lastSeenLocation =
+            loc != null
+              ? `Near ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)} (reported ${new Date().toLocaleString()})`
+              : undefined;
           await reports.createMissing({
             qrCodeId: id,
-            description: tag.label || tag.name,
+            description: `${firstName} was reported missing. If you see them, tap I've seen them on the community notice.`,
             lat: loc?.lat,
             lng: loc?.lng,
+            lastSeenLocation,
             requestBroadcast: requestBroadcast && (tag.category === 'person' || tag.category === 'medical'),
           });
         } catch {

@@ -10,7 +10,8 @@ export default function NotificationsPage() {
         <Link href="/dashboard" className="text-sm text-[#7a6957] hover:text-brand-400">
           ← Dashboard
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-white">Notifications</h1>
+        <h1 className="mt-2 text-xl font-bold text-white">Alerts</h1>
+        <p className="mt-1 text-xs text-[#9d8c7a]">System notices · Conversations live in Messages</p>
       </div>
       <NotificationsModal />
     </div>

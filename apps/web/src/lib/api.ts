@@ -410,6 +410,7 @@ export interface Report {
   broadcastExtendCount?: number;
   createdAt: string;
   responses?: ReportResponse[];
+  qrCode?: { name?: string | null; label?: string | null; category?: string | null };
 }
 
 export interface ReportResponse {
@@ -513,6 +514,7 @@ export interface BroadcastDetail extends BroadcastListItem {
   customFields?: Record<string, unknown> | null;
   lastSeenLat?: string | null;
   lastSeenLng?: string | null;
+  createdAt?: string;
 }
 
 export interface BroadcastAdminItem {
@@ -1468,6 +1470,9 @@ export interface AreaSummary {
   scoreMethodology: string;
   /** True when fewer than 3 incidents in the query radius */
   dataLimited?: boolean;
+  lastUpdated?: string | null;
+  partialNote?: string | null;
+  fcdoAdviceUrl?: string | null;
 }
 
 export const safetyEngine = {

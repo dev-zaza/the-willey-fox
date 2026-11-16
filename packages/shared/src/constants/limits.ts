@@ -19,10 +19,17 @@ export const STRIPE_TRIAL_DAYS = 7;
  * Product model: Free vs Pro only.
  * Pro is sold as monthly or yearly Stripe subscription.
  * DB still has basic/premium/enterprise for legacy rows — all map to Pro (unlimited).
+ *
+ * Free quota (WF-17):
+ * - Physical (claimed / bought) tags: max 5
+ * - Family / protected-person digital profiles: unlimited (do not count)
+ * - Other digital tags: unlimited on free (physical claim is the free-plan cap)
  */
 export const TIER_LIMITS = {
   free: {
+    /** @deprecated Prefer maxPhysicalTags — kept for pricing config compatibility. */
     maxQrCodes: 5,
+    maxPhysicalTags: 5,
     maxFamilies: 1,
     maxGuardians: 2,
     maxPinsPerDay: 5,
@@ -31,6 +38,7 @@ export const TIER_LIMITS = {
   /** @deprecated Legacy paid tier — treated as Pro (unlimited). */
   basic: {
     maxQrCodes: Infinity,
+    maxPhysicalTags: Infinity,
     maxFamilies: Infinity,
     maxGuardians: Infinity,
     maxPinsPerDay: Infinity,
@@ -39,6 +47,7 @@ export const TIER_LIMITS = {
   /** Pro (monthly or yearly checkout). */
   premium: {
     maxQrCodes: Infinity,
+    maxPhysicalTags: Infinity,
     maxFamilies: Infinity,
     maxGuardians: Infinity,
     maxPinsPerDay: Infinity,
@@ -47,6 +56,7 @@ export const TIER_LIMITS = {
   /** @deprecated Legacy paid tier — treated as Pro (unlimited). */
   enterprise: {
     maxQrCodes: Infinity,
+    maxPhysicalTags: Infinity,
     maxFamilies: Infinity,
     maxGuardians: Infinity,
     maxPinsPerDay: Infinity,

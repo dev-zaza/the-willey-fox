@@ -54,11 +54,22 @@ export class ReportsService {
 
     const uniqueQrIds = [...new Set(allQrIds)];
 
-    return this.db
-      .select()
+    const rows = await this.db
+      .select({
+        report: reports,
+        qrName: qrCodes.name,
+        qrLabel: qrCodes.label,
+        qrCategory: qrCodes.category,
+      })
       .from(reports)
+      .innerJoin(qrCodes, eq(reports.qrCodeId, qrCodes.id))
       .where(inArray(reports.qrCodeId, uniqueQrIds))
       .orderBy(reports.createdAt);
+
+    return rows.map(({ report, qrName, qrLabel, qrCategory }) => ({
+      ...report,
+      qrCode: { name: qrName, label: qrLabel, category: qrCategory },
+    }));
   }
 
   async findById(reportId: string) {

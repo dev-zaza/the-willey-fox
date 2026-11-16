@@ -37,6 +37,11 @@ export default function ShopPage() {
               STORE OPENING SOON · ALL TAGS QR-LINKED TO YOUR IN-APP EMERGENCY PROFILE
             </p>
             <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-[#17130F]">Shop</h1>
+            <p className="mt-2 max-w-[66ch] text-sm text-[#5C5245]">
+              Why a tag? A finder scans it and reaches your published emergency profile — never your number unless you
+              choose. Print or order physical tags when you want them on bags, keys, or wristbands; digital profiles
+              work without printing. Free plan includes 5 physical tags.
+            </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {TABS.map((t) => (

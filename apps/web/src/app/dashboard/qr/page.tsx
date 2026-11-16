@@ -65,10 +65,9 @@ export default function QrPage() {
 
   const isPro = isProTier(user?.subscriptionTier);
   const shopUrl = getShopifyShopUrl();
-  const freeLimit = TIER_LIMITS.free.maxQrCodes;
+  const freePhysicalLimit = TIER_LIMITS.free.maxPhysicalTags;
   const usage = useMemo(() => describeDigitalUsage(tags, user?.subscriptionTier), [tags, user?.subscriptionTier]);
-  const digitalCount = usage.digitalUsed;
-  const atDigitalLimit = !isPro && digitalCount >= freeLimit;
+  const atPhysicalLimit = !isPro && usage.physicalCount >= freePhysicalLimit;
 
   useEffect(() => {
     qrCodes
@@ -167,8 +166,9 @@ export default function QrPage() {
             <p className="text-[11px] font-extrabold tracking-[0.12em] text-[#8A7B67]">QR TAGS</p>
             <h1 className="mt-1 text-[28px] font-extrabold tracking-tight text-[#17130F]">Tags &amp; items</h1>
             <p className="mt-2 max-w-[66ch] text-sm text-[#5C5245]">
-              Stick a tag on anything. A finder scans it and sees only what you&apos;ve published, never your number or
-              email. Click a tag to edit it, add medical info, or report it missing.
+              Each family member gets a free digital profile and QR. Scan it from your phone or print / order a physical
+              tag. Tags are optional for reporting, SOS, alerts, and the map. Free plan includes {freePhysicalLimit}{' '}
+              physical tags.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -190,23 +190,24 @@ export default function QrPage() {
                 setCreateError('');
                 setCreateOpen(true);
               }}
-              disabled={atDigitalLimit}
-              title={
-                atDigitalLimit
-                  ? 'Free plan digital tag limit reached — upgrade or unlink a digital tag'
-                  : 'Create a digital QR profile'
-              }
-              className="rounded-xl border border-brand-500 bg-white px-3 py-2 text-sm font-bold text-brand-600 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Create a digital QR profile"
+              className="rounded-xl border border-brand-500 bg-white px-3 py-2 text-sm font-bold text-brand-600"
             >
               <Plus className="mr-1 inline h-4 w-4" />
-              Create digital tag
+              Create new digital tag
             </button>
             <button
               type="button"
               onClick={() => setLinkOpen(true)}
-              className="rounded-xl bg-brand-500 px-3 py-2 text-sm font-bold text-white"
+              disabled={atPhysicalLimit}
+              title={
+                atPhysicalLimit
+                  ? 'Free plan physical tag limit reached — upgrade or unlink a physical tag'
+                  : 'Link a bought physical tag'
+              }
+              className="rounded-xl bg-brand-500 px-3 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Link physical tag
+              Scan a physical tag
             </button>
           </div>
         </div>
@@ -218,13 +219,14 @@ export default function QrPage() {
               {usage.categories.map((c) => `${c.label} ${c.count}`).join(' · ')}
             </p>
           ) : null}
-          {atDigitalLimit ? (
+          {atPhysicalLimit ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-              Free digital limit reached. Bought physical tags can still be linked anytime. Unlink a digital tag or{' '}
+              Free physical tag limit reached ({freePhysicalLimit}). Family digital profiles stay free. Unlink a physical
+              tag or{' '}
               <Link href="/dashboard/subscription" className="underline">
                 upgrade
               </Link>{' '}
-              to create more.
+              for unlimited physical tags.
             </p>
           ) : null}
         </div>

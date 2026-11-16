@@ -147,11 +147,18 @@ ON CONFLICT (h3_index, resolution) DO UPDATE SET
 export class H3Scorer {
   constructor(@Inject(DRIZZLE) private readonly db: DrizzleDB) {}
 
-  // Blend police score (0-100 safety) with Numbeo city index: 0.70 × P + 0.30 × N
+  /**
+   * Global Wiley Fox score (WF-mapping Nov 2026):
+   * baseline = 50% Numbeo safety + 50% homicide/country safety fallback,
+   * then live police/area data may move the score by at most ±10.
+   */
   blendWithNumbeo(policeScore: number, cityName: string, countryIso: string): number {
     const key = cityName.toLowerCase().trim();
     const numbeo = NUMBEO_CITY_SCORES[key] ?? NUMBEO_COUNTRY_FALLBACK[countryIso] ?? 50.0;
-    return Math.round((0.70 * policeScore + 0.30 * numbeo) * 10) / 10;
+    const homicideProxy = NUMBEO_COUNTRY_FALLBACK[countryIso] ?? 50.0;
+    const baseline = 0.5 * numbeo + 0.5 * homicideProxy;
+    const delta = Math.max(-10, Math.min(10, policeScore - baseline));
+    return Math.round((baseline + delta) * 10) / 10;
   }
 
   async scoreCountry(country: string): Promise<{ country: string; cells: number }> {

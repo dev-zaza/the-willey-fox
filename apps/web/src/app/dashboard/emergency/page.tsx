@@ -45,8 +45,15 @@ export default function EmergencyPage() {
   }
 
   async function acceptContact(id: string) {
-    const updated = await emergency.acceptContact(id);
-    setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    try {
+      const updated = await emergency.acceptContact(id);
+      setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (e: any) {
+      alert(e?.message ?? 'Emergency contact request not found');
+      // Refresh list in case the invite was already accepted/declined
+      const fresh = await emergency.listContacts().catch(() => null);
+      if (fresh) setContacts(fresh);
+    }
   }
 
   async function removeContact(id: string) {
@@ -219,7 +226,7 @@ export default function EmergencyPage() {
                 <div className="w-11 h-11 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-400 text-xl flex-shrink-0">⏳</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold text-sm">{c.contact ? `${c.contact.firstName} ${c.contact.lastName}` : 'Unknown'}</p>
-                  <p className="text-amber-400 text-xs">{c.isRequester ? 'Awaiting acceptance' : 'Invited you'}</p>
+                  <p className="text-amber-700 text-xs font-medium">{c.isRequester ? 'Awaiting acceptance' : 'Invited you'}</p>
                 </div>
                 {!c.isRequester && (
                   <button

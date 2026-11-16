@@ -38,7 +38,7 @@ export default function OnboardGroupPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6" style={{ background: '#f0e7d6', color: '#1b1410' }}>
       <Link href="/onboard/welcome" className="mb-8 text-sm" style={{ color: '#7a6957' }}>← Back</Link>
-      <h1 className="text-2xl font-bold">Name your group</h1>
+      <h1 className="text-2xl font-bold">Create your group or family</h1>
       <p className="mt-2 text-sm" style={{ color: '#5a4a3d' }}>Family, team, or household — you can change this later.</p>
       <input
         value={name}

@@ -45,13 +45,14 @@ export default function OnboardDonePage() {
         </p>
       ) : null}
       <p className="mt-3 max-w-sm text-center text-sm leading-6" style={{ color: '#5a4a3d' }}>
-        QR safety profiles have been created for every member of your group.
+        Each member has a free digital profile and QR tag. You can scan it from your phone or print / order a physical
+        tag — printing is optional. You do not need a tag to use reporting, SOS, alerts, or the map.
       </p>
 
       {qrList.length > 0 && (
         <div className="mt-8 w-full space-y-2.5">
           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#7a6957' }}>
-            QR profiles created
+            Digital profiles created
           </p>
           {qrList.map((q) => (
             <div
@@ -88,9 +89,10 @@ export default function OnboardDonePage() {
       >
         <Lightbulb className="mt-0.5 h-5 w-5 flex-shrink-0" style={{ color: '#ea2e00' }} />
         <div>
-          <p className="text-sm font-bold">Next step</p>
+          <p className="text-sm font-bold">Optional next step</p>
           <p className="mt-1 text-xs leading-[18px]" style={{ color: '#7a6957' }}>
-            Print your QR tags and attach them to your family members&apos; bags, phones, or wear them as wristbands.
+            Print or order physical tags if you want them on bags, keys, or wristbands. Free plan includes 5 physical
+            tags; family digital profiles stay free.
           </p>
         </div>
       </div>

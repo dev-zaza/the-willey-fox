@@ -530,24 +530,35 @@ export function DashboardClient() {
         </div>
       )}
 
-      {/* Top bar — mobile only */}
-      <div className="relative z-10 flex items-center gap-2 px-3 pt-safe pt-3 pb-2 lg:hidden">
-        <MobileMenuButton />
-        <div className="min-w-0 flex-1">
-          <SearchBar onSelect={handleSearchSelect} />
+      {/* Top bar — mobile only: full-width search, tools on second row (WF-15 / WF-18) */}
+      <div className="relative z-10 flex flex-col gap-2 px-3 pt-safe pt-3 pb-2 lg:hidden">
+        <div className="flex items-center gap-2">
+          <MobileMenuButton />
+          <div className="min-w-0 flex-1">
+            <SearchBar onSelect={handleSearchSelect} placeholder="Search address or place…" />
+          </div>
         </div>
+        <div className="flex items-center gap-2">
         <button
-          onClick={toggleSafetyOverlay}
+          onClick={() => {
+            const first = typeof window !== 'undefined' && !localStorage.getItem('wf_safety_grid_tip');
+            void toggleSafetyOverlay();
+            if (first) {
+              localStorage.setItem('wf_safety_grid_tip', '1');
+              alert('Safety grid shows live crime/safety colours for the map area you are viewing.');
+            }
+          }}
           disabled={safetyOverlayLoading}
-          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border glass transition-colors ${
+          className={`inline-flex h-10 flex-shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-bold glass transition-colors ${
             safetyOverlayOn
-              ? 'border-green-500/50 bg-green-500/20 text-green-400'
-              : 'border-surface-border text-[#7a6957] hover:text-white'
+              ? 'border-green-500/50 bg-green-500/20 text-green-700'
+              : 'border-surface-border text-[#5C5245]'
           }`}
-          aria-label="Toggle safety overlay"
-          title="Safety overlay"
+          aria-label="Toggle safety grid"
+          title="Safety grid"
         >
           <ShieldCheck className="h-4 w-4" />
+          Safety grid
         </button>
         <button
           onClick={() => { void openAreaReport(); }}
@@ -583,6 +594,7 @@ export function DashboardClient() {
             user?.firstName?.[0]?.toUpperCase() ?? 'U'
           )}
         </button>
+        </div>
       </div>
 
       {/* Desktop overlay chrome — search + UK/Global left, tools right */}
@@ -653,10 +665,11 @@ export function DashboardClient() {
                 ? 'border-green-500/50 bg-green-500/15 text-green-700'
                 : 'border-surface-border text-[#7a6957] hover:text-[var(--text-primary)]'
             }`}
-            aria-label="Toggle safety overlay"
-            title="Safety overlay"
+            aria-label="Toggle safety grid"
+            title="Safety grid — live crime colours on the map"
           >
             <ShieldCheck className="h-4 w-4" />
+            <span className="sr-only">Safety grid</span>
           </button>
           <button
             type="button"

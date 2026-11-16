@@ -26,9 +26,19 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Deep links into a specific profile/alert must survive incomplete onboarding (WF-29).
+    const preserveDeepLink =
+      Boolean(pathname?.match(/^\/dashboard\/qr\/[^/]+/)) ||
+      Boolean(pathname?.match(/^\/dashboard\/alerts\//)) ||
+      Boolean(pathname?.match(/^\/dashboard\/people/));
+
     let cancelled = false;
-    resolvePostAuthPath({ isAdmin: user.isAdmin, fallback: '/dashboard' }).then((path) => {
+    resolvePostAuthPath({ isAdmin: user.isAdmin, fallback: pathname || '/dashboard' }).then((path) => {
       if (cancelled) return;
+      if (preserveDeepLink) {
+        setReady(true);
+        return;
+      }
       if (path.startsWith('/onboard') && !pathname?.startsWith('/onboard')) {
         router.replace(path);
         return;

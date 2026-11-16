@@ -29,6 +29,50 @@ export class EmergencyService {
 
   // ─── Emergency Contacts ───────────────────────────────────────────────
 
+  private async enrichContactRow(
+    row: {
+      id: string;
+      status: string;
+      isPrimarySos: boolean | null;
+      acceptedAt: Date | null;
+      createdAt: Date;
+      userId: string;
+      contactUserId: string;
+    },
+    viewerUserId: string,
+  ) {
+    const otherUserId = row.userId === viewerUserId ? row.contactUserId : row.userId;
+    const [otherUser] = await this.db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        avatarUrl: users.avatarUrl,
+      })
+      .from(users)
+      .where(eq(users.id, otherUserId))
+      .limit(1);
+
+    return {
+      id: row.id,
+      status: row.status,
+      isPrimarySos: row.isPrimarySos,
+      acceptedAt: row.acceptedAt,
+      createdAt: row.createdAt,
+      isRequester: row.userId === viewerUserId,
+      contact: otherUser
+        ? {
+            id: otherUser.id,
+            firstName: otherUser.firstName || 'Unknown',
+            lastName: otherUser.lastName || '',
+            email: otherUser.email,
+            avatarUrl: otherUser.avatarUrl,
+          }
+        : null,
+    };
+  }
+
   async addContact(userId: string, dto: AddContactDto) {
     let contactUserId = dto.contactUserId;
 
@@ -113,15 +157,23 @@ export class EmergencyService {
       })
       .returning();
 
-    // Notify the contact user of the request
-    await this.notificationsService.sendPush(contactUserId, {
-      title: 'Emergency Contact Request',
-      body: 'Someone has added you as an emergency contact. Open the app to accept or decline.',
-      data: { type: 'emergency_contact_request', contactId: contact.id },
+    const [requesterProfile] = await this.db
+      .select({ firstName: users.firstName, lastName: users.lastName, email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const requesterName =
+      [requesterProfile?.firstName, requesterProfile?.lastName].filter(Boolean).join(' ').trim() || 'Someone';
+
+    await this.notificationsService.notifyEmergencyContactRequest({
+      contactUserId,
+      contactId: contact.id,
+      requesterName,
+      requesterEmail: requesterProfile?.email,
     });
 
     this.logger.log(`Emergency contact request sent: ${userId} → ${contactUserId}`);
-    return contact;
+    return this.enrichContactRow(contact, userId);
   }
 
   async acceptContact(contactId: string, userId: string) {
@@ -147,15 +199,21 @@ export class EmergencyService {
       .where(eq(emergencyContacts.id, contactId))
       .returning();
 
-    // Notify the requester that their contact accepted
-    await this.notificationsService.sendPush(contact.userId, {
-      title: 'Emergency Contact Accepted',
-      body: 'Your emergency contact request was accepted.',
-      data: { type: 'emergency_contact_accepted', contactId },
+    const [acceptor] = await this.db
+      .select({ firstName: users.firstName, lastName: users.lastName })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const acceptorName = [acceptor?.firstName, acceptor?.lastName].filter(Boolean).join(' ').trim() || 'Your contact';
+
+    await this.notificationsService.notifyEmergencyContactAccepted({
+      requesterUserId: contact.userId,
+      contactId,
+      acceptorName,
     });
 
     this.logger.log(`Emergency contact ${contactId} accepted by ${userId}`);
-    return updated;
+    return this.enrichContactRow(updated, userId);
   }
 
   async declineContact(contactId: string, userId: string) {
@@ -212,7 +270,6 @@ export class EmergencyService {
   }
 
   async listContacts(userId: string) {
-    // Contacts where the user is the requester OR where they are the contact and accepted
     const rows = await this.db
       .select({
         id: emergencyContacts.id,
@@ -220,9 +277,8 @@ export class EmergencyService {
         isPrimarySos: emergencyContacts.isPrimarySos,
         acceptedAt: emergencyContacts.acceptedAt,
         createdAt: emergencyContacts.createdAt,
-        direction: emergencyContacts.userId,
+        userId: emergencyContacts.userId,
         contactUserId: emergencyContacts.contactUserId,
-        requesterUserId: emergencyContacts.userId,
       })
       .from(emergencyContacts)
       .where(
@@ -232,35 +288,7 @@ export class EmergencyService {
         ),
       );
 
-    // Enrich with user details
-    const enriched = await Promise.all(
-      rows.map(async (row) => {
-        const otherUserId = row.requesterUserId === userId ? row.contactUserId : row.requesterUserId;
-        const [otherUser] = await this.db
-          .select({
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-            avatarUrl: users.avatarUrl,
-          })
-          .from(users)
-          .where(eq(users.id, otherUserId))
-          .limit(1);
-
-        return {
-          id: row.id,
-          status: row.status,
-          isPrimarySos: row.isPrimarySos,
-          acceptedAt: row.acceptedAt,
-          createdAt: row.createdAt,
-          isRequester: row.requesterUserId === userId,
-          contact: otherUser ?? null,
-        };
-      }),
-    );
-
-    return enriched;
+    return Promise.all(rows.map((row) => this.enrichContactRow(row, userId)));
   }
 
   async setPrimaryContact(contactId: string, userId: string): Promise<{ message: string }> {

@@ -15,6 +15,7 @@ interface QrPublicInfo {
   uniqueCode: string;
   status?: string;
   isLost: boolean;
+  viewerIsOwner?: boolean;
   name?: string;
   photoUrl?: string;
   description?: string;
@@ -115,7 +116,10 @@ type FetchQrResult =
 
 async function fetchQrInfo(code: string): Promise<FetchQrResult> {
   try {
-    const res = await fetch(`${API_BASE}/public/q/${code}`, { cache: 'no-store' });
+    const headers: Record<string, string> = {};
+    const token = typeof window !== 'undefined' ? localStorage.getItem('safetag_access_token') : null;
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/public/q/${code}`, { cache: 'no-store', headers });
     if (res.status === 404) return { ok: false, reason: 'not_found' };
     if (!res.ok) return { ok: false, reason: 'server_error' };
     return { ok: true, info: await res.json() };
@@ -176,7 +180,7 @@ async function activateQr(code: string, form: ClaimForm): Promise<{ ok: true } |
       } else if (raw.includes('QR_NOT_FOUND') || raw.toLowerCase().includes('not found')) {
         message = 'Tag code not found.';
       } else if (raw.includes('QR_LIMIT_REACHED')) {
-        message = 'You have reached your free digital tag limit. This physical tag should still link — try Link physical tag from My Tags.';
+        message = 'You have reached your free physical tag limit (5). Unlink a physical tag or upgrade to link more.';
       } else if (raw) {
         message = raw;
       }
@@ -749,7 +753,25 @@ export default function FinderPage({ params }: { params: Promise<{ code: string 
         </div>
 
         <div style={styles.formSection}>
-          <ReportForm code={code} apiUrl={API_URL} />
+          {qrInfo.viewerIsOwner ? (
+            <div style={{ ...styles.card, textAlign: 'center', padding: '24px' }}>
+              <p style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 8px', color: '#17130F' }}>
+                This is your tag
+              </p>
+              <p style={{ fontSize: '14px', color: '#5C5245', margin: '0 0 16px' }}>
+                {qrInfo.name ? `"${qrInfo.name}" is linked to your account.` : 'Linked successfully to your account.'}{' '}
+                Finders see the public report form — you do not.
+              </p>
+              <a
+                href={qrInfo.id ? `/dashboard/qr/${qrInfo.id}` : '/dashboard/qr'}
+                style={styles.activateBtn}
+              >
+                Open tag details
+              </a>
+            </div>
+          ) : (
+            <ReportForm code={code} apiUrl={API_URL} />
+          )}
         </div>
       </main>
 

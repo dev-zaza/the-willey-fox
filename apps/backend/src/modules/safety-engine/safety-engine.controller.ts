@@ -412,17 +412,25 @@ export class SafetyEngineController {
 
     const h3Cell = latLngToCell(lat, lng, 9);
     const scoreRows = (await this.db.execute(sql`
-      SELECT score, band, source_country
+      SELECT score, band, source_country, last_calculated_at
       FROM h3_safety_scores
       WHERE h3_index = ${h3Cell} AND resolution = 9
       LIMIT 1
-    `)) as Array<{ score: string | null; band: string | null; source_country: string }>;
+    `)) as Array<{
+      score: string | null;
+      band: string | null;
+      source_country: string;
+      last_calculated_at: Date | string | null;
+    }>;
 
     const rawScore = scoreRows[0]?.score != null ? Number(scoreRows[0].score) : null;
     let band = scoreRows[0]?.band ?? null;
     const countryIso = scoreRows[0]?.source_country ?? (inUk ? 'GB' : 'XX');
     const cityName = cityParam?.trim() ?? '';
     const dataLimited = totalIncidents < 3;
+    const lastCalculated = scoreRows[0]?.last_calculated_at
+      ? new Date(scoreRows[0].last_calculated_at).toISOString()
+      : null;
 
     if (!band && dataLimited) {
       band = 'low_count';
@@ -445,6 +453,13 @@ export class SafetyEngineController {
       scoreEstimated = true;
     }
 
+    const fcdoCountry = countryIso === 'GB' || countryIso === 'UK' ? 'united-kingdom' : countryIso.toLowerCase();
+    const partialNote = dataLimited
+      ? 'Limited street-level incidents here — score may use the city baseline until more data lands.'
+      : scoreEstimated
+        ? 'Score estimated from nearby crimes until the safety grid is recalculated.'
+        : null;
+
     return {
       lat,
       lng,
@@ -458,11 +473,14 @@ export class SafetyEngineController {
       crimeBreakdown,
       dataLimited,
       dataMonth: new Date().toISOString().slice(0, 7),
+      lastUpdated: lastCalculated ?? new Date().toISOString(),
+      partialNote,
+      fcdoAdviceUrl: `https://www.gov.uk/foreign-travel-advice/${fcdoCountry}`,
       scoreMethodology: dataLimited
         ? 'Limited local crime data for this area · try a nearby street or wider report'
         : scoreEstimated
           ? 'Estimated from crimes recorded in this radius until the safety grid is recalculated'
-          : '70% live police data · 30% Numbeo · population-adjusted',
+          : '50% Numbeo + 50% country safety · live police data adjusts by up to ±10',
     };
   }
 

@@ -50,9 +50,10 @@ export async function createAndLinkFamilyProfiles(
         name: draft.name,
         label: draft.name,
         category: draft.category,
-        customFields: draft.relationship
-          ? { relationship: draft.relationship }
-          : undefined,
+        customFields: {
+          familyProfile: true,
+          ...(draft.relationship ? { relationship: draft.relationship } : {}),
+        },
       });
       await families.addQrCode(familyId, qr.id);
       created.push(qr);

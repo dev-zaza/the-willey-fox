@@ -276,7 +276,7 @@ export default function SubscriptionPage() {
                 <p className="text-[#7a6957] text-sm">{pricing.monthlyPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited digital tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited physical tags · family profiles free</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited family groups</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Travel guide &amp; crime reports</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Bulk QR generation</li>
@@ -300,7 +300,7 @@ export default function SubscriptionPage() {
                 <p className="text-[#7a6957] text-sm">{pricing.annualPriceLabel}</p>
               </div>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited digital tags</li>
+                <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited physical tags · family profiles free</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Unlimited family groups</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Travel guide &amp; crime reports</li>
                 <li className="flex items-start gap-2 text-sm text-[#5a4a3d]"><CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" /> Bulk QR generation</li>
@@ -324,7 +324,7 @@ export default function SubscriptionPage() {
             <p className="text-sm font-semibold text-[#7a6957] uppercase tracking-wider mb-3">Your Current Plan — Free</p>
             <ul className="space-y-2">
               {[
-                `${pricing.tierLimits.free.maxQrCodes} Tags`,
+                `${pricing.tierLimits.free.maxQrCodes} physical tags`,
                 `${pricing.tierLimits.free.maxEmergencyContacts} emergency contacts`,
                 'Community map access',
                 'Basic safety alerts',

@@ -127,6 +127,7 @@ export default function MessagesPage() {
         <aside className={cn('border-[#E3D8C6] bg-white lg:w-[380px] lg:flex-shrink-0 lg:border-r', showThread && 'hidden lg:block')}>
           <div className="border-b border-[#E3D8C6] px-5 py-5">
             <h1 className="text-2xl font-extrabold tracking-tight text-[#17130F]">Inbox</h1>
+            <p className="mt-1 text-xs text-[#8A7B67]">Messages with finders · Alerts are under the bell</p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {(
                 [
@@ -154,7 +155,16 @@ export default function MessagesPage() {
           <div className="overflow-y-auto lg:h-[calc(100vh-7.5rem)]">
             {loading ? <p className="px-5 py-10 text-sm text-[#8A7B67]">Loading…</p> : null}
 
-            {!loading && filteredReports.map((r) => (
+            {!loading && filteredReports.map((r) => {
+              const isMissing = r.isPublicBroadcast || /missing/i.test(r.finderNotes ?? '');
+              const title = isMissing
+                ? `Missing: ${r.qrCode?.name || r.qrCode?.label || 'person'}`
+                : `Found: ${r.qrCode?.name || r.qrCode?.label || r.qrCode?.category || 'tag'}`;
+              const when = new Date(r.createdAt);
+              const whenLabel = Number.isNaN(when.getTime())
+                ? ''
+                : when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+              return (
               <button
                 key={r.id}
                 type="button"
@@ -166,32 +176,44 @@ export default function MessagesPage() {
                 className={cn(
                   'flex w-full gap-3 border-b border-[#E3D8C6] px-5 py-4 text-left hover:bg-[#FBF7F1]',
                   activeReport?.id === r.id && 'bg-[#FFF3EE]',
-                  r.isPublicBroadcast && 'bg-[#FFF3EE]/60',
+                  isMissing && 'bg-[#F5F3FF]/60',
                 )}
               >
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand-500 text-white">
-                  !
+                <span
+                  className={cn(
+                    'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white text-sm font-bold',
+                    isMissing ? 'bg-[#6D28D9]' : 'bg-emerald-600',
+                  )}
+                >
+                  {isMissing ? '!' : '✓'}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-bold text-[#17130F]">
-                      {r.isPublicBroadcast ? 'Community alert' : 'Found item'}
+                    <span className="whitespace-normal break-words text-sm font-bold text-[#17130F]">
+                      {title}
                     </span>
-                    <span className="text-[11px] text-[#8A7B67]">
-                      {new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <span className="flex-shrink-0 text-[11px] text-[#8A7B67]" title={when.toLocaleString()}>
+                      {whenLabel}
                     </span>
                   </span>
-                  <span className="mt-0.5 block truncate text-xs text-[#5C5245]">
-                    {r.finderNotes || r.locationAddress || r.finderContact}
+                  <span className="mt-0.5 block whitespace-normal break-words text-xs text-[#5C5245]">
+                    {r.finderNotes || r.locationAddress || r.finderContact || 'Open for details'}
                   </span>
                   <span className="mt-1 flex gap-1">
-                    <span className="rounded-full bg-[#FFF3EE] px-2 py-0.5 text-[10px] font-bold text-brand-600">
-                      {r.isPublicBroadcast ? 'Community' : 'Found'}
+                    <span
+                      className={cn(
+                        'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                        isMissing ? 'bg-[#EDE9FE] text-[#6D28D9]' : 'bg-emerald-50 text-emerald-700',
+                      )}
+                    >
+                      {isMissing ? 'Missing' : 'Found'}
+                      {r.qrCode?.category ? ` · ${r.qrCode.category}` : ''}
                     </span>
                   </span>
                 </span>
               </button>
-            ))}
+              );
+            })}
 
             {!loading && filteredConvos.map((convo) => {
               const who = convo.otherParticipant;

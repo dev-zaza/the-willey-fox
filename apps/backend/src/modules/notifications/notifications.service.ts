@@ -842,6 +842,117 @@ export class NotificationsService {
     });
   }
 
+  async notifyEmergencyContactRequest(params: {
+    contactUserId: string;
+    contactId: string;
+    requesterName: string;
+    requesterEmail?: string | null;
+  }): Promise<void> {
+    const [recipient] = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, params.contactUserId))
+      .limit(1);
+    if (!recipient) return;
+
+    const baseUrl = this.configService.get<string>('PUBLIC_BASE_URL', 'http://localhost:3001');
+    const title = 'Emergency contact request';
+    const body = `${params.requesterName} invited you as an emergency contact. Open Emergency to accept.`;
+    const metadata = {
+      type: 'emergency_contact_request',
+      contactId: params.contactId,
+      deepLink: `${baseUrl}/dashboard/emergency`,
+    };
+
+    // Always log so Alerts feed shows the invite even without FCM/email prefs
+    const [log] = await this.db
+      .insert(notificationLogs)
+      .values({
+        type: 'push',
+        recipientId: recipient.id,
+        recipientContact: recipient.fcmToken || recipient.email || recipient.id,
+        subject: title,
+        body,
+        metadata,
+        status: 'pending',
+      })
+      .returning();
+
+    if (recipient.fcmToken) {
+      await this.notificationsQueue.add(
+        'send-push',
+        {
+          logId: log.id,
+          type: 'push' as const,
+          payload: { recipient: recipient.fcmToken, subject: title, body, metadata },
+        },
+        { attempts: 3, backoff: { type: 'exponential' as const, delay: 2000 } },
+      );
+    } else {
+      await this.db
+        .update(notificationLogs)
+        .set({ status: 'sent', sentAt: new Date() })
+        .where(eq(notificationLogs.id, log.id));
+    }
+
+    await this.webPushService.queueForUser(recipient.id, { title, body, data: metadata });
+
+    if (recipient.email) {
+      const emailSubject = `${params.requesterName} invited you as an emergency contact`;
+      const emailBody = [
+        `Hi ${recipient.firstName || 'there'},`,
+        '',
+        `${params.requesterName} wants to add you as an emergency contact on TheWileyfox.`,
+        `Open ${baseUrl}/dashboard/emergency to accept or decline.`,
+        '',
+        'If you accept, they can send you SOS alerts with their location.',
+      ].join('\n');
+      await this.queueGuardianNotification(
+        'email',
+        recipient.id,
+        recipient.email,
+        params.contactId,
+        emailSubject,
+        emailBody,
+      );
+    }
+
+    this.logger.log(`Emergency contact request notified for user ${params.contactUserId}`);
+  }
+
+  async notifyEmergencyContactAccepted(params: {
+    requesterUserId: string;
+    contactId: string;
+    acceptorName: string;
+  }): Promise<void> {
+    const title = 'Emergency contact accepted';
+    const body = `${params.acceptorName} accepted your emergency contact request. SOS is now available.`;
+    await this.sendPush(params.requesterUserId, {
+      title,
+      body,
+      data: { type: 'emergency_contact_accepted', contactId: params.contactId },
+    });
+
+    // Ensure Alerts feed has a row even when FCM is missing
+    const [user] = await this.db
+      .select({ id: users.id, email: users.email, fcmToken: users.fcmToken })
+      .from(users)
+      .where(eq(users.id, params.requesterUserId))
+      .limit(1);
+    if (user && !user.fcmToken) {
+      await this.db.insert(notificationLogs).values({
+        type: 'push',
+        recipientId: user.id,
+        recipientContact: user.email || user.id,
+        subject: title,
+        body,
+        metadata: { type: 'emergency_contact_accepted', contactId: params.contactId },
+        status: 'sent',
+        sentAt: new Date(),
+      });
+    }
+  }
+
   private async queueGuardianNotification(
     type: 'email' | 'sms' | 'push',
     recipientId: string,

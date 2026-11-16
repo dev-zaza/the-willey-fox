@@ -44,7 +44,7 @@ export class PublicService {
     return this.supportService.createTicket(dto);
   }
 
-  async getPublicQrInfo(code: string) {
+  async getPublicQrInfo(code: string, viewerUserId?: string) {
     // LEFT JOIN visual_themes to include theme data in one query
     const rows = await this.db
       .select({
@@ -70,36 +70,40 @@ export class PublicService {
 
     // Unclaimed QR — return minimal info so the finder page can show the activation form
     if (qrCode.status === 'unclaimed') {
-      return { status: 'unclaimed', uniqueCode: qrCode.uniqueCode };
+      return { status: 'unclaimed', uniqueCode: qrCode.uniqueCode, viewerIsOwner: false };
     }
 
     const visibility = (qrCode.visibilityConfig || {}) as VisibilityConfig;
+    const viewerIsOwner = Boolean(viewerUserId && qrCode.userId && viewerUserId === qrCode.userId);
 
     const publicInfo: Record<string, unknown> = {
       id: qrCode.id,
       category: qrCode.category,
       uniqueCode: qrCode.uniqueCode,
       isLost: qrCode.isLost,
+      status: qrCode.status,
+      viewerIsOwner,
     };
 
-    if (visibility.showName) {
+    if (viewerIsOwner || visibility.showName) {
       publicInfo.name = qrCode.label ?? qrCode.name;
     }
-    if (visibility.showPhoto && qrCode.photoUrl) {
+    if ((viewerIsOwner || visibility.showPhoto) && qrCode.photoUrl) {
       publicInfo.photoUrl = qrCode.photoUrl;
     }
-    if (visibility.showDescription && qrCode.description) {
+    if ((viewerIsOwner || visibility.showDescription) && qrCode.description) {
       publicInfo.description = qrCode.description;
     }
-    if (visibility.showCustomFields && qrCode.customFields) {
+    if ((viewerIsOwner || visibility.showCustomFields) && qrCode.customFields) {
       publicInfo.customFields = qrCode.customFields;
     }
 
-    // Always expose owner contact info and reward message so finder can reach owner directly
-    if (qrCode.ownerContactEmail) {
+    // Contact fields only when owner opted in — or when the signed-in owner is viewing their own tag
+    const showContact = viewerIsOwner || (visibility as VisibilityConfig & { showContact?: boolean }).showContact !== false;
+    if (showContact && qrCode.ownerContactEmail) {
       publicInfo.ownerContactEmail = qrCode.ownerContactEmail;
     }
-    if (qrCode.ownerContactPhone) {
+    if (showContact && qrCode.ownerContactPhone) {
       publicInfo.ownerContactPhone = qrCode.ownerContactPhone;
     }
     if (qrCode.rewardMessage) {
@@ -337,6 +341,7 @@ export class PublicService {
       lastSeenNotes: r.finderNotes,
       broadcastApprovedAt: r.approvedAt,
       broadcastExpiresAt: r.expiresAt,
+      createdAt: r.createdAt,
     };
   }
 

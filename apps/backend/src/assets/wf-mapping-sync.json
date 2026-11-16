@@ -1,0 +1,5 @@
+{
+  "syncedAt": "2026-11-12T04:37:13.711Z",
+  "filesCopied": 173,
+  "note": "Run after WF-mapping daily pipeline. Recalculate h3_safety_scores via safety-engine ingest jobs."
+}

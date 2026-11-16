@@ -4,6 +4,7 @@ import { GlobeHeroSection } from '@/components/landing/globe-hero-section';
 import { HowItWorksSection } from '@/components/landing/how-it-works-section';
 import { UseCasesSection } from '@/components/landing/use-cases-section';
 import { PhoneMockupSection } from '@/components/landing/phone-mockup-section';
+import { MedicalIdSection } from '@/components/landing/medical-id-section';
 import { FeaturesSection } from '@/components/landing/features-section';
 import { TrustStatsSection } from '@/components/landing/trust-stats-section';
 import { PricingTeaserSection } from '@/components/landing/pricing-teaser-section';
@@ -20,6 +21,7 @@ export default function HomePage() {
       <GlobeHeroSection />
       <HowItWorksSection />
       <UseCasesSection />
+      <MedicalIdSection />
       <PhoneMockupSection />
       <FeaturesSection />
       <TrustStatsSection />

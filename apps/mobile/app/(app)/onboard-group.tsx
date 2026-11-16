@@ -72,7 +72,7 @@ export default function OnboardGroupScreen() {
 
         <View style={{ gap: 8, alignItems: 'center' }}>
           <Text style={{ fontSize: 24, fontWeight: '800', color: textPrimary(dark), textAlign: 'center' }}>
-            Name your group
+            Create your group or family
           </Text>
           <Text style={{ fontSize: 14, color: textMuted(dark), textAlign: 'center', lineHeight: 21 }}>
             This is how your group appears to family members and in safety alerts.

@@ -37,7 +37,7 @@ export const ERROR_MESSAGES: Record<string, string> = {
   QR_NOT_FOUND: 'QR code not found.',
   QR_ACCESS_DENIED: 'You do not have access to this QR code.',
   QR_NOT_OWNER: 'You are not the owner of this QR code.',
-  QR_LIMIT_REACHED: 'You have reached your free digital tag limit (5). Claim bought tags anytime, or upgrade for unlimited generate.',
+  QR_LIMIT_REACHED: 'You have reached your free physical tag limit (5). Family profiles stay free — upgrade for unlimited physical tags.',
   QR_ALREADY_CLAIMED: 'This QR code has already been claimed.',
   QR_BULK_LIMIT_EXCEEDED: 'Bulk creation exceeds your plan limit.',
   FAMILY_LIMIT_REACHED: 'Free plan includes 1 family group. Upgrade to create more.',

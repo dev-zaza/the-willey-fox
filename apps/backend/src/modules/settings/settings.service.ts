@@ -45,7 +45,10 @@ const DEFAULT_QR_CATEGORIES: QrCategoryConfig[] = [
 ];
 
 export interface TierLimit {
+  /** Free-plan physical (claimed) tag cap. Displayed as “physical tags”. */
   maxQrCodes: number;
+  /** Optional explicit physical cap; falls back to maxQrCodes when unset. */
+  maxPhysicalTags?: number;
   maxGuardians: number;
   maxEmergencyContacts: number;
   maxPinsPerDay: number;
@@ -82,9 +85,10 @@ const DEFAULTS: PricingConfig = {
   stripePriceIdMonthly: '',
   stripePriceIdAnnual: '',
   tierLimits: {
-    free:    { maxQrCodes: 5,  maxGuardians: 2,  maxEmergencyContacts: 3,  maxPinsPerDay: 5 },
-    basic:   { maxQrCodes: 10, maxGuardians: 5,  maxEmergencyContacts: 10, maxPinsPerDay: 20 },
-    premium: { maxQrCodes: 50, maxGuardians: 20, maxEmergencyContacts: 25, maxPinsPerDay: 100 },
+    // Free: max 5 physical tags. Family digital profiles are unlimited (not stored here).
+    free:    { maxQrCodes: 5,  maxPhysicalTags: 5,  maxGuardians: 2,  maxEmergencyContacts: 3,  maxPinsPerDay: 5 },
+    basic:   { maxQrCodes: 999999, maxPhysicalTags: 999999, maxGuardians: 5,  maxEmergencyContacts: 10, maxPinsPerDay: 20 },
+    premium: { maxQrCodes: 999999, maxPhysicalTags: 999999, maxGuardians: 20, maxEmergencyContacts: 25, maxPinsPerDay: 100 },
   },
 };
 

@@ -6,9 +6,9 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import { settings, type PricingConfig } from '@/lib/api';
 
 const FEATURES = [
-  { label: 'Digital QR tags', free: (p: PricingConfig) => `${p.tierLimits.free.maxQrCodes} tags`, pro: 'Unlimited' },
+  { label: 'Physical tags', free: (p: PricingConfig) => `${p.tierLimits.free.maxQrCodes} tags`, pro: 'Unlimited' },
+  { label: 'Family digital profiles', free: 'Unlimited', pro: 'Unlimited' },
   { label: 'Family groups', free: '1 group', pro: 'Unlimited' },
-  { label: 'Physical tag claims', free: 'Unlimited', pro: 'Unlimited' },
   { label: 'Area safety stats', free: true, pro: true },
   { label: 'Travel guide & crime reports', free: false, pro: true },
   { label: 'Bulk QR generation', free: false, pro: true },
@@ -121,13 +121,13 @@ export default function PricingPage() {
             </div>
             <ul className="space-y-3 mb-8 flex-1">
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} digital QR tags
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> {pricing.tierLimits.free.maxQrCodes} physical tags
+              </li>
+              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
+                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited family digital profiles
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
                 <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> 1 family group
-              </li>
-              <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
-                <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Unlimited physical tag claims
               </li>
               <li className="flex items-start gap-2 text-sm" style={{ color: '#5a4a3d' }}>
                 <CheckCircle className="w-4 h-4 text-[#0e8b5e] flex-shrink-0 mt-0.5" /> Area safety stats

@@ -31,7 +31,7 @@ export const TAG_CATEGORY_LABELS: Record<PinCategory, string> = {
 export const PIN_COLORS: Record<PinCategory, string> = {
   hazard: '#f59e0b',
   roadblock: '#ef4444',
-  construction: '#ea2e00',
+  construction: '#F97316',
   safety_alert: '#8b5cf6',
   traffic: '#3b82f6',
   event: '#22c55e',

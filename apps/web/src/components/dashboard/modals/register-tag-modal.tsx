@@ -12,7 +12,7 @@ interface RegisterTagModalProps {
   onCreated: () => void;
 }
 
-const FREE_TAG_LIMIT = TIER_LIMITS.free.maxQrCodes;
+const FREE_TAG_LIMIT = TIER_LIMITS.free.maxPhysicalTags;
 
 export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) {
   const [label, setLabel] = useState('');
@@ -81,10 +81,10 @@ export function RegisterTagModal({ onClose, onCreated }: RegisterTagModalProps) 
         >
           <span className="text-2xl">🏷️</span>
           <div className="flex-1 space-y-1">
-            <p className="text-sm font-semibold text-white">Tag limit reached</p>
+            <p className="text-sm font-semibold text-white">Physical tag limit reached</p>
             <p className="text-sm text-[#7a6957] leading-5">
-              You&apos;ve reached your free plan limit of {FREE_TAG_LIMIT} tags. Upgrade your plan
-              to register more tags for your valuables.
+              You&apos;ve reached your free plan limit of {FREE_TAG_LIMIT} physical tags. Family
+              digital profiles stay free — upgrade for unlimited physical tags.
             </p>
             <Link
               href="/dashboard/subscription"

@@ -174,10 +174,9 @@ describe('QrService', () => {
   });
 
   // ── create ──────────────────────────────────────────────────────────────────
-  // create(): count query uses direct await (enqueueDirect); then insert.returning()
+  // Free plan no longer caps digital generate; family profiles are free.
   describe('create', () => {
     it('inserts a new QR code and returns it', async () => {
-      enqueueDirect([{ activeCount: 0 }]);        // count() query direct await
       db.returning.mockResolvedValueOnce([baseQr]);
 
       const result = await service.create('user-1', 'free', { category: 'pets' as any, name: 'Fluffy' });
@@ -186,16 +185,23 @@ describe('QrService', () => {
       expect(result).toEqual(baseQr);
     });
 
-    it('throws ForbiddenException when tier limit is reached', async () => {
-      enqueueDirect([{ activeCount: 3 }]); // at limit
+    it('marks family profiles in customFields', async () => {
+      db.returning.mockResolvedValueOnce([baseQr]);
 
-      await expect(
-        service.create('user-1', 'free', { category: 'pets' as any, name: 'Extra' }),
-      ).rejects.toThrow(ForbiddenException);
+      await service.create('user-1', 'free', {
+        category: 'person' as any,
+        name: 'Zoe',
+        customFields: { relationship: 'Daughter' },
+      });
+
+      expect(db.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customFields: expect.objectContaining({ familyProfile: true, relationship: 'Daughter' }),
+        }),
+      );
     });
 
     it('applies default visibility config when none provided', async () => {
-      enqueueDirect([{ activeCount: 0 }]);
       db.returning.mockResolvedValueOnce([baseQr]);
 
       await service.create('user-1', 'free', { category: 'items' as any, name: 'Keys' });
@@ -303,7 +309,8 @@ describe('QrService', () => {
       const unclaimedQr = { ...baseQr, status: 'unclaimed', userId: null, isActive: false };
       const claimedQr = { ...baseQr, status: 'active', userId: 'user-2', isActive: true };
 
-      enqueueLimit([unclaimedQr]);              // 1. QR lookup by uniqueCode
+      enqueueLimit([unclaimedQr]); // 1. QR lookup by uniqueCode
+      enqueueDirect([{ activeCount: 0 }]); // 2. physical count
       db.returning.mockResolvedValueOnce([claimedQr]);
 
       const result = await service.claimQrCode('ABC12345', 'user-2', 'free', {
@@ -331,8 +338,9 @@ describe('QrService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('allows claiming physical tags even when digital limit is reached', async () => {
+    it('allows claiming when under the free physical tag limit', async () => {
       enqueueLimit([{ ...baseQr, status: 'unclaimed', userId: null, isActive: false }]);
+      enqueueDirect([{ activeCount: 2 }]);
       const claimedQr = { ...baseQr, status: 'active', userId: 'user-1', isActive: true };
       db.returning.mockResolvedValueOnce([claimedQr]);
 
@@ -343,13 +351,24 @@ describe('QrService', () => {
 
       expect(result).toHaveProperty('status', 'active');
     });
+
+    it('blocks claiming when free physical tag limit is reached', async () => {
+      enqueueLimit([{ ...baseQr, status: 'unclaimed', userId: null, isActive: false }]);
+      enqueueDirect([{ activeCount: 5 }]);
+
+      await expect(
+        service.claimQrCode('ABC12345', 'user-1', 'free', {
+          category: 'pets' as any,
+          name: 'Bought tag',
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   // ── bulkCreate ──────────────────────────────────────────────────────────────
   describe('bulkCreate', () => {
     it('creates multiple QR codes for premium users', async () => {
       const bulkQrs = [{ id: 'qr-a', uniqueCode: 'A1' }, { id: 'qr-b', uniqueCode: 'B2' }];
-      enqueueDirect([{ activeCount: 0 }]); // count query
       db.returning.mockResolvedValueOnce(bulkQrs);
 
       const result = await service.bulkCreate('user-1', 'premium', { count: 2, category: 'items' as any });
@@ -435,6 +454,18 @@ describe('QrService', () => {
       await expect(
         service.setTheme('qr-1', 'user-1', 'free', { themeId: 'bad-theme' }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('generateQrImage', () => {
+    it('rejects loopback PUBLIC_BASE_URL in production', async () => {
+      mockConfig.get.mockImplementation((key: string, def?: unknown) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'PUBLIC_BASE_URL') return 'http://127.0.0.1:3001';
+        if (key === 'QR_PUBLIC_BASE_URL') return undefined;
+        return def;
+      });
+      await expect(service.generateQrImage('ABC12345')).rejects.toThrow(BadRequestException);
     });
   });
 

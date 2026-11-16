@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { eq, and, count, isNull, sql } from 'drizzle-orm';
+import { eq, and, count, sql } from 'drizzle-orm';
 import { customAlphabet } from 'nanoid';
 import * as QRCode from 'qrcode';
 import { DRIZZLE } from '../../database/database.module';
@@ -30,10 +30,9 @@ export class QrService {
   ) {}
 
   /**
-   * Digital self-serve tags only (not Shopify / batch physical claims).
-   * Free users may claim unlimited physical tags but may only generate this many.
+   * Physical (claimed / bought) tags owned by the user — free plan caps these at 5.
    */
-  private async countDigitalOwnedTags(userId: string): Promise<number> {
+  private async countPhysicalOwnedTags(userId: string): Promise<number> {
     const [{ activeCount }] = await this.db
       .select({ activeCount: count() })
       .from(qrCodes)
@@ -41,35 +40,40 @@ export class QrService {
         and(
           eq(qrCodes.userId, userId),
           eq(qrCodes.isActive, true),
-          isNull(qrCodes.batchId),
-          isNull(qrCodes.shopifyOrderId),
-          isNull(qrCodes.shopifyOrderItemId),
-          sql`coalesce((${qrCodes.customFields}->>'acquisition'), 'digital') = 'digital'`,
+          sql`coalesce((${qrCodes.customFields}->>'acquisition'), 'digital') = 'claimed'`,
         ),
       );
     return Number(activeCount);
   }
 
-  private async resolveMaxDigitalTags(tier: string): Promise<number> {
-    // Pro (monthly/yearly) and legacy paid tiers: unlimited digital generate
+  private async resolveMaxPhysicalTags(tier: string): Promise<number> {
     if (isProTier(tier)) return Infinity;
 
     const tierKey = tier as keyof typeof TIER_LIMITS;
     const staticLimits = TIER_LIMITS[tierKey] ?? TIER_LIMITS.free;
     const pricing = await this.settingsService.getPricingConfig();
-    const liveLimit = (pricing.tierLimits as Record<string, { maxQrCodes?: number }>)[tierKey];
-    return liveLimit?.maxQrCodes ?? staticLimits.maxQrCodes;
+    const live = (pricing.tierLimits as Record<string, { maxPhysicalTags?: number; maxQrCodes?: number }>)[
+      tierKey
+    ];
+    return live?.maxPhysicalTags ?? live?.maxQrCodes ?? staticLimits.maxPhysicalTags;
+  }
+
+  /** Family / protected-person digital profiles never consume free-plan quota. */
+  private isFamilyProfileDto(dto: { category: string; customFields?: Record<string, unknown> }): boolean {
+    const fields = dto.customFields ?? {};
+    if (fields.familyProfile === true) return true;
+    if (typeof fields.relationship === 'string' && fields.relationship.trim().length > 0) {
+      return dto.category === 'person' || dto.category === 'pet' || dto.category === 'medical';
+    }
+    return false;
   }
 
   async create(userId: string, tier: string, dto: CreateQrDto) {
-    const maxQrCodes = await this.resolveMaxDigitalTags(tier);
-    const activeCount = await this.countDigitalOwnedTags(userId);
-
-    if (Number.isFinite(maxQrCodes) && activeCount >= maxQrCodes) {
-      throw new ForbiddenException('QR_LIMIT_REACHED');
-    }
+    // Free plan caps physical claims only. Digital generate (incl. family profiles) is unrestricted.
+    void tier;
 
     const uniqueCode = nanoid();
+    const familyProfile = this.isFamilyProfileDto(dto);
 
     const defaultVisibility = {
       showName: true,
@@ -96,6 +100,7 @@ export class QrService {
           : defaultVisibility,
         customFields: {
           acquisition: 'digital',
+          ...(familyProfile ? { familyProfile: true } : {}),
           ...(dto.customFields || {}),
           ...(dto.medicalInfo ? { medicalInfo: dto.medicalInfo } : {}),
         },
@@ -297,7 +302,7 @@ export class QrService {
     });
   }
 
-  async claimQrCode(code: string, userId: string, _tier: string, dto: ClaimQrDto) {
+  async claimQrCode(code: string, userId: string, tier: string, dto: ClaimQrDto) {
     const [qrCode] = await this.db
       .select()
       .from(qrCodes)
@@ -312,7 +317,14 @@ export class QrService {
       throw new BadRequestException('QR_ALREADY_CLAIMED');
     }
 
-    // Physical / purchased claims are unlimited on every tier — only digital generate is capped.
+    // Free plan: max 5 physical (claimed) tags. Family digital profiles do not count.
+    const maxPhysical = await this.resolveMaxPhysicalTags(tier);
+    if (Number.isFinite(maxPhysical)) {
+      const physicalCount = await this.countPhysicalOwnedTags(userId);
+      if (physicalCount >= maxPhysical) {
+        throw new ForbiddenException('QR_LIMIT_REACHED');
+      }
+    }
 
     const defaultVisibility = {
       showName: true,
@@ -413,13 +425,6 @@ export class QrService {
   async bulkCreate(userId: string, tier: string, dto: BulkCreateQrDto) {
     if (!isProTier(tier)) {
       throw new ForbiddenException('PREMIUM_REQUIRED');
-    }
-
-    const maxQrCodes = await this.resolveMaxDigitalTags(tier);
-    const activeCount = await this.countDigitalOwnedTags(userId);
-
-    if (Number.isFinite(maxQrCodes) && activeCount + dto.count > maxQrCodes) {
-      throw new ForbiddenException('QR_LIMIT_REACHED');
     }
 
     const defaultVisibility = {
